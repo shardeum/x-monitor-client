@@ -42,33 +42,41 @@ let NetworkMonitor = function() {
             let newNode = createNewNode('request', {x, y})
             newNode.circle.addEventListener('click', e => {
                 e.stopImmediatePropagation()
-                newNode.nodeId = (Math.random() * 100000).toFixed(0)
-                newNode.circle.setAttribute('fill', 'yellow')
-                let degree = Math.random() * 360
-                let radian = degree *  Math.PI / 180;
-                let x = R * Math.cos(radian) + X
-                let y = R * Math.sin(radian) + Y
-                let currentX = newNode.circle.getAttribute('cx')
-                let currentY = newNode.circle.getAttribute('cy')
-                let travelX
-                let travelY
+                
+                if (newNode.status === 'request') {
+                    newNode.nodeId = (Math.random() * 100000).toFixed(0)
+                    newNode.circle.setAttribute('fill', '#f9cb35')
+                    let degree = Math.random() * 360
+                    let radian = degree *  Math.PI / 180;
+                    let x = R * Math.cos(radian) + X
+                    let y = R * Math.sin(radian) + Y
+                    let currentX = newNode.circle.getAttribute('cx')
+                    let currentY = newNode.circle.getAttribute('cy')
+                    let travelX
+                    let travelY
 
-                travelX = x - currentX
-                travelY = y - currentY
+                    travelX = x - currentX
+                    travelY = y - currentY
 
-                const circleStyler = styler(newNode.circle);
+                    let circleStyler = styler(newNode.circle)
 
-                // console.log('=====')
-                // console.log(currentX, currentY)
-                // console.log(x, y)
-                // console.log(travelX, travelY)
-
-                tween({
-                    from: 0,
-                    to: { x: travelX, y: travelY},
-                    duration: 1000,
-                }).start(circleStyler.set);
-            }, once)
+                    tween({
+                        from: 0,
+                        to: { x: travelX, y: travelY},
+                        duration: 1000,
+                    }).start(circleStyler.set)
+                    newNode.status = 'syncing'
+                } else if (newNode.status === 'syncing') {
+                    let circleStyler = styler(newNode.circle)
+                    newNode.status = 'active'
+                    console.log(newNode)
+                    tween({
+                        from: { fill: '#f9cb35' },
+                        to: { fill: '#4caf50' },
+                        duration: 500,
+                    }).start(circleStyler.set)
+                }
+            })
             nodes.requests.push(newNode)
         })
         
