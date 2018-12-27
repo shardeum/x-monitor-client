@@ -21,6 +21,8 @@ let NetworkMonitor = function(config) {
     let R = config.networkCircleRadius || 200
     let X = config.networkCircleX || 400
     let Y = config.networkCircleY || 400
+    let r = config.nodeRadius || 25
+    let alpha = 2 * Math.asin(r / R) * (180 / Math.PI)
 
     const init = function () {
         drawNetworkCycle(R, X, Y)
@@ -33,22 +35,25 @@ let NetworkMonitor = function(config) {
             var y = event.pageY - parseFloat(parentTop);
 
             let newNode = createNewNode({x, y})
+
+            let circleStyler = styler(newNode.circle)
+
             newNode.circle.addEventListener('click', e => {
                 e.stopImmediatePropagation()
                 
                 if (newNode.status === 'request') {
                     newNode.nodeId = (Math.random() * 100000).toFixed(0)
                     newNode.circle.setAttribute('fill', '#f9cb35')
-                    let networkPosition = calculateNetworkPosition(newNode.nodeId)
+                    let networkPosition = calculateNetworkPosition(newNode)
                     let x = networkPosition.x
                     let y = networkPosition.y
-                    let currentX = newNode.circle.getAttribute('cx')
-                    let currentY = newNode.circle.getAttribute('cy')
+                    let initialX = parseFloat(newNode.circle.getAttribute('cx'))
+                    let initialY = parseFloat(newNode.circle.getAttribute('cy'))
                     let travelX
                     let travelY
 
-                    travelX = x - currentX
-                    travelY = y - currentY
+                    travelX = x - initialX
+                    travelY = y - initialY
 
                     let circleStyler = styler(newNode.circle)
 
@@ -58,8 +63,16 @@ let NetworkMonitor = function(config) {
                         duration: 1000,
                     }).start(circleStyler.set)
                     newNode.status = 'syncing'
-                    newNode.currentPosition.x += travelX
-                    newNode.currentPosition.y += travelY
+                    newNode.initialPosition = {
+                        x: initialX,
+                        y: initialY
+                    }
+                    newNode.currentPosition = {
+                        x: x,
+                        y: y
+                    }
+                    // setTimeout(() => shiftNearestNode(newNode, 45), 1000)
+                    newNode.degree = networkPosition.degree
                 } else if (newNode.status === 'syncing') {
                     let circleStyler = styler(newNode.circle)
                     newNode.status = 'active'
@@ -125,7 +138,7 @@ let NetworkMonitor = function(config) {
     }
 
     const createNewTxCircle = function(inputTx) {
-        let circleId = drawCircle({x: 0, y: 0}, "5px", "red", "0px")
+        let circleId = drawCircle({x: 0, y: 0}, "5px", "red", "0")
         let circle = $(`#${circleId}`)
         let currentPosition = {
             x: parseFloat(circle.getAttribute('cx')),
@@ -141,7 +154,7 @@ let NetworkMonitor = function(config) {
     }
 
     const cloneTxCircle = function(txCircle) {
-        let circleId = drawCircle({x: txCircle.currentPosition.x, y: txCircle.currentPosition.y}, "5px", "red", "0px")
+        let circleId = drawCircle({x: txCircle.currentPosition.x, y: txCircle.currentPosition.y}, "5px", "red", "0")
         let circle = $(`#${circleId}`)
         let clone =  Object.assign({}, txCircle)
         clone.circle = circle
@@ -151,7 +164,7 @@ let NetworkMonitor = function(config) {
 
     const drawCircle = function(position, radius, fill, stroke) {
         let circleId = `abc${(Date.now() * Math.random() * 100).toFixed(0)}xyz`
-        let circleSVG = `<circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="${stroke}" fill="${fill}" id="${circleId}" class="request-node"/>`
+        let circleSVG = `<circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" class="request-node"/>`
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
         return circleId
     }
@@ -198,13 +211,163 @@ let NetworkMonitor = function(config) {
         }, 500)
     }
 
-    const calculateNetworkPosition = function(nodeId) {
+    const calculateNetworkPosition = function(node) {
         const maxId = 100000
-        let degree = 270 - (nodeId / maxId) * 360
+        let degree = 360 - (node.nodeId / maxId) * 360
+        // let degree = 0
+        // let degreeRange = calculateDegreeRange(degree)
+
+        let nodeList = nodes
+            .filter(node => node.degree !== undefined)
+
+        if (nodeList.length > 0) {
+            let isOverlap = true
+            let i = 0
+            // while (isOverlap && i < 5000) {
+                let nearestNodes = getNearestNode(degree)
+                console.log(nearestNodes)
+                isOverlap = checkOverlap(degree, nearestNodes.degree)
+
+                // if (!isOverlap) break
+
+                let leftOverlap
+                let rightOverlap
+
+                if(nearestNodes.leftNode.length > 0 && nearestNodes.rightNode.length === 0) {
+                    leftOverlap = checkOverlap(degree, nearestNodes.leftNode[0].degree)
+                    console.log(`Is left overlap: ${leftOverlap}`)
+                    nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
+                    degree = degree + (alpha / 2)
+                } else if(nearestNodes.leftNode.length === 0 && nearestNodes.rightNode.length > 0) {
+                    nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
+                    degree = degree + (-alpha / 2)
+                } else if(nearestNodes.leftNode.length > 0 && nearestNodes.rightNode.length > 0) {
+                    leftOverlap = checkOverlap(degree, nearestNodes.leftNode[0].degree)
+                    rightOverlap = checkOverlap(degree, nearestNodes.rightNode[0].degree)
+                    console.log(`Is left overlap: ${leftOverlap}`)
+                    console.log(`Is right overlap: ${rightOverlap}`)
+                    if(leftOverlap && rightOverlap) {
+                        nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
+                       nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
+                    } else if (leftOverlap && !rightOverlap) {
+                        nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
+                        nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
+                        degree = degree + (alpha / 2)
+                    } else if (!leftOverlap && rightOverlap) {
+                        nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
+                        nearestNodes.rightNode.forEach(right => shiftNearestNode(right, -alpha/2))
+                        degree = degree + (-alpha / 2)
+                    }
+                    // degree = degree + (alpha / 2)
+                }
+                // shiftNearestNode(node, alpha)
+                if (degree > 360) degree -= 360
+
+                // console.log(nodeList.map(n => n.degree))
+                // console.log(`Degree for new node: ${degree}`)
+                // console.log(`Nearest node degree is ${nearestNode.degree}`)
+                // console.log(`Alpha value is: ${alpha}`)
+                // console.log(`Will overlap: ${isOverlap}`)
+                // console.log(`Degree is shifted to ${degree}`)
+                i += 1
+            // }
+        }
+
         let radian = degree *  Math.PI / 180;
         let x = R * Math.cos(radian) + X
         let y = R * Math.sin(radian) + Y
-        return {x, y}
+        node.degree = degree
+        return {x, y, degree}
+    }
+
+    const shiftNearestNode = function(node, shiftDegree) {
+        let degree = node.degree + shiftDegree
+        let radian = degree *  Math.PI / 180;
+        let x = R * Math.cos(radian) + X
+        let y = R * Math.sin(radian) + Y
+
+        let initialX = node.initialPosition.x
+        let initialY = node.initialPosition.y
+        let travelX
+        let travelY
+
+        
+        let circleStyler = styler(node.circle)
+
+        let animationStartX = node.currentPosition.x - initialX
+        let animationStartY = node.currentPosition.y - initialY
+
+        travelX = x - node.currentPosition.x
+        travelY = y - node.currentPosition.y
+
+        // console.log(`Shifted degree is ${degree}`)
+        // console.log(initialX, initialY)
+        // console.log(node.currentPosition.x, node.currentPosition.y)
+        // console.log(x, y)
+        // console.log(animationStartX, animationStartY)
+        // console.log(travelX, travelY)
+
+        tween({
+            from: { x: animationStartX, y: animationStartY},
+            to: { x: animationStartX + travelX, y: animationStartY + travelY},
+            duration: 500,
+        }).start(circleStyler.set)
+        node.currentPosition.x = x
+        node.currentPosition.y = y
+        node.degree = degree
+    }
+
+    const calculateDegreeRange = function(degree) {
+        let r = config.nodeRadius
+        let alpha = 2 * Math.asin(r / R) * (180 / Math.PI)
+        console.log(`degree is ${degree}`)
+        console.log(`alpha is ${alpha}`)
+        degree -= (alpha) - 0.1
+        let radian = degree *  Math.PI / 180;
+        let x = R * Math.cos(radian) + X
+        let y = R * Math.sin(radian) + Y
+        drawCircle({x, y}, r, 'red', 2)
+    }
+
+    const getNearestNode = function(degree) {
+        let nodeList = nodes
+            .filter(node => node.degree !== undefined)
+            .sort((a, b) => Math.abs(a.degree - degree) - Math.abs(b.degree - degree))
+        console.log(nodeList.map(n => n.degree))
+        let leftNode
+        let rightNode
+        if (nodeList.length > 0) {
+            // for (let i = 0; i < nodeList.length; i += 1) {
+            //     if (nodeList[i].degree <= degree) {
+            //         leftNode = nodeList[i]
+            //         break
+            //     }
+            // }
+            // for (let i = 0; i < nodeList.length; i += 1) {
+            //     if (nodeList[i].degree > degree) {
+            //         rightNode = nodeList[i]
+            //         break
+            //     }
+            // }
+            leftNode = nodeList.filter(n => n.degree <= degree)
+            rightNode = nodeList.filter(n => n.degree > degree)
+            return {
+                leftNode, rightNode
+            }
+        }
+    }
+
+    const checkOverlap = function(degree, nearestDegree) {
+        if (degree === nearestDegree) {
+            return true
+        } else if (degree > nearestDegree) {
+            if (degree - alpha < nearestDegree) return true
+            else return false
+        } else if (degree < nearestDegree) {
+            if (degree + alpha > nearestDegree) return true
+            else return false
+        }
+        return false
     }
 
     const drawNetworkCycle = function(R, X, Y) {
