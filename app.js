@@ -16,17 +16,14 @@ window.$ = function(selector) { // shorthand for document selector
 
 let { tween, styler, listen, pointer, timeline } = window.popmotion
 
-let NetworkMonitor = function() {
-
+let NetworkMonitor = function(config) {
     let nodes = []
-
-    let once = { once : true }
-
-    let R = 200
-    let X = 400
-    let Y = 400
+    let R = config.networkCircleRadius || 200
+    let X = config.networkCircleX || 400
+    let Y = config.networkCircleY || 400
 
     const init = function () {
+        drawNetworkCycle(R, X, Y)
         $('.background').addEventListener('click', e => {
             e.stopImmediatePropagation()
             let parentTop = e.target.style.top.split('px')[0]
@@ -35,7 +32,7 @@ let NetworkMonitor = function() {
             var x = event.pageX - parseFloat(parentLeft);
             var y = event.pageY - parseFloat(parentTop);
 
-            let newNode = createNewNode('request', {x, y})
+            let newNode = createNewNode({x, y})
             newNode.circle.addEventListener('click', e => {
                 e.stopImmediatePropagation()
                 
@@ -76,7 +73,6 @@ let NetworkMonitor = function() {
                     let injectedTx = createNewTxCircle(newTx)
                     let circleStyler = styler(injectedTx.circle)
                     let travelDistance = distanceBtnTwoNodes(injectedTx, newNode)
-
                     tween({
                         from: 0,
                         to: { x: travelDistance.x, y: travelDistance.y},
@@ -106,28 +102,25 @@ let NetworkMonitor = function() {
         })
     }
 
-    const createNewNode = function(type, position) {
-        switch(type) {
-            case "request":
-                let circleId = drawCircle(position, "25px", "gray", "2px")
-                let circle = $(`#${circleId}`)
-                let currentPosition = {
-                    x: parseFloat(circle.getAttribute('cx')),
-                    y: parseFloat(circle.getAttribute('cy')),
-                }
-                let node = {
-                    circle: circle,
-                    circleId: circleId,
-                    status: 'request',
-                    currentPosition: currentPosition
-                }
-                return node
+    const createNewNode = function(position) {
+        let circleId = drawCircle(position, config.nodeRadius, "gray", 2)
+        let circle = $(`#${circleId}`)
+        let currentPosition = {
+            x: parseFloat(circle.getAttribute('cx')),
+            y: parseFloat(circle.getAttribute('cy')),
         }
+        let node = {
+            circle: circle,
+            circleId: circleId,
+            status: 'request',
+            currentPosition: currentPosition
+        }
+        return node
     }
 
     const createNewTx = function() {
         return {
-            timestamp: Date.now(),
+            timestamp: Date.now()
         }
     }
 
@@ -150,7 +143,6 @@ let NetworkMonitor = function() {
     const cloneTxCircle = function(txCircle) {
         let circleId = drawCircle({x: txCircle.currentPosition.x, y: txCircle.currentPosition.y}, "5px", "red", "0px")
         let circle = $(`#${circleId}`)
-
         let clone =  Object.assign({}, txCircle)
         clone.circle = circle
         clone.circleId = circleId
@@ -165,24 +157,22 @@ let NetworkMonitor = function() {
     }
 
     const distanceBtnTwoNodes = function(node1, node2) {
-
         return {
             x: node2.currentPosition.x - node1.currentPosition.x,
             y: node2.currentPosition.y - node1.currentPosition.y
         }
     }
 
-    const getRandomNodes = function(num, excludedNode = null) {
+    const getRandomNodes = function(count, excludedNode = null) {
         let nodeList = nodes.filter(n => n.status === 'active')
         let randomNodes = []
+        let n
 
         if (excludedNode) nodeList = nodeList.filter(n => n.circleId !== excludedNode.circleId)
-
         if (nodeList.length === 0) return []
-
-        let n
-        if (nodeList.length < num) n = nodeList.length
-        else n = num
+        
+        if (nodeList.length < count) n = nodeList.length
+        else n = count
 
         for (let i = 0; i < n; i += 1) {
             let item = nodeList[Math.floor(Math.random() * nodeList.length)]
@@ -193,7 +183,6 @@ let NetworkMonitor = function() {
     }
 
     const forwardInjectedTx = function(injectedTx, targetNode) {
-        
         let clone = cloneTxCircle(injectedTx)
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode)
@@ -216,7 +205,15 @@ let NetworkMonitor = function() {
         let x = R * Math.cos(radian) + X
         let y = R * Math.sin(radian) + Y
         return {x, y}
+    }
 
+    const drawNetworkCycle = function(R, X, Y) {
+        let networkHTML = `
+        <svg height="100%" width="100%" class="background" style="top: 0px; left: 0px">
+            <circle cx="${X}" cy="${Y}" r="${R}" stroke="green" stroke-width="3" fill="#f1f1f1" id="networkCircle"/>
+        </svg>
+        `
+        $('#app').innerHTML = networkHTML
     }
 
     init()
