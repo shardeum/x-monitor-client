@@ -42,10 +42,9 @@ let NetworkMonitor = function() {
                 if (newNode.status === 'request') {
                     newNode.nodeId = (Math.random() * 100000).toFixed(0)
                     newNode.circle.setAttribute('fill', '#f9cb35')
-                    let degree = Math.random() * 360
-                    let radian = degree *  Math.PI / 180;
-                    let x = R * Math.cos(radian) + X
-                    let y = R * Math.sin(radian) + Y
+                    let networkPosition = calculateNetworkPosition(newNode.nodeId)
+                    let x = networkPosition.x
+                    let y = networkPosition.y
                     let currentX = newNode.circle.getAttribute('cx')
                     let currentY = newNode.circle.getAttribute('cy')
                     let travelX
@@ -208,6 +207,16 @@ let NetworkMonitor = function() {
         setTimeout(() => {
             clone.circle.remove()
         }, 500)
+    }
+
+    const calculateNetworkPosition = function(nodeId) {
+        const maxId = 100000
+        let degree = 270 - (nodeId / maxId) * 360
+        let radian = degree *  Math.PI / 180;
+        let x = R * Math.cos(radian) + X
+        let y = R * Math.sin(radian) + Y
+        return {x, y}
+
     }
 
     init()
