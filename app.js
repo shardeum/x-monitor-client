@@ -215,62 +215,83 @@ let NetworkMonitor = function(config) {
         const maxId = 100000
         let degree = 360 - (node.nodeId / maxId) * 360
         // let degree = 0
-        // let degreeRange = calculateDegreeRange(degree)
 
         let nodeList = nodes
             .filter(node => node.degree !== undefined)
 
         if (nodeList.length > 0) {
             let isOverlap = true
-            let i = 0
-            // while (isOverlap && i < 5000) {
-                let nearestNodes = getNearestNode(degree)
-                console.log(nearestNodes)
-                isOverlap = checkOverlap(degree, nearestNodes.degree)
+            let nearestNodes = getNearestNode(degree)
+            isOverlap = checkOverlap(degree, nearestNodes.degree)
 
-                // if (!isOverlap) break
+            let leftOverlap
+            let rightOverlap
 
-                let leftOverlap
-                let rightOverlap
-
-                if(nearestNodes.leftNode.length > 0 && nearestNodes.rightNode.length === 0) {
-                    leftOverlap = checkOverlap(degree, nearestNodes.leftNode[0].degree)
-                    console.log(`Is left overlap: ${leftOverlap}`)
-                    nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
-                    degree = degree + (alpha / 2)
-                } else if(nearestNodes.leftNode.length === 0 && nearestNodes.rightNode.length > 0) {
-                    nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
-                    degree = degree + (-alpha / 2)
-                } else if(nearestNodes.leftNode.length > 0 && nearestNodes.rightNode.length > 0) {
-                    leftOverlap = checkOverlap(degree, nearestNodes.leftNode[0].degree)
-                    rightOverlap = checkOverlap(degree, nearestNodes.rightNode[0].degree)
-                    console.log(`Is left overlap: ${leftOverlap}`)
-                    console.log(`Is right overlap: ${rightOverlap}`)
-                    if(leftOverlap && rightOverlap) {
-                        nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
-                       nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
-                    } else if (leftOverlap && !rightOverlap) {
-                        nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
-                        nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
-                        degree = degree + (alpha / 2)
-                    } else if (!leftOverlap && rightOverlap) {
-                        nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
-                        nearestNodes.rightNode.forEach(right => shiftNearestNode(right, -alpha/2))
-                        degree = degree + (-alpha / 2)
+            if(nearestNodes.leftNode.length > 0 && nearestNodes.rightNode.length === 0) {
+                leftOverlap = checkOverlap(degree, nearestNodes.leftNode[0].degree)
+                nearestNodes.leftNode.forEach(left => shiftNearestNode(left, -alpha/2))
+                degree = degree + (alpha / 2)
+            } else if(nearestNodes.leftNode.length === 0 && nearestNodes.rightNode.length > 0) {
+                nearestNodes.rightNode.forEach(right => shiftNearestNode(right, alpha/2))
+                degree = degree + (-alpha / 2)
+            } else if(nearestNodes.leftNode.length > 0 && nearestNodes.rightNode.length > 0) {
+                leftOverlap = checkOverlap(degree, nearestNodes.leftNode[0].degree)
+                rightOverlap = checkOverlap(degree, nearestNodes.rightNode[0].degree)
+                if(leftOverlap && rightOverlap) {
+                    shiftNearestNode(nearestNodes.leftNode[0], -alpha/2)
+                    for (let i = 1; i < nearestNodes.leftNode.length; i += 1 ) {
+                        let isLeftClash = checkOverlap(nearestNodes.leftNode[i].degree, nearestNodes.leftNode[i - 1].degree)
+                        if (isLeftClash) shiftNearestNode(nearestNodes.leftNode[i], -alpha/2)
                     }
-                    // degree = degree + (alpha / 2)
-                }
-                // shiftNearestNode(node, alpha)
-                if (degree > 360) degree -= 360
 
-                // console.log(nodeList.map(n => n.degree))
-                // console.log(`Degree for new node: ${degree}`)
-                // console.log(`Nearest node degree is ${nearestNode.degree}`)
-                // console.log(`Alpha value is: ${alpha}`)
-                // console.log(`Will overlap: ${isOverlap}`)
-                // console.log(`Degree is shifted to ${degree}`)
-                i += 1
-            // }
+                    shiftNearestNode(nearestNodes.rightNode[0], alpha/2)
+                    for (let i = 1; i < nearestNodes.rightNode.length; i += 1 ) {
+                        let isRightClash = checkOverlap(nearestNodes.rightNode[i].degree, nearestNodes.rightNode[i - 1].degree)
+                        if (isRightClash) shiftNearestNode(nearestNodes.rightNode[i], alpha/2)
+                    }
+
+                } else if (leftOverlap && !rightOverlap) {
+                    shiftNearestNode(nearestNodes.leftNode[0], -alpha/2)
+                    for (let i = 1; i < nearestNodes.leftNode.length; i += 1 ) {
+                        let isLeftClash = checkOverlap(nearestNodes.leftNode[i].degree, nearestNodes.leftNode[i - 1].degree)
+                        if (isLeftClash) shiftNearestNode(nearestNodes.leftNode[i], -alpha/2)
+                    }
+
+                    degree = degree + (alpha / 2)
+
+                    let initialRightClash = checkOverlap(nearestNodes.rightNode[0].degree, degree)
+                    console.log(`initialRightClash is ${initialRightClash}`)
+                    if (initialRightClash) {
+                            shiftNearestNode(nearestNodes.rightNode[0], alpha/2)
+                    }
+
+                    for (let i = 1; i < nearestNodes.rightNode.length; i += 1 ) {
+                        let isRightClash = checkOverlap(nearestNodes.rightNode[i].degree, nearestNodes.rightNode[i - 1].degree)
+                        console.log(`isClash is ${isRightClash}`)
+                        if (isRightClash) shiftNearestNode(nearestNodes.rightNode[i], alpha/2)
+                    }
+                    
+                } else if (!leftOverlap && rightOverlap) {
+                    shiftNearestNode(nearestNodes.rightNode[0], alpha/2)
+                    for (let i = 1; i < nearestNodes.rightNode.length; i += 1 ) {
+                        let isRightClash = checkOverlap(nearestNodes.rightNode[i].degree, nearestNodes.rightNode[i - 1].degree)
+                        if (isRightClash) shiftNearestNode(nearestNodes.rightNode[i], alpha/2)
+                    }
+
+                    degree = degree + (-alpha / 2)
+
+                    let initialLeftClash = checkOverlap(nearestNodes.leftNode[0].degree, degree)
+                    console.log(`initialLeftClash is ${initialLeftClash}`)
+                    if (initialLeftClash) {
+                            shiftNearestNode(nearestNodes.leftNode[0], -alpha/2)
+                    }
+                    for (let i = 1; i < nearestNodes.leftNode.length; i += 1 ) {
+                        let isLeftClash = checkOverlap(nearestNodes.leftNode[i].degree, nearestNodes.leftNode[i - 1].degree)
+                        if (isLeftClash) shiftNearestNode(nearestNodes.leftNode[i], -alpha/2)
+                    }
+                }
+            }
+            if (degree > 360) degree -= 360
         }
 
         let radian = degree *  Math.PI / 180;
@@ -333,22 +354,9 @@ let NetworkMonitor = function(config) {
         let nodeList = nodes
             .filter(node => node.degree !== undefined)
             .sort((a, b) => Math.abs(a.degree - degree) - Math.abs(b.degree - degree))
-        console.log(nodeList.map(n => n.degree))
         let leftNode
         let rightNode
         if (nodeList.length > 0) {
-            // for (let i = 0; i < nodeList.length; i += 1) {
-            //     if (nodeList[i].degree <= degree) {
-            //         leftNode = nodeList[i]
-            //         break
-            //     }
-            // }
-            // for (let i = 0; i < nodeList.length; i += 1) {
-            //     if (nodeList[i].degree > degree) {
-            //         rightNode = nodeList[i]
-            //         break
-            //     }
-            // }
             leftNode = nodeList.filter(n => n.degree <= degree)
             rightNode = nodeList.filter(n => n.degree > degree)
             return {
