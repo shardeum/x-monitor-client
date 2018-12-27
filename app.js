@@ -14,15 +14,11 @@ window.$ = function(selector) { // shorthand for document selector
     return elements
 }
 
-let { tween, styler, listen, pointer } = popmotion
+let { tween, styler, listen, pointer, timeline } = window.popmotion
 
 let NetworkMonitor = function() {
 
-    let nodes = {
-        requests: [],
-        syncing: [],
-        active: []
-    }
+    let nodes = []
 
     let once = { once : true }
 
@@ -66,18 +62,43 @@ let NetworkMonitor = function() {
                         duration: 1000,
                     }).start(circleStyler.set)
                     newNode.status = 'syncing'
+                    newNode.currentPosition.x += travelX
+                    newNode.currentPosition.y += travelY
                 } else if (newNode.status === 'syncing') {
                     let circleStyler = styler(newNode.circle)
                     newNode.status = 'active'
-                    console.log(newNode)
                     tween({
                         from: { fill: '#f9cb35' },
                         to: { fill: '#4caf50' },
                         duration: 500,
                     }).start(circleStyler.set)
+                } else if (newNode.status === 'active') {
+                    let newTx = createNewTx()
+                    let injectedTx = createNewTxCircle(newTx)
+                    let circleStyler = styler(injectedTx.circle)
+                    let travelDistance = distanceBtnTwoNodes(injectedTx, newNode)
+
+                    tween({
+                        from: 0,
+                        to: { x: travelDistance.x, y: travelDistance.y},
+                        duration: 500,
+                    }).start(circleStyler.set)
+
+                    setTimeout(() => {
+                        injectedTx.currentPosition.x += travelDistance.x
+                        injectedTx.currentPosition.y += travelDistance.y
+
+                        let randomNodes = getRandomNodes(2, newNode)
+
+                        for (let i = 0; i < randomNodes.length; i += 1) {
+                            forwardInjectedTx(injectedTx, randomNodes[i])
+                        }
+                        injectedTx.circle.remove()    
+                    }, 500)
+                    
                 }
             })
-            nodes.requests.push(newNode)
+            nodes.push(newNode)
         })
         
         $('#networkCircle').addEventListener('click', e => {
@@ -91,21 +112,102 @@ let NetworkMonitor = function() {
             case "request":
                 let circleId = drawCircle(position, "30px", "gray", "2px")
                 let circle = $(`#${circleId}`)
+                let currentPosition = {
+                    x: parseFloat(circle.getAttribute('cx')),
+                    y: parseFloat(circle.getAttribute('cy')),
+                }
                 let node = {
                     circle: circle,
                     circleId: circleId,
-                    status: 'request'
+                    status: 'request',
+                    currentPosition: currentPosition
                 }
                 return node
         }
     }
 
+    const createNewTx = function() {
+        return {
+            timestamp: Date.now(),
+        }
+    }
+
+    const createNewTxCircle = function(inputTx) {
+        let circleId = drawCircle({x: 0, y: 0}, "5px", "red", "0px")
+        let circle = $(`#${circleId}`)
+        let currentPosition = {
+            x: parseFloat(circle.getAttribute('cx')),
+            y: parseFloat(circle.getAttribute('cy')),
+        }
+        let tx = {
+            circle: circle,
+            circleId: circleId,
+            currentPosition,
+            data: inputTx
+        }
+        return tx
+    }
+
+    const cloneTxCircle = function(txCircle) {
+        let circleId = drawCircle({x: txCircle.currentPosition.x, y: txCircle.currentPosition.y}, "5px", "red", "0px")
+        let circle = $(`#${circleId}`)
+
+        let clone =  Object.assign({}, txCircle)
+        clone.circle = circle
+        clone.circleId = circleId
+        return clone
+    }
+
     const drawCircle = function(position, radius, fill, stroke) {
-        let circleId = `abc${Date.now()}xyz`
-        console.log(position)
+        let circleId = `abc${(Date.now() * Math.random() * 100).toFixed(0)}xyz`
         let circleSVG = `<circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="${stroke}" fill="${fill}" id="${circleId}" class="request-node"/>`
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
         return circleId
+    }
+
+    const distanceBtnTwoNodes = function(node1, node2) {
+
+        return {
+            x: node2.currentPosition.x - node1.currentPosition.x,
+            y: node2.currentPosition.y - node1.currentPosition.y
+        }
+    }
+
+    const getRandomNodes = function(num, excludedNode = null) {
+        let nodeList = nodes.filter(n => n.status === 'active')
+        let randomNodes = []
+
+        if (excludedNode) nodeList = nodeList.filter(n => n.circleId !== excludedNode.circleId)
+
+        if (nodeList.length === 0) return []
+
+        let n
+        if (nodeList.length < num) n = nodeList.length
+        else n = num
+
+        for (let i = 0; i < n; i += 1) {
+            let item = nodeList[Math.floor(Math.random() * nodeList.length)]
+            randomNodes.push(item)
+            nodeList = nodeList.filter(n => n.circleId !== item.circleId)
+        }
+        return randomNodes
+    }
+
+    const forwardInjectedTx = function(injectedTx, targetNode) {
+        
+        let clone = cloneTxCircle(injectedTx)
+        let circleStyler = styler(clone.circle)
+        let travelDistance = distanceBtnTwoNodes(clone, targetNode)
+   
+        tween({
+            from: 0,
+            to: { x: travelDistance.x, y: travelDistance.y},
+            duration: 500,
+        }).start(circleStyler.set)
+
+        setTimeout(() => {
+            clone.circle.remove()
+        }, 500)
     }
 
     init()
