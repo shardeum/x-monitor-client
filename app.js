@@ -110,7 +110,7 @@ let NetworkMonitor = function() {
     const createNewNode = function(type, position) {
         switch(type) {
             case "request":
-                let circleId = drawCircle(position, "30px", "gray", "2px")
+                let circleId = drawCircle(position, "25px", "gray", "2px")
                 let circle = $(`#${circleId}`)
                 let currentPosition = {
                     x: parseFloat(circle.getAttribute('cx')),
