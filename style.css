@@ -1,4 +1,20 @@
+body {
+    background: #f5f3f3;
+}
+
 .background {
     display: block;
     margin: 0 auto;
 }
+
+#reset-report {
+    height: 40px;
+    border: none;
+    border-radius: 5px;
+    padding: 0px 15px;
+    background: #f55555;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0px 3px 5px #b3b3b3;
+}
+

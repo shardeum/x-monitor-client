@@ -1,14 +1,4 @@
-/*
-
-- Start the page with just a large green circle outline.
-- When the user clicks outside the circle create a new gray node there.
-- When the user clicks on a gray node randomly assign it a node id (two byte) and move it - - to the green circle and change the color to yellow.
-- When the user clicks on a yellow node change the node to active and make it green.
-
-When the user clicks on a green node show a transaction coming from outside the large circle to the node and then the node sending the tx to up to 2 other randomly picked nodes that are active (green).
-*/
-
-window.$ = function(selector) { // shorthand for document selector
+window.$ = function(selector) { // shorthand for query selector
     let elements = document.querySelectorAll(selector)
     if (elements.length === 1) return elements[0]
     return elements
@@ -16,123 +6,204 @@ window.$ = function(selector) { // shorthand for document selector
 
 let { tween, styler, listen, pointer, timeline } = window.popmotion
 
-
 let NetworkMonitor = function(config) {
-    
     let G = {} // semi-global namespace
     G.nodes = []
     G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    G.VH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    G.VH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
     G.R = config.networkCircleRadius || 200
     G.X = config.networkCircleX || G.VW / 2
     G.Y = config.networkCircleY || G.VH / 2
-    
-    G.maxId = 100000
-
-    const init = function () {
-        drawNetworkCycle(G.R, G.X, G.Y)
-        $('.background').addEventListener('click', e => {
-            e.stopImmediatePropagation()
-            let parentTop = e.target.style.top.split('px')[0]
-            let parentLeft = e.target.style.left.split('px')[0]
-
-            var x = event.pageX - parseFloat(parentLeft);
-            var y = event.pageY - parseFloat(parentTop);
-
-            let newNode = createNewNode({x, y})
-
-            let circleStyler = styler(newNode.circle)
-
-            newNode.circle.addEventListener('click', e => {
-                e.stopImmediatePropagation()
-                
-                if (newNode.status === 'request') {
-                    newNode.nodeId = (Math.random() * G.maxId).toFixed(0)
-                    newNode.circle.setAttribute('fill', '#f9cb35')
-                    let networkPosition = calculateNetworkPosition(newNode.nodeId)
-                    newNode.despos = networkPosition.degree  // set the desired position of the node
-                    let x = networkPosition.x
-                    let y = networkPosition.y
-                    let initialX = parseFloat(newNode.circle.getAttribute('cx'))
-                    let initialY = parseFloat(newNode.circle.getAttribute('cy'))
-                    let travelX
-                    let travelY
-
-                    travelX = x - initialX
-                    travelY = y - initialY
-
-                    let circleStyler = styler(newNode.circle)
-
-                    tween({
-                        from: 0,
-                        to: { x: travelX, y: travelY},
-                        duration: 1000,
-                    }).start(circleStyler.set)
-                    newNode.status = 'syncing'
-                    newNode.initialPosition = {
-                        x: initialX,
-                        y: initialY
-                    }
-                    newNode.currentPosition = {
-                        x: x,
-                        y: y
-                    }
-                    newNode.degree = networkPosition.degree
-                    setTimeout(() => {
-                        adjustNodePosition()
-                    }, 1000)
-                } else if (newNode.status === 'syncing') {
-                    let circleStyler = styler(newNode.circle)
-                    newNode.status = 'active'
-                    tween({
-                        from: { fill: '#f9cb35' },
-                        to: { fill: '#4caf50' },
-                        duration: 500,
-                    }).start(circleStyler.set)
-                } else if (newNode.status === 'active') {
-                    let newTx = createNewTx()
-                    let injectedTx = createNewTxCircle(newTx, newNode)
-                    let circleStyler = styler(injectedTx.circle)
-                    let travelDistance = distanceBtnTwoNodes(injectedTx, newNode)
-                    tween({
-                        from: 0,
-                        to: { x: travelDistance.x, y: travelDistance.y},
-                        duration: 500,
-                    }).start(circleStyler.set)
-
-                    setTimeout(() => {
-                        injectedTx.currentPosition.x += travelDistance.x
-                        injectedTx.currentPosition.y += travelDistance.y
-                        let randomNodes = getRandomNodes(50, newNode)
-                        for (let i = 0; i < randomNodes.length; i += 1) {
-                            forwardInjectedTx(injectedTx, randomNodes[i])
-                        }
-                        injectedTx.circle.remove()    
-                    }, 500)
-                }
-            })
-            G.nodes.push(newNode)
-        })
-        
-        $('#networkCircle').addEventListener('click', e => {
-            e.stopImmediatePropagation()
-            console.log('clicked on network circle')
-        })
+    G.monitorServerUrl = config.monitorServerUrl || `https://tn1.shardus.com:3000/api`
+    G.maxId = parseInt('ffff', 16)
+    G.joining = {}
+    G.syncing = {}
+    G.active = {}
+    G.colors = {
+        'joining': '#999',
+        'syncing': '#f9cb35',
+        'active': '#16c716'
     }
 
-    const createNewNode = function(position) {
-        let circleId = drawCircle(position, config.nodeRadius, "gray", 2)
-        let circle = $(`#${circleId}`)
-        let currentPosition = {
-            x: parseFloat(circle.getAttribute('cx')),
-            y: parseFloat(circle.getAttribute('cy')),
+    const init = async function () {
+        drawNetworkCycle(G.R, G.X, G.Y)
+        $('#reset-report').addEventListener('click', flushReport)
+        
+        let updateReportInterval = setInterval(async () => {
+            let report = await getReport()
+            // console.log(`Report`, Object.keys(report.joining).length, Object.keys(report.syncing).length, Object.keys(report.active).length)
+            // console.log(`Global`, Object.keys(G.joining).length, Object.keys(G.syncing).length, Object.keys(G.active).length)
+
+            for(let publicKey in report.joining) {
+                if (!G.joining[publicKey]) {
+                    G.joining[publicKey] = createNewNode('joining', publicKey)
+                }
+            }
+
+            for(let nodeId in report.syncing) {
+                let publicKey = report.syncing[nodeId]
+                if (!G.syncing[nodeId] && nodeId !== null && nodeId !== 'null') {
+                    if (G.joining[publicKey]) { // syncing node is already drawn as gray circle
+                        console.log(`Syncing node found on joining list...`)
+                        G.syncing[nodeId] = Object.assign({}, G.joining[publicKey], {status: 'syncing', nodeId: nodeId})
+                        delete G.joining[publicKey]
+                        updateUI('joining', 'syncing', publicKey, nodeId)
+                    } else { // syncing node is not drawn as gray circle yet
+                        console.log(`New syncing node`)
+                        G.syncing[nodeId] = createNewNode('syncing', nodeId)
+                        G.syncing[nodeId].nodeId = nodeId
+                        positionNewNodeIntoNetwork('syncing', G.syncing[nodeId])
+                    }
+                }
+            }
+
+            for(let nodeId in report.active) {
+                if (!G.active[nodeId] && nodeId !== null) {
+                    if (G.syncing[nodeId]) { // active node is already drawn as yellow circle
+                        console.log(`Active node found on syncing list...`)
+                        G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {status: 'active', nodeId: nodeId})
+                        delete G.syncing[nodeId]
+                        updateUI('syncing', 'active', null, nodeId)
+                    } else { // syncing node is not drawn as gray circle yet
+                        console.log(`New active node`)
+                        G.active[nodeId] = createNewNode('active', nodeId)
+                        G.active[nodeId].nodeId = nodeId
+                        positionNewNodeIntoNetwork('active', G.active[nodeId])
+                    }
+                }
+            }
+
+        }, 1000)
+
+        // Handle Inject Transaction
+        // let newTx = createNewTx()
+        // let injectedTx = createNewTxCircle(newTx, newNode)
+        // let circleStyler = styler(injectedTx.circle)
+        // let travelDistance = distanceBtnTwoNodes(injectedTx, newNode)
+        // tween({
+        //     from: 0,
+        //     to: { x: travelDistance.x, y: travelDistance.y},
+        //     duration: 500,
+        // }).start(circleStyler.set)
+
+        // setTimeout(() => {
+        //     injectedTx.currentPosition.x += travelDistance.x
+        //     injectedTx.currentPosition.y += travelDistance.y
+        //     let randomNodes = getRandomNodes(50, newNode)
+        //     for (let i = 0; i < randomNodes.length; i += 1) {
+        //         forwardInjectedTx(injectedTx, randomNodes[i])
+        //     }
+        //     injectedTx.circle.remove()    
+        // }, 500)
+   
+    }
+
+    const updateUI = function(previousStatus, currentStatus, publicKey, nodeId) {
+        if (previousStatus === 'joining' && currentStatus === 'syncing') {
+            relocateNode(previousStatus, G.syncing[nodeId])
+        } else if (previousStatus === 'syncing' && currentStatus === 'active') {
+            let node = G.active[nodeId]
+            node.rectangel = drawStateRectangle(node)
+            let circleStyler = styler(node.circle)
+            tween({
+                from: { fill: '#f9cb35' },
+                to: { fill: '#4caf50' },
+                duration: 500,
+            }).start(circleStyler.set)
         }
+    }
+
+    const relocateNode = function(previousStatus, node) {
+        if (previousStatus === 'joining') {
+            node.circle.setAttribute('fill', '#f9cb35')
+            let networkPosition = calculateNetworkPosition(parseInt(node.nodeId.substr(0, 4), 16))
+            node.despos = networkPosition.degree  // set the desired position of the node
+            let x = networkPosition.x
+            let y = networkPosition.y
+            let initialX = parseFloat(node.circle.getAttribute('cx'))
+            let initialY = parseFloat(node.circle.getAttribute('cy'))
+            let travelX
+            let travelY
+    
+            travelX = x - initialX
+            travelY = y - initialY
+            
+            let circleStyler = styler(node.circle)
+    
+            tween({
+                from: 0,
+                to: { x: travelX, y: travelY},
+                duration: 500,
+            }).start(circleStyler.set)
+            node.initialPosition = {
+                x: initialX,
+                y: initialY
+            }
+            node.currentPosition = {
+                x: x,
+                y: y
+            }
+            node.degree = networkPosition.degree
+            setTimeout(() => {
+                adjustNodePosition()
+            }, 500)
+        }
+    }
+
+    const positionNewNodeIntoNetwork = function(currentStatus, node) {
+        if (currentStatus === 'syncing' || currentStatus === 'active') {
+            node.circle.setAttribute('fill', G.colors[currentStatus])
+            let networkPosition = calculateNetworkPosition(parseInt(node.nodeId.substr(0, 4), 16))
+            node.despos = networkPosition.degree  // set the desired position of the node
+            let x = networkPosition.x
+            let y = networkPosition.y
+            let initialX = parseFloat(node.circle.getAttribute('cx'))
+            let initialY = parseFloat(node.circle.getAttribute('cy'))
+            let travelX
+            let travelY
+    
+            travelX = x - initialX
+            travelY = y - initialY
+    
+            let circleStyler = styler(node.circle)
+    
+            tween({
+                from: 0,
+                to: { x: travelX, y: travelY},
+                duration: 1000,
+            }).start(circleStyler.set)
+
+            node.initialPosition = {
+                x: initialX,
+                y: initialY
+            }
+            node.currentPosition = {
+                x: x,
+                y: y
+            }
+            node.degree = networkPosition.degree
+
+            if (currentStatus === 'active') {
+                node.rectangel = drawStateRectangle(node)
+            }
+
+            setTimeout(() => {
+                adjustNodePosition()
+            }, 1100)
+        }
+    }
+
+    const createNewNode = function(type, id) {
+        const position = getRandomPosition()
+        let circleId = drawCircle(position, config.nodeRadius, G.colors[type], 2, id)
+        let circle = $(`#${circleId}`)
         let node = {
             circle: circle,
-            circleId: circleId,
-            status: 'request',
-            currentPosition: currentPosition
+            circleId: id,
+            status: type,
+            currentPosition: position
         }
+        if (type === 'joining') node.publicKey = id
         return node
     }
 
@@ -169,9 +240,30 @@ let NetworkMonitor = function(config) {
         return clone
     }
 
-    const drawCircle = function(position, radius, fill, stroke) {
-        let circleId = `abc${(Date.now() * Math.random() * 100).toFixed(0)}xyz`
-        let circleSVG = `<circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" class="request-node"/>`
+    const drawStateRectangle = function(node) {
+
+        let rectId =`abc${node.nodeId.substr(0, 6)}xyz`
+        let stateRec = makeSVGEl('circle', {
+            id: rectId,
+            cx: node.currentPosition.x,
+            cy: node.currentPosition.y,
+            r: config.nodeRadius / 4,
+            fill: `#F62BE2`
+        })
+        let group = node.circle.parentNode
+        group.appendChild(stateRec)
+        return $(`#${rectId}`)
+    }
+
+    const drawCircle = function(position, radius, fill, stroke, id) {
+        let circleId =`abc${id.substr(0, 4)}xyz`
+        if(id) circleId = `abc${id.substr(0, 4)}xyz`
+        else circleId = `abc${Date.now()}xyz`
+        let circleSVG = `
+        <g>
+            <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node"/>
+        </g>
+        `
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
         return circleId
     }
@@ -225,8 +317,10 @@ let NetworkMonitor = function(config) {
     }
 
     const adjustNodePosition = function() {
-        let nodeList = G.nodes
-            .filter(node => node.degree !== undefined)
+        let syncingNodes = Object.values(G.syncing)
+        let activeNodes = Object.values(G.active)
+        let nodes = syncingNodes.concat(activeNodes)
+        let nodeList = nodes.filter(node => node.degree !== undefined)
         for (let i = 0; i < nodeList.length; i++) {
           nodeList[i].newpos = nodeList[i].despos
         }
@@ -265,6 +359,7 @@ let NetworkMonitor = function(config) {
     }
 
     const shiftNearestNode = function(node, newDegree) {  // new degree instead of delta
+
         let degree = newDegree
         let radian = degree *  Math.PI / 180;
         let x = G.R * Math.cos(radian) + G.X
@@ -276,18 +371,41 @@ let NetworkMonitor = function(config) {
         let travelY
 
         let circleStyler = styler(node.circle)
-
+    
         let animationStartX = node.currentPosition.x - initialX
         let animationStartY = node.currentPosition.y - initialY
 
         travelX = x - node.currentPosition.x
         travelY = y - node.currentPosition.y
 
+        if (travelX === 0 && travelY === 0) {
+            return
+        }
+
+        if (node.status === 'active') {
+            let initialX = node.rectangel.getAttribute('cx')
+            let initialY = node.rectangel.getAttribute('cy')
+
+            let animationStartX = node.currentPosition.x - initialX
+            let animationStartY = node.currentPosition.y - initialY
+
+            travelX = x - node.currentPosition.x
+            travelY = y - node.currentPosition.y
+
+            let rectangelStyler = styler(node.rectangel)
+            tween({
+                from: { x: animationStartX, y: animationStartY},
+                to: { x: animationStartX + travelX , y: animationStartY + travelY },
+                duration: 500,
+            }).start(rectangelStyler.set)
+        }
+
         tween({
             from: { x: animationStartX, y: animationStartY},
             to: { x: animationStartX + travelX, y: animationStartY + travelY},
             duration: 500,
         }).start(circleStyler.set)
+
         node.currentPosition.x = x
         node.currentPosition.y = y
         node.degree = degree
@@ -295,11 +413,41 @@ let NetworkMonitor = function(config) {
     
     const drawNetworkCycle = function(R, X, Y) {
         let networkHTML = `
+        <button id="reset-report">Reset Report</button>
         <svg height="100%" width="100%" class="background" style="top: 0px; left: 0px">
             <circle cx="${X}" cy="${Y}" r="${R}" stroke="green" stroke-width="1" fill="#ffffff" id="networkCircle"/>
         </svg>
         `
         $('#app').innerHTML = networkHTML
+    }
+
+    const getReport = async function() {
+        let response = await axios.get(`${G.monitorServerUrl}/report`)
+        return response.data
+    }
+
+    const flushReport = async function() {
+        let response = await axios.get(`${G.monitorServerUrl}/flush`)
+        document.location.reload()
+    }
+
+    const getRandomPosition = function() {
+        let randomAngle = Math.random() * 360
+        let maxRadius
+        if (G.VW < G.VH) maxRadius = G.VW / 2 - config.nodeRadius
+        else maxRadius = G.VH / 2 - config.nodeRadius
+        let randomRadius = Math.random() * (maxRadius - G.R) + G.R + 50
+        let x = randomRadius * Math.sin(randomAngle)
+        let y = randomRadius * Math.cos(randomAngle)
+        return {x: x + G.X, y: y + G.Y}
+    }
+
+    const makeSVGEl = function (tag, attrs) {
+        var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (var k in attrs) {
+          el.setAttribute(k, attrs[k]);
+        }
+        return el;
     }
 
     init()
