@@ -24,7 +24,7 @@ let NetworkMonitor = function(config) {
         'syncing': '#f9cb35',
         'active': '#16c716'
     }
-    G.txAnimationSpeed = 1000
+    G.txAnimationSpeed = 400
 
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
@@ -71,20 +71,23 @@ let NetworkMonitor = function(config) {
                 }
                 G.active[nodeId].appState = report.active[nodeId].appState
                 G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
-                G.active[nodeId].tpsInjected = report.active[nodeId].tpsInjected
-                G.active[nodeId].tpsApplied = report.active[nodeId].tpsApplied
+                G.active[nodeId].txInjected = report.active[nodeId].txInjected
+                G.active[nodeId].txApplied = report.active[nodeId].txApplied
+                G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
             } 
             updateTables()
             injectTransactions()
+            updateStateCircle()
         }, 2000)
     }
 
     const injectTransactions = function() {
         for (let nodeId in G.active) {
             let node = G.active[nodeId]
-            let tps = node.tpsInjected
+            let txs = node.txInjected
+            let interval = node.reportInterval * 1000
 
-            if (!tps || tps === 0) continue
+            if (!txs || txs === 0) continue
             let injectInterval = setInterval(() => {
                 let newTx = createNewTx()
                 let injectedTx = createNewTxCircle(newTx, node)
@@ -104,7 +107,7 @@ let NetworkMonitor = function(config) {
                     }
                     injectedTx.circle.remove()    
                 }, G.txAnimationSpeed)
-            }, Math.floor(1000 / tps))
+            }, Math.floor(interval / txs))
         }
     }
 
@@ -113,7 +116,7 @@ let NetworkMonitor = function(config) {
             relocateNode(previousStatus, G.syncing[nodeId])
         } else if (previousStatus === 'syncing' && currentStatus === 'active') {
             let node = G.active[nodeId]
-            node.rectangel = drawStateRectangle(node)
+            node.rectangel = drawStateCircle(node)
             let circleStyler = styler(node.circle)
             tween({
                 from: { fill: '#f9cb35' },
@@ -137,6 +140,25 @@ let NetworkMonitor = function(config) {
         if (Object.keys(G.active).length > 0) {
             let currentCycleMarker = G.active[Object.keys(G.active)[0]].cycleMarker
             $('#current-cyclemarker').innerHTML = `${currentCycleMarker.slice(0,4)}...${currentCycleMarker.slice(59,63)}`
+        }
+    }
+
+    const updateStateCircle = function(previousStatus, currentStatus, publicKey, nodeId) {
+        for (let nodeId in G.active) {
+            let node = G.active[nodeId]
+            if (!node.appState) return
+
+            if (node.rectangel) {
+                // update state color
+                let circleStyler = styler(node.rectangel)
+                tween({
+                    from: { fill: `${G.colors['active']}` },
+                    to: { fill: `#${node.appState.slice(0, 6)}` },
+                    duration: 500,
+                }).start(circleStyler.set)
+            } else {
+                node.rectangel = drawStateCircle(node)
+            }
         }
     }
 
@@ -211,7 +233,7 @@ let NetworkMonitor = function(config) {
             node.degree = networkPosition.degree
 
             if (currentStatus === 'active') {
-                node.rectangel = drawStateRectangle(node)
+                node.rectangel = drawStateCircle(node)
             }
 
             setTimeout(() => {
@@ -267,7 +289,8 @@ let NetworkMonitor = function(config) {
         return clone
     }
 
-    const drawStateRectangle = function(node) {
+    const drawStateCircle = function(node) {
+        if(!node.appState) return
 
         let rectId =`abc${node.nodeId.substr(0, 6)}xyz`
         let stateRec = makeSVGEl('circle', {
@@ -275,7 +298,7 @@ let NetworkMonitor = function(config) {
             cx: node.currentPosition.x,
             cy: node.currentPosition.y,
             r: config.nodeRadius / 4,
-            fill: `#F62BE2`
+            fill: `#${node.appState.slice(0, 6)}`
         })
         let group = node.circle.parentNode
         group.appendChild(stateRec)
