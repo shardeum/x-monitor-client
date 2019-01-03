@@ -24,6 +24,7 @@ let NetworkMonitor = function(config) {
         'syncing': '#f9cb35',
         'active': '#16c716'
     }
+    G.txAnimationSpeed = 1000
 
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
@@ -31,9 +32,6 @@ let NetworkMonitor = function(config) {
         
         let updateReportInterval = setInterval(async () => {
             let report = await getReport()
-            // console.log(`Report`, Object.keys(report.joining).length, Object.keys(report.syncing).length, Object.keys(report.active).length)
-            // console.log(`Global`, Object.keys(G.joining).length, Object.keys(G.syncing).length, Object.keys(G.active).length)
-
             for(let publicKey in report.joining) {
                 if (!G.joining[publicKey]) {
                     G.joining[publicKey] = createNewNode('joining', publicKey)
@@ -61,7 +59,7 @@ let NetworkMonitor = function(config) {
                 if (!G.active[nodeId] && nodeId !== null) {
                     if (G.syncing[nodeId]) { // active node is already drawn as yellow circle
                         console.log(`Active node found on syncing list...`)
-                        G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {status: 'active', nodeId: nodeId})
+                        G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {status: 'active', nodeId: nodeId })
                         delete G.syncing[nodeId]
                         updateUI('syncing', 'active', null, nodeId)
                     } else { // syncing node is not drawn as gray circle yet
@@ -71,31 +69,43 @@ let NetworkMonitor = function(config) {
                         positionNewNodeIntoNetwork('active', G.active[nodeId])
                     }
                 }
-            }
+                G.active[nodeId].appState = report.active[nodeId].appState
+                G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+                G.active[nodeId].tpsInjected = report.active[nodeId].tpsInjected
+                G.active[nodeId].tpsApplied = report.active[nodeId].tpsApplied
+            } 
+            updateTables()
+            injectTransactions()
+        }, 2000)
+    }
 
-        }, 1000)
+    const injectTransactions = function() {
+        for (let nodeId in G.active) {
+            let node = G.active[nodeId]
+            let tps = node.tpsInjected
 
-        // Handle Inject Transaction
-        // let newTx = createNewTx()
-        // let injectedTx = createNewTxCircle(newTx, newNode)
-        // let circleStyler = styler(injectedTx.circle)
-        // let travelDistance = distanceBtnTwoNodes(injectedTx, newNode)
-        // tween({
-        //     from: 0,
-        //     to: { x: travelDistance.x, y: travelDistance.y},
-        //     duration: 500,
-        // }).start(circleStyler.set)
-
-        // setTimeout(() => {
-        //     injectedTx.currentPosition.x += travelDistance.x
-        //     injectedTx.currentPosition.y += travelDistance.y
-        //     let randomNodes = getRandomNodes(50, newNode)
-        //     for (let i = 0; i < randomNodes.length; i += 1) {
-        //         forwardInjectedTx(injectedTx, randomNodes[i])
-        //     }
-        //     injectedTx.circle.remove()    
-        // }, 500)
-   
+            if (!tps || tps === 0) continue
+            let injectInterval = setInterval(() => {
+                let newTx = createNewTx()
+                let injectedTx = createNewTxCircle(newTx, node)
+                let circleStyler = styler(injectedTx.circle)
+                let travelDistance = distanceBtnTwoNodes(injectedTx, node)
+                tween({
+                    from: 0,
+                    to: { x: travelDistance.x, y: travelDistance.y},
+                    duration: G.txAnimationSpeed,
+                }).start(circleStyler.set)
+                setTimeout(() => {
+                    injectedTx.currentPosition.x += travelDistance.x
+                    injectedTx.currentPosition.y += travelDistance.y
+                    let randomNodes = getRandomNodes(50, node)
+                    for (let i = 0; i < randomNodes.length; i += 1) {
+                        forwardInjectedTx(injectedTx, randomNodes[i])
+                    }
+                    injectedTx.circle.remove()    
+                }, G.txAnimationSpeed)
+            }, Math.floor(1000 / tps))
+        }
     }
 
     const updateUI = function(previousStatus, currentStatus, publicKey, nodeId) {
@@ -110,6 +120,23 @@ let NetworkMonitor = function(config) {
                 to: { fill: '#4caf50' },
                 duration: 500,
             }).start(circleStyler.set)
+        }
+    }
+
+    const updateTables = function() {
+        let totalJoining = Object.keys(G.joining).length
+        let totalSyncing = Object.keys(G.syncing).length
+        let totalActive = Object.keys(G.active).length
+        let total = totalJoining + totalSyncing + totalActive
+        
+        $('#node-info-joining').innerHTML = totalJoining
+        $('#node-info-syncing').innerHTML = totalSyncing
+        $('#node-info-active').innerHTML = totalActive
+        $('#node-info-total').innerHTML = total
+
+        if (Object.keys(G.active).length > 0) {
+            let currentCycleMarker = G.active[Object.keys(G.active)[0]].cycleMarker
+            $('#current-cyclemarker').innerHTML = `${currentCycleMarker.slice(0,4)}...${currentCycleMarker.slice(59,63)}`
         }
     }
 
@@ -216,7 +243,7 @@ let NetworkMonitor = function(config) {
     const createNewTxCircle = function(inputTx, toNode) {
         let x = G.X + 1.5*(toNode.currentPosition.x - G.X)
         let y = G.Y + 1.5*(toNode.currentPosition.y - G.Y)
-        let circleId = drawCircle({x: x, y: y}, "5px", "red", "0")
+        let circleId = drawCircle({x: x, y: y}, "5px", "red", 2)
         let circle = $(`#${circleId}`)
         let currentPosition = {
             x: parseFloat(circle.getAttribute('cx')),
@@ -256,15 +283,21 @@ let NetworkMonitor = function(config) {
     }
 
     const drawCircle = function(position, radius, fill, stroke, id) {
-        let circleId =`abc${id.substr(0, 4)}xyz`
+        let circleId
         if(id) circleId = `abc${id.substr(0, 4)}xyz`
-        else circleId = `abc${Date.now()}xyz`
+        else circleId = `abc${parseInt(Date.now() * Math.random())}xyz`
         let circleSVG = `
         <g>
-            <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node"/>
+            <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="0.0"/>
         </g>
         `
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
+        let circleStyler = styler($(`#${circleId}`))
+        tween({
+            from: 0,
+            to: { opacity: 1},
+            duration: 3000 * Math.random(),
+        }).start(circleStyler.set)
         return circleId
     }
 
@@ -276,16 +309,16 @@ let NetworkMonitor = function(config) {
     }
 
     const getRandomNodes = function(count, excludedNode = null) {
-        let nodeList = G.nodes.filter(n => n.status === 'active')
+        let nodeList = []
+        for (let nodeId in G.active) {
+            nodeList.push(G.active[nodeId])
+        }
         let randomNodes = []
         let n
-
         if (excludedNode) nodeList = nodeList.filter(n => n.circleId !== excludedNode.circleId)
         if (nodeList.length === 0) return []
-        
         if (nodeList.length < count) n = nodeList.length
         else n = count
-
         for (let i = 0; i < n; i += 1) {
             let item = nodeList[Math.floor(Math.random() * nodeList.length)]
             randomNodes.push(item)
@@ -301,11 +334,11 @@ let NetworkMonitor = function(config) {
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
-            duration: 500,
+            duration: G.txAnimationSpeed,
         }).start(circleStyler.set)
         setTimeout(() => {
             clone.circle.remove()
-        }, 500)
+        }, G.txAnimationSpeed)
     }
 
     const calculateNetworkPosition = function(nodeId) {
@@ -414,6 +447,36 @@ let NetworkMonitor = function(config) {
     const drawNetworkCycle = function(R, X, Y) {
         let networkHTML = `
         <button id="reset-report">Reset Report</button>
+        <table id="node-info-table">
+            <thead>
+                <tr>
+                    <td>Joining</td>
+                    <td>Syncing</td>
+                    <td>Active</td>
+                    <td>Total</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="node-info-joining">0</td>
+                    <td id="node-info-syncing">0</td>
+                    <td id="node-info-active">0</td>
+                    <td id="node-info-total">0</td>
+                </tr>
+            </tbody>
+        </table>
+        <table id="cyclemarker-table">
+            <thead>
+                <tr>
+                    <td>Cycle Marker</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="current-cyclemarker">-</td>
+                </tr>
+            </tbody>
+        </table>
         <svg height="100%" width="100%" class="background" style="top: 0px; left: 0px">
             <circle cx="${X}" cy="${Y}" r="${R}" stroke="green" stroke-width="1" fill="#ffffff" id="networkCircle"/>
         </svg>
