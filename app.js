@@ -86,6 +86,7 @@ let NetworkMonitor = function(config) {
             let node = G.active[nodeId]
             let txs = node.txInjected
             let interval = node.reportInterval * 1000
+            let animatedInjection = 0
 
             if (!txs || txs === 0) continue
             let injectInterval = setInterval(() => {
@@ -107,6 +108,8 @@ let NetworkMonitor = function(config) {
                     }
                     injectedTx.circle.remove()    
                 }, G.txAnimationSpeed)
+                animatedInjection += 1
+                if (animatedInjection > txs) clearInterval(injectInterval)
             }, Math.floor(interval / txs))
         }
     }
