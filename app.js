@@ -14,6 +14,7 @@ let NetworkMonitor = function(config) {
     G.R = config.networkCircleRadius || 200
     G.X = config.networkCircleX || G.VW / 2
     G.Y = config.networkCircleY || G.VH / 2
+    G.nodeRadius = config.nodeRadius || 200
     G.monitorServerUrl = config.monitorServerUrl || `https://tn1.shardus.com:3000/api`
     G.maxId = parseInt('ffff', 16)
     G.joining = {}
@@ -22,9 +23,10 @@ let NetworkMonitor = function(config) {
     G.colors = {
         'joining': '#999',
         'syncing': '#f9cb35',
-        'active': '#16c716'
+        'active': '#16c716',
+        'transaction': '#f55555cc'
     }
-    G.txAnimationSpeed = 400
+    G.txAnimationSpeed = 800
 
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
@@ -102,7 +104,7 @@ let NetworkMonitor = function(config) {
                 setTimeout(() => {
                     injectedTx.currentPosition.x += travelDistance.x
                     injectedTx.currentPosition.y += travelDistance.y
-                    let randomNodes = getRandomNodes(50, node)
+                    let randomNodes = getRandomActiveNodes(50, node)
                     for (let i = 0; i < randomNodes.length; i += 1) {
                         forwardInjectedTx(injectedTx, randomNodes[i])
                     }
@@ -246,8 +248,8 @@ let NetworkMonitor = function(config) {
     }
 
     const createNewNode = function(type, id) {
-        const position = getRandomPosition()
-        let circleId = drawCircle(position, config.nodeRadius, G.colors[type], 2, id)
+        const position = getJoiningPosition()
+        let circleId = drawCircle(position, G.nodeRadius, G.colors[type], 2, id)
         let circle = $(`#${circleId}`)
         let node = {
             circle: circle,
@@ -268,7 +270,7 @@ let NetworkMonitor = function(config) {
     const createNewTxCircle = function(inputTx, toNode) {
         let x = G.X + 1.5*(toNode.currentPosition.x - G.X)
         let y = G.Y + 1.5*(toNode.currentPosition.y - G.Y)
-        let circleId = drawCircle({x: x, y: y}, "5px", "red", 2)
+        let circleId = drawCircle({x: x, y: y}, "5px", G.colors['transaction'], 2)
         let circle = $(`#${circleId}`)
         let currentPosition = {
             x: parseFloat(circle.getAttribute('cx')),
@@ -284,7 +286,7 @@ let NetworkMonitor = function(config) {
     }
 
     const cloneTxCircle = function(txCircle) {
-        let circleId = drawCircle({x: txCircle.currentPosition.x, y: txCircle.currentPosition.y}, "5px", "red", "0")
+        let circleId = drawCircle({x: txCircle.currentPosition.x, y: txCircle.currentPosition.y}, "5px", G.colors['transaction'], "0")
         let circle = $(`#${circleId}`)
         let clone =  Object.assign({}, txCircle)
         clone.circle = circle
@@ -300,7 +302,7 @@ let NetworkMonitor = function(config) {
             id: rectId,
             cx: node.currentPosition.x,
             cy: node.currentPosition.y,
-            r: config.nodeRadius / 4,
+            r: G.nodeRadius / 4,
             fill: `#${node.appState.slice(0, 6)}`
         })
         let group = node.circle.parentNode
@@ -334,7 +336,14 @@ let NetworkMonitor = function(config) {
         }
     }
 
-    const getRandomNodes = function(count, excludedNode = null) {
+    const distanceBtnTwoPoints = function(p1, p2) {
+        let dx = p1.x - p2.x
+        let dy = p1.y - p2.y
+        let distance = Math.sqrt(dx ** 2 + dy ** 2)
+        return distance
+    }
+
+    const getRandomActiveNodes = function(count, excludedNode = null) {
         let nodeList = []
         for (let nodeId in G.active) {
             nodeList.push(G.active[nodeId])
@@ -523,12 +532,45 @@ let NetworkMonitor = function(config) {
     const getRandomPosition = function() {
         let randomAngle = Math.random() * 360
         let maxRadius
-        if (G.VW < G.VH) maxRadius = G.VW / 2 - config.nodeRadius
-        else maxRadius = G.VH / 2 - config.nodeRadius
+        if (G.VW < G.VH) maxRadius = G.VW / 2 - G.nodeRadius
+        else maxRadius = G.VH / 2 - G.nodeRadius
         let randomRadius = Math.random() * (maxRadius - G.R) + G.R + 50
         let x = randomRadius * Math.sin(randomAngle)
         let y = randomRadius * Math.cos(randomAngle)
         return {x: x + G.X, y: y + G.Y}
+    }
+
+    const getNearestNodeFromPoint = function(point) {
+        let joiningNodes = Object.values(G.joining)
+        let sortedNodes = joiningNodes.sort((n1, n2) => {
+            return distanceBtnTwoPoints(point, n1.currentPosition) - distanceBtnTwoPoints(point, n2.currentPosition)
+        })
+        return sortedNodes[0]
+    }
+
+    const getJoiningPosition = function() {
+        let selectedDistance = 0
+        let selectedPosition
+        let minimumDistance = 2.5 * G.nodeRadius
+        if (Object.keys(G.joining).length === 0) return getRandomPosition()
+
+        while (selectedDistance < minimumDistance) {
+            let randomPositions = []
+            let nearestNodes = []
+            let distanceFromNearestNode = []
+            for (let i = 0; i < 3; i += 1) randomPositions.push(getRandomPosition())
+            for (let i = 0; i < 3; i += 1) nearestNodes.push(getNearestNodeFromPoint(randomPositions[i]))
+            for (let i = 0; i < 3; i += 1) {
+                distanceFromNearestNode.push({
+                    distance: distanceBtnTwoPoints(randomPositions[i], nearestNodes[i].currentPosition),
+                    position: randomPositions[i]
+                })
+            }
+            let sorted = distanceFromNearestNode.sort((d1, d2) => d2.distance - d1.distance)
+            selectedDistance = sorted[0].distance
+            selectedPosition = sorted[0].position
+        }
+        return selectedPosition
     }
 
     const makeSVGEl = function (tag, attrs) {
