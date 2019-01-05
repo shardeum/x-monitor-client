@@ -271,6 +271,7 @@ let NetworkMonitor = function(config) {
         let x = G.X + 1.5*(toNode.currentPosition.x - G.X)
         let y = G.Y + 1.5*(toNode.currentPosition.y - G.Y)
         let circleId = drawCircle({x: x, y: y}, "5px", G.colors['transaction'], 2)
+        // $('.background').insertAdjacentHTML('beforeend', `<use xlink:href="#${circleId}"/>`)
         let circle = $(`#${circleId}`)
         let currentPosition = {
             x: parseFloat(circle.getAttribute('cx')),
@@ -315,7 +316,7 @@ let NetworkMonitor = function(config) {
         if(id) circleId = `abc${id.substr(0, 4)}xyz`
         else circleId = `abc${parseInt(Date.now() * Math.random())}xyz`
         let circleSVG = `
-        <g>
+        <g id="group-${circleId}">
             <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="0.0"/>
         </g>
         `
@@ -366,6 +367,7 @@ let NetworkMonitor = function(config) {
         let clone = cloneTxCircle(injectedTx)
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode)
+        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 200
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
@@ -373,7 +375,7 @@ let NetworkMonitor = function(config) {
         }).start(circleStyler.set)
         setTimeout(() => {
             clone.circle.remove()
-        }, G.txAnimationSpeed)
+        }, dur)
     }
 
     const calculateNetworkPosition = function(nodeId) {
