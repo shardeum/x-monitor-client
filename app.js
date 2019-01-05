@@ -4,7 +4,7 @@ window.$ = function(selector) { // shorthand for query selector
     return elements
 }
 
-let { tween, styler, listen, pointer, timeline } = window.popmotion
+let { tween, styler, listen, pointer, timeline, easing  } = window.popmotion
 
 let NetworkMonitor = function(config) {
     let G = {} // semi-global namespace
@@ -95,12 +95,13 @@ let NetworkMonitor = function(config) {
                 let newTx = createNewTx()
                 let injectedTx = createNewTxCircle(newTx, node)
                 let circleStyler = styler(injectedTx.circle)
-                let travelDistance = distanceBtnTwoNodes(injectedTx, node)
-                bringForwardNode(node, 500)
+                let travelDistance = distanceBtnTwoNodes(injectedTx, node, false)
+                // bringForwardNode(node, 500)
                 tween({
                     from: 0,
                     to: { x: travelDistance.x, y: travelDistance.y},
                     duration: G.txAnimationSpeed,
+                    ease: easing.linear
                 }).start(circleStyler.set)
                 setTimeout(() => {
                     injectedTx.currentPosition.x += travelDistance.x
@@ -337,17 +338,21 @@ let NetworkMonitor = function(config) {
         $('.background').insertAdjacentHTML('beforeend', `<use xlink:href="#${toNodeStateId}" />`)
     }
 
-    const distanceBtnTwoNodes = function(node1, node2) {
+    const distanceBtnTwoNodes = function(node1, node2, substract) {
         let X = node2.currentPosition.x - node1.currentPosition.x
         let Y = node2.currentPosition.y - node1.currentPosition.y
         let R = G.nodeRadius
         let radian = Math.atan(Y / X)
         let x = R * Math.cos(radian)
         let y = R * Math.sin(radian)
-        
-        return {
+
+        if (substract) return {
             x: X - x,
             y: Y - y
+        }
+        return {
+            x: X,
+            y: Y
         }
     }
 
@@ -380,13 +385,14 @@ let NetworkMonitor = function(config) {
     const forwardInjectedTx = function(injectedTx, targetNode) {
         let clone = cloneTxCircle(injectedTx)
         let circleStyler = styler(clone.circle)
-        let travelDistance = distanceBtnTwoNodes(clone, targetNode)
+        let travelDistance = distanceBtnTwoNodes(clone, targetNode, true)
         let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 400
         // bringForwardNode(targetNode, timeout)
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
             duration: dur,
+            ease: easing.linear
         }).start(circleStyler.set)
         setTimeout(() => {
             clone.circle.remove()
