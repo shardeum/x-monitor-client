@@ -96,7 +96,7 @@ let NetworkMonitor = function(config) {
                 let injectedTx = createNewTxCircle(newTx, node)
                 let circleStyler = styler(injectedTx.circle)
                 let travelDistance = distanceBtnTwoNodes(injectedTx, node)
-                bringForwardNode(node)
+                bringForwardNode(node, 500)
                 tween({
                     from: 0,
                     to: { x: travelDistance.x, y: travelDistance.y},
@@ -330,7 +330,7 @@ let NetworkMonitor = function(config) {
         return circleId
     }
 
-    const bringForwardNode = function(toNode) {
+    const bringForwardNode = function(toNode, timeout) {
         let toNodeId = `abc${toNode.circleId.substr(0, 4)}xyz`
         let toNodeStateId = toNode.rectangel.getAttribute('id')
         $('.background').insertAdjacentHTML('beforeend', `<use xlink:href="#${toNodeId}" />`)
@@ -338,9 +338,16 @@ let NetworkMonitor = function(config) {
     }
 
     const distanceBtnTwoNodes = function(node1, node2) {
+        let X = node2.currentPosition.x - node1.currentPosition.x
+        let Y = node2.currentPosition.y - node1.currentPosition.y
+        let R = G.nodeRadius
+        let radian = Math.atan(Y / X)
+        let x = R * Math.cos(radian)
+        let y = R * Math.sin(radian)
+        
         return {
-            x: node2.currentPosition.x - node1.currentPosition.x,
-            y: node2.currentPosition.y - node1.currentPosition.y
+            x: X - x,
+            y: Y - y
         }
     }
 
@@ -375,7 +382,7 @@ let NetworkMonitor = function(config) {
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode)
         let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 400
-        bringForwardNode(targetNode)
+        // bringForwardNode(targetNode, timeout)
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
