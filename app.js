@@ -371,7 +371,7 @@ let NetworkMonitor = function(config) {
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
-            duration: G.txAnimationSpeed,
+            duration: dur,
         }).start(circleStyler.set)
         setTimeout(() => {
             clone.circle.remove()
