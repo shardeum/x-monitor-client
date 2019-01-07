@@ -338,7 +338,7 @@ let NetworkMonitor = function(config) {
         $('.background').insertAdjacentHTML('beforeend', `<use xlink:href="#${toNodeStateId}" />`)
     }
 
-    const distanceBtnTwoNodes = function(node1, node2, substract) {
+        const distanceBtnTwoNodes = function(node1, node2, substract) {
         let X = node2.currentPosition.x - node1.currentPosition.x
         let Y = node2.currentPosition.y - node1.currentPosition.y
         let R = G.nodeRadius
@@ -346,16 +346,21 @@ let NetworkMonitor = function(config) {
         let x = R * Math.cos(radian)
         let y = R * Math.sin(radian)
 
+        let xFactor = 1
+        let yFactor = 1
+
+        if (X < 0) xFactor = -1
+        if (Y < 0) yFactor = -1
+
         if (substract) return {
-            x: X - x,
-            y: Y - y
+            x: X - xFactor * Math.sqrt(x * x),
+            y: Y - yFactor * Math.sqrt(y * y)
         }
         return {
             x: X,
             y: Y
         }
     }
-
     const distanceBtnTwoPoints = function(p1, p2) {
         let dx = p1.x - p2.x
         let dy = p1.y - p2.y
@@ -386,7 +391,7 @@ let NetworkMonitor = function(config) {
         let clone = cloneTxCircle(injectedTx)
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode, true)
-        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 400
+        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 1400
         // bringForwardNode(targetNode, timeout)
         tween({
             from: 0,
