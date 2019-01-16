@@ -391,7 +391,7 @@ let NetworkMonitor = function(config) {
         let clone = cloneTxCircle(injectedTx)
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode, true)
-        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 1400
+        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 1000
         // bringForwardNode(targetNode, timeout)
         tween({
             from: 0,
