@@ -48,3 +48,19 @@ thead > tr {
 #cyclemarker-table {
     top: 100px;
 }
+.tippy-tooltip.tomato-theme {
+    background: #5f5f5fcc;
+  }
+
+  .tippy-popper[x-placement^='top'] .tippy-tooltip.tomato-theme .tippy-arrow {
+    border-top-color: #5f5f5fcc;
+  }
+  .tippy-popper[x-placement^='bottom'] .tippy-tooltip.tomato-theme .tippy-arrow {
+    border-bottom-color: #5f5f5fcc;
+  }
+  .tippy-popper[x-placement^='left'] .tippy-tooltip.tomato-theme .tippy-arrow {
+    border-left-color: #5f5f5fcc;
+  }
+  .tippy-popper[x-placement^='right'] .tippy-tooltip.tomato-theme .tippy-arrow {
+    border-right-color: #5f5f5fcc;
+  }

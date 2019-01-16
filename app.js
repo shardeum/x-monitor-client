@@ -76,7 +76,8 @@ let NetworkMonitor = function(config) {
                 G.active[nodeId].txInjected = report.active[nodeId].txInjected
                 G.active[nodeId].txApplied = report.active[nodeId].txApplied
                 G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
-            } 
+                updateTooltip(G.active[nodeId])
+            }
             updateTables()
             injectTransactions()
             updateStateCircle()
@@ -96,7 +97,6 @@ let NetworkMonitor = function(config) {
                 let injectedTx = createNewTxCircle(newTx, node)
                 let circleStyler = styler(injectedTx.circle)
                 let travelDistance = distanceBtnTwoNodes(injectedTx, node, false)
-                // bringForwardNode(node, 500)
                 tween({
                     from: 0,
                     to: { x: travelDistance.x, y: travelDistance.y},
@@ -124,6 +124,7 @@ let NetworkMonitor = function(config) {
         } else if (previousStatus === 'syncing' && currentStatus === 'active') {
             let node = G.active[nodeId]
             node.rectangel = drawStateCircle(node)
+            // node.cycleMarkerBox = drawCycleMarkerBox(node)
             let circleStyler = styler(node.circle)
             tween({
                 from: { fill: '#f9cb35' },
@@ -150,7 +151,28 @@ let NetworkMonitor = function(config) {
         }
     }
 
-    const updateStateCircle = function(previousStatus, currentStatus, publicKey, nodeId) {
+    const updateTooltip = function(node) {
+        let nodeIdShort = `${node.nodeId.slice(0,4)}...${node.nodeId.slice(59,63)}`
+        let cycleMarkerShort = `${node.cycleMarker.slice(0,4)}...${node.cycleMarker.slice(59,63)}`
+        let appStateShort = `${node.appState.slice(0,4)}...${node.appState.slice(59,63)}`
+        let tooltipHTML = `
+        <div style="text-align: left">
+        <p>NodeId: <strong>${nodeIdShort}</strong></p>
+        <p>Marker: <strong>${cycleMarkerShort}</strong></p>
+        <p>State: <strong>${appStateShort}<strong></p>
+        </div>
+        `
+        node.circle.setAttribute('data-tippy-content', tooltipHTML)
+        tippy(node.circle, {
+            theme: 'tomato',
+            animation: 'perspective',
+            arrow: true,
+            size: 'small',
+            duration: [475, 450]
+        })
+    }
+
+    const updateStateCircle = function() {
         for (let nodeId in G.active) {
             let node = G.active[nodeId]
             if (!node.appState) return
@@ -165,6 +187,7 @@ let NetworkMonitor = function(config) {
                 }).start(circleStyler.set)
             } else {
                 node.rectangel = drawStateCircle(node)
+                // node.cycleMarkerBox = drawCycleMarkerBox(node)
             }
         }
     }
@@ -241,6 +264,7 @@ let NetworkMonitor = function(config) {
 
             if (currentStatus === 'active') {
                 node.rectangel = drawStateCircle(node)
+                // node.cycleMarkerBox = drawCycleMarkerBox(node)
             }
 
             setTimeout(() => {
@@ -312,15 +336,35 @@ let NetworkMonitor = function(config) {
         return $(`#${rectId}`)
     }
 
-    const drawCircle = function(position, radius, fill, stroke, id) {
+    const drawCycleMarkerBox = function(node) {
+        console.log("hi")
+        if(!node.appState) return
+
+        let rectId =`cycleMarkerBox${node.nodeId.substr(0, 6)}xyz`
+        let cycleMarkerBox = makeSVGEl('circle', {
+            id: rectId,
+            cx: node.currentPosition.x,
+            cy: node.currentPosition.y,
+            r: G.nodeRadius / 4,
+            fill: 'red'
+        })
+        console.log(cycleMarkerBox)
+        let group = node.circle.parentNode
+        group.appendChild(cycleMarkerBox)
+        return $(`#${rectId}`)
+    }
+
+    const drawCircle = function(position, radius, fill, stroke, id, tooltip) {
         let circleId
         if(id) circleId = `abc${id.substr(0, 4)}xyz`
         else circleId = `abc${parseInt(Date.now() * Math.random())}xyz`
-        let circleSVG = `
+        let circleSVG
+        circleSVG = `
         <g id="group-${circleId.slice(0, 4)}">
             <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="0.0"/>
         </g>
         `
+
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
         let circleStyler = styler($(`#${circleId}`))
         tween({
@@ -331,14 +375,7 @@ let NetworkMonitor = function(config) {
         return circleId
     }
 
-    const bringForwardNode = function(toNode, timeout) {
-        let toNodeId = `abc${toNode.circleId.substr(0, 4)}xyz`
-        let toNodeStateId = toNode.rectangel.getAttribute('id')
-        $('.background').insertAdjacentHTML('beforeend', `<use xlink:href="#${toNodeId}" />`)
-        $('.background').insertAdjacentHTML('beforeend', `<use xlink:href="#${toNodeStateId}" />`)
-    }
-
-        const distanceBtnTwoNodes = function(node1, node2, substract) {
+    const distanceBtnTwoNodes = function(node1, node2, substract) {
         let X = node2.currentPosition.x - node1.currentPosition.x
         let Y = node2.currentPosition.y - node1.currentPosition.y
         let R = G.nodeRadius
@@ -392,7 +429,6 @@ let NetworkMonitor = function(config) {
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode, true)
         let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 1000
-        // bringForwardNode(targetNode, timeout)
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
@@ -455,19 +491,15 @@ let NetworkMonitor = function(config) {
     }
 
     const shiftNearestNode = function(node, newDegree) {  // new degree instead of delta
-
         let degree = newDegree
         let radian = degree *  Math.PI / 180;
         let x = G.R * Math.cos(radian) + G.X
         let y = G.R * Math.sin(radian) + G.Y
-
         let initialX = node.initialPosition.x
         let initialY = node.initialPosition.y
         let travelX
         let travelY
-
         let circleStyler = styler(node.circle)
-    
         let animationStartX = node.currentPosition.x - initialX
         let animationStartY = node.currentPosition.y - initialY
 
