@@ -58,25 +58,34 @@ let NetworkMonitor = function(config) {
             }
 
             for(let nodeId in report.active) {
-                if (!G.active[nodeId] && nodeId !== null) {
+                if (!G.active[nodeId] && nodeId !== null && report.active[nodeId].appState) {
                     if (G.syncing[nodeId]) { // active node is already drawn as yellow circle
                         console.log(`Active node found on syncing list...`)
                         G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {status: 'active', nodeId: nodeId })
                         delete G.syncing[nodeId]
+                        G.active[nodeId].appState = report.active[nodeId].appState
+                        G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+                        G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
+                        G.active[nodeId].txInjected = report.active[nodeId].txInjected
+                        G.active[nodeId].txApplied = report.active[nodeId].txApplied
+                        G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
                         updateUI('syncing', 'active', null, nodeId)
+                        updateTooltip(G.active[nodeId])
                     } else { // syncing node is not drawn as gray circle yet
                         console.log(`New active node`)
                         G.active[nodeId] = createNewNode('active', nodeId)
                         G.active[nodeId].nodeId = nodeId
+
+                        G.active[nodeId].appState = report.active[nodeId].appState
+                        G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+                        G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
+                        G.active[nodeId].txInjected = report.active[nodeId].txInjected
+                        G.active[nodeId].txApplied = report.active[nodeId].txApplied
+                        G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
                         positionNewNodeIntoNetwork('active', G.active[nodeId])
+                        updateTooltip(G.active[nodeId])
                     }
                 }
-                G.active[nodeId].appState = report.active[nodeId].appState
-                G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
-                G.active[nodeId].txInjected = report.active[nodeId].txInjected
-                G.active[nodeId].txApplied = report.active[nodeId].txApplied
-                G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
-                updateTooltip(G.active[nodeId])
             }
             updateTables()
             injectTransactions()
@@ -124,7 +133,8 @@ let NetworkMonitor = function(config) {
         } else if (previousStatus === 'syncing' && currentStatus === 'active') {
             let node = G.active[nodeId]
             node.rectangel = drawStateCircle(node)
-            // node.cycleMarkerBox = drawCycleMarkerBox(node)
+            node.markerCycle = drawCycleMarkerBox(node)
+            node.nodeListCycle = drawNodeListBox(node)
             let circleStyler = styler(node.circle)
             tween({
                 from: { fill: '#f9cb35' },
@@ -155,15 +165,44 @@ let NetworkMonitor = function(config) {
         let nodeIdShort = `${node.nodeId.slice(0,4)}...${node.nodeId.slice(59,63)}`
         let cycleMarkerShort = `${node.cycleMarker.slice(0,4)}...${node.cycleMarker.slice(59,63)}`
         let appStateShort = `${node.appState.slice(0,4)}...${node.appState.slice(59,63)}`
+        let nodeListShort = `${node.nodelistHash.slice(0,4)}...${node.nodelistHash.slice(59,63)}`
         let tooltipHTML = `
         <div style="text-align: left">
         <p>NodeId: <strong>${nodeIdShort}</strong></p>
         <p>Marker: <strong>${cycleMarkerShort}</strong></p>
-        <p>State: <strong>${appStateShort}<strong></p>
+        <p>State: <strong>${appStateShort}</strong></p>
+        <p>Nodelist: <strong>${nodeListShort}</strong></p>
         </div>
         `
         node.circle.setAttribute('data-tippy-content', tooltipHTML)
         tippy(node.circle, {
+            theme: 'tomato',
+            animation: 'perspective',
+            arrow: true,
+            size: 'small',
+            duration: [475, 450]
+        })
+
+        node.rectangel.setAttribute('data-tippy-content', 'App State')
+        tippy(node.rectangel, {
+            theme: 'tomato',
+            animation: 'perspective',
+            arrow: true,
+            size: 'small',
+            duration: [475, 450]
+        })
+
+        node.markerCycle.setAttribute('data-tippy-content', 'Cyclemarker')
+        tippy(node.markerCycle, {
+            theme: 'tomato',
+            animation: 'perspective',
+            arrow: true,
+            size: 'small',
+            duration: [475, 450]
+        })
+
+        node.nodeListCycle.setAttribute('data-tippy-content', 'Nodelist')
+        tippy(node.nodeListCycle, {
             theme: 'tomato',
             animation: 'perspective',
             arrow: true,
@@ -264,7 +303,8 @@ let NetworkMonitor = function(config) {
 
             if (currentStatus === 'active') {
                 node.rectangel = drawStateCircle(node)
-                // node.cycleMarkerBox = drawCycleMarkerBox(node)
+                node.markerCycle = drawCycleMarkerBox(node)
+                node.nodeListCycle = drawNodeListBox(node)
             }
 
             setTimeout(() => {
@@ -322,12 +362,12 @@ let NetworkMonitor = function(config) {
 
     const drawStateCircle = function(node) {
         if(!node.appState) return
-
+        let radius = G.nodeRadius / 4
         let rectId =`abc${node.nodeId.substr(0, 6)}xyz`
         let stateRec = makeSVGEl('circle', {
             id: rectId,
             cx: node.currentPosition.x,
-            cy: node.currentPosition.y,
+            cy: node.currentPosition.y + radius,
             r: G.nodeRadius / 4,
             fill: `#${node.appState.slice(0, 6)}`
         })
@@ -337,18 +377,40 @@ let NetworkMonitor = function(config) {
     }
 
     const drawCycleMarkerBox = function(node) {
-        console.log("hi")
-        if(!node.appState) return
+        if(!node.cycleMarker) return
+
+        let radius = G.nodeRadius / 4
+        let x = 2 * radius * Math.cos(Math.PI / 4)
+        let y = 2 * radius * Math.sin(Math.PI / 4)
 
         let rectId =`cycleMarkerBox${node.nodeId.substr(0, 6)}xyz`
         let cycleMarkerBox = makeSVGEl('circle', {
             id: rectId,
-            cx: node.currentPosition.x,
-            cy: node.currentPosition.y,
+            cx: node.currentPosition.x + radius,
+            cy: node.currentPosition.y - radius,
             r: G.nodeRadius / 4,
-            fill: 'red'
+            fill: `#${node.cycleMarker.slice(0, 6)}`
         })
-        console.log(cycleMarkerBox)
+        let group = node.circle.parentNode
+        group.appendChild(cycleMarkerBox)
+        return $(`#${rectId}`)
+    }
+
+    const drawNodeListBox = function(node) {
+        if(!node.nodelistHash) return
+
+        let radius = G.nodeRadius / 4
+        let x = 2 * radius * Math.cos(Math.PI / 4)
+        let y = 2 * radius * Math.sin(Math.PI / 4)
+
+        let rectId =`nodeListBox${node.nodeId.substr(0, 6)}xyz`
+        let cycleMarkerBox = makeSVGEl('circle', {
+            id: rectId,
+            cx: node.currentPosition.x - radius,
+            cy: node.currentPosition.y - radius,
+            r: G.nodeRadius / 4,
+            fill: `#${node.nodelistHash.slice(0, 6)}`
+        })
         let group = node.circle.parentNode
         group.appendChild(cycleMarkerBox)
         return $(`#${rectId}`)
@@ -511,6 +573,8 @@ let NetworkMonitor = function(config) {
         }
 
         if (node.status === 'active') {
+            let radius = G.nodeRadius / 4
+            // move app state circle
             let initialX = node.rectangel.getAttribute('cx')
             let initialY = node.rectangel.getAttribute('cy')
 
@@ -523,9 +587,44 @@ let NetworkMonitor = function(config) {
             let rectangelStyler = styler(node.rectangel)
             tween({
                 from: { x: animationStartX, y: animationStartY},
-                to: { x: animationStartX + travelX , y: animationStartY + travelY },
+                to: { x: animationStartX + travelX , y: animationStartY + travelY + radius },
                 duration: 500,
             }).start(rectangelStyler.set)
+
+            // move cyclemarker cycle
+            let initialXm = node.markerCycle.getAttribute('cx')
+            let initialYm = node.markerCycle.getAttribute('cy')
+
+            let animationStartXm = node.currentPosition.x - initialXm
+            let animationStartYm = node.currentPosition.y - initialYm
+            
+            travelXm = x - node.currentPosition.x
+            travelYm = y - node.currentPosition.y
+
+            let markerStyler = styler(node.markerCycle)
+            tween({
+                from: { x: animationStartXm, y: animationStartYm},
+                to: { x: animationStartXm + travelXm + radius , y: animationStartYm + travelYm - radius },
+                duration: 500,
+            }).start(markerStyler.set)
+
+            // move nodelist cycle
+            console.log(node)
+            let initialXn = node.nodeListCycle.getAttribute('cx')
+            let initialYn = node.nodeListCycle.getAttribute('cy')
+
+            let animationStartXn = node.currentPosition.x - initialXn
+            let animationStartYn = node.currentPosition.y - initialYn
+            
+            travelXn = x - node.currentPosition.x
+            travelYn = y - node.currentPosition.y
+
+            let nodeListStyler = styler(node.nodeListCycle)
+            tween({
+                from: { x: animationStartXn, y: animationStartYn},
+                to: { x: animationStartXn + travelXn - radius , y: animationStartYn + travelYn - radius },
+                duration: 500,
+            }).start(nodeListStyler.set)
         }
 
         tween({
