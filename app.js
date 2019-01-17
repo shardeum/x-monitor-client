@@ -63,29 +63,36 @@ let NetworkMonitor = function(config) {
                         console.log(`Active node found on syncing list...`)
                         G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {status: 'active', nodeId: nodeId })
                         delete G.syncing[nodeId]
-                        G.active[nodeId].appState = report.active[nodeId].appState
-                        G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
-                        G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
-                        G.active[nodeId].txInjected = report.active[nodeId].txInjected
-                        G.active[nodeId].txApplied = report.active[nodeId].txApplied
-                        G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
-                        G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
-                        G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
+                        try {
+                            G.active[nodeId].appState = report.active[nodeId].appState
+                            G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+                            G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
+                            G.active[nodeId].txInjected = report.active[nodeId].txInjected
+                            G.active[nodeId].txApplied = report.active[nodeId].txApplied
+                            G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
+                            G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
+                            G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
+                        } catch(e) {
+                            console.log(e)
+                        }
                         updateUI('syncing', 'active', null, nodeId)
                         updateTooltip(G.active[nodeId])
                     } else { // syncing node is not drawn as gray circle yet
                         console.log(`New active node`)
                         G.active[nodeId] = createNewNode('active', nodeId)
                         G.active[nodeId].nodeId = nodeId
-
-                        G.active[nodeId].appState = report.active[nodeId].appState
-                        G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
-                        G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
-                        G.active[nodeId].txInjected = report.active[nodeId].txInjected
-                        G.active[nodeId].txApplied = report.active[nodeId].txApplied
-                        G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
-                        G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
-                        G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
+                        try {
+                            G.active[nodeId].appState = report.active[nodeId].appState
+                            G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+                            G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
+                            G.active[nodeId].txInjected = report.active[nodeId].txInjected
+                            G.active[nodeId].txApplied = report.active[nodeId].txApplied
+                            G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
+                            G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
+                            G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
+                        } catch(e) {
+                            console.log(e)
+                        }
                         positionNewNodeIntoNetwork('active', G.active[nodeId])
                         updateTooltip(G.active[nodeId])
                     }
