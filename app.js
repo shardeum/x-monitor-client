@@ -69,6 +69,8 @@ let NetworkMonitor = function(config) {
                         G.active[nodeId].txInjected = report.active[nodeId].txInjected
                         G.active[nodeId].txApplied = report.active[nodeId].txApplied
                         G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
+                        G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
+                        G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
                         updateUI('syncing', 'active', null, nodeId)
                         updateTooltip(G.active[nodeId])
                     } else { // syncing node is not drawn as gray circle yet
@@ -82,6 +84,8 @@ let NetworkMonitor = function(config) {
                         G.active[nodeId].txInjected = report.active[nodeId].txInjected
                         G.active[nodeId].txApplied = report.active[nodeId].txApplied
                         G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
+                        G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
+                        G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
                         positionNewNodeIntoNetwork('active', G.active[nodeId])
                         updateTooltip(G.active[nodeId])
                     }
@@ -172,6 +176,8 @@ let NetworkMonitor = function(config) {
         <p>Marker: <strong>${cycleMarkerShort}</strong></p>
         <p>State: <strong>${appStateShort}</strong></p>
         <p>Nodelist: <strong>${nodeListShort}</strong></p>
+        <p>ExtIP: <strong>${node.externalIp}</strong></p>
+        <p>ExtPort: <strong>${node.externalPort}</strong></p>
         </div>
         `
         node.circle.setAttribute('data-tippy-content', tooltipHTML)
