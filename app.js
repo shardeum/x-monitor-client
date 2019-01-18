@@ -76,7 +76,7 @@ let NetworkMonitor = function(config) {
                             console.log(e)
                         }
                         updateUI('syncing', 'active', null, nodeId)
-                        updateTooltip(G.active[nodeId])
+                        G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
                     } else { // syncing node is not drawn as gray circle yet
                         console.log(`New active node`)
                         G.active[nodeId] = createNewNode('active', nodeId)
@@ -94,13 +94,25 @@ let NetworkMonitor = function(config) {
                             console.log(e)
                         }
                         positionNewNodeIntoNetwork('active', G.active[nodeId])
-                        updateTooltip(G.active[nodeId])
+                        G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
                     }
+                } else if (G.active[nodeId] && report.active[nodeId].appState) {
+                    G.active[nodeId].appState = report.active[nodeId].appState
+                    G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+                    G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
+                    G.active[nodeId].txInjected = report.active[nodeId].txInjected
+                    G.active[nodeId].txApplied = report.active[nodeId].txApplied
+                    G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
+                    G.active[nodeId].externalIp = report.active[nodeId].nodeIpInfo.externalIp
+                    G.active[nodeId].externalPort = report.active[nodeId].nodeIpInfo.externalPort
+                    updateTooltip(G.active[nodeId])
                 }
             }
             updateTables()
             injectTransactions()
             updateStateCircle()
+            updateMarkerCycle()
+            updateNodelistCycle()
         }, 2000)
     }
 
@@ -172,19 +184,19 @@ let NetworkMonitor = function(config) {
         }
     }
 
-    const updateTooltip = function(node) {
+    const drawTooltip = function(node) {
         let nodeIdShort = `${node.nodeId.slice(0,4)}...${node.nodeId.slice(59,63)}`
         let cycleMarkerShort = `${node.cycleMarker.slice(0,4)}...${node.cycleMarker.slice(59,63)}`
         let appStateShort = `${node.appState.slice(0,4)}...${node.appState.slice(59,63)}`
         let nodeListShort = `${node.nodelistHash.slice(0,4)}...${node.nodelistHash.slice(59,63)}`
         let tooltipHTML = `
-        <div style="text-align: left">
-        <p>NodeId: <strong>${nodeIdShort}</strong></p>
-        <p>Marker: <strong>${cycleMarkerShort}</strong></p>
-        <p>State: <strong>${appStateShort}</strong></p>
-        <p>Nodelist: <strong>${nodeListShort}</strong></p>
-        <p>ExtIP: <strong>${node.externalIp}</strong></p>
-        <p>ExtPort: <strong>${node.externalPort}</strong></p>
+        <div style="text-align: left" id="tooltip-${node.nodeId.slice(0,4)}">
+            <p>NodeId: <strong class="tooltip-nodeId">${nodeIdShort}</strong></p>
+            <p>Marker: <strong class="tooltip-cycleMarker">${cycleMarkerShort}</strong></p>
+            <p>State: <strong class="tooltip-appState">${appStateShort}</strong></p>
+            <p>Nodelist: <strong class="tooltip-nodeList">${nodeListShort}</strong></p>
+            <p>ExtIP: <strong class="tooltip-extIP">${node.externalIp}</strong></p>
+            <p>ExtPort: <strong class="tooltip-extPort">${node.externalPort}</strong></p>
         </div>
         `
         node.circle.setAttribute('data-tippy-content', tooltipHTML)
@@ -195,6 +207,7 @@ let NetworkMonitor = function(config) {
             size: 'small',
             duration: [475, 450]
         })
+        const instance = node.circle._tippy
 
         node.rectangel.setAttribute('data-tippy-content', 'App State')
         tippy(node.rectangel, {
@@ -222,6 +235,27 @@ let NetworkMonitor = function(config) {
             size: 'small',
             duration: [475, 450]
         })
+        return instance
+    }
+
+    const updateTooltip = function(node) {
+        let instance = node.tooltipInstance
+
+        let nodeIdShort = `${node.nodeId.slice(0,4)}...${node.nodeId.slice(59,63)}`
+        let cycleMarkerShort = `${node.cycleMarker.slice(0,4)}...${node.cycleMarker.slice(59,63)}`
+        let appStateShort = `${node.appState.slice(0,4)}...${node.appState.slice(59,63)}`
+        let nodeListShort = `${node.nodelistHash.slice(0,4)}...${node.nodelistHash.slice(59,63)}`
+        let tooltipHTML = `
+        <div style="text-align: left" id="tooltip-${node.nodeId.slice(0,4)}">
+            <p>NodeId: <strong class="tooltip-nodeId">${nodeIdShort}</strong></p>
+            <p>Marker: <strong class="tooltip-cycleMarker">${cycleMarkerShort}</strong></p>
+            <p>State: <strong class="tooltip-appState">${appStateShort}</strong></p>
+            <p>Nodelist: <strong class="tooltip-nodeList">${nodeListShort}</strong></p>
+            <p>ExtIP: <strong class="tooltip-extIP">${node.externalIp}</strong></p>
+            <p>ExtPort: <strong class="tooltip-extPort">${node.externalPort}</strong></p>
+        </div>
+        `
+        instance.setContent(tooltipHTML)
     }
 
     const updateStateCircle = function() {
@@ -239,7 +273,44 @@ let NetworkMonitor = function(config) {
                 }).start(circleStyler.set)
             } else {
                 node.rectangel = drawStateCircle(node)
-                // node.cycleMarkerBox = drawCycleMarkerBox(node)
+            }
+        }
+    }
+
+    const updateMarkerCycle = function() {
+        for (let nodeId in G.active) {
+            let node = G.active[nodeId]
+            if (!node.cycleMarker) return
+
+            if (node.cycleMarker) {
+                // update cycle marker color
+                let circleStyler = styler(node.markerCycle)
+                tween({
+                    from: { fill: `${G.colors['active']}` },
+                    to: { fill: `#${node.cycleMarker.slice(0, 6)}` },
+                    duration: 500,
+                }).start(circleStyler.set)
+            } else {
+                node.markerCycle = drawCycleMarkerBox(node)
+            }
+        }
+    }
+
+    const updateNodelistCycle = function() {
+        for (let nodeId in G.active) {
+            let node = G.active[nodeId]
+            if (!node.nodelistHash) return
+
+            if (node.nodelistHash) {
+                // update nodelist Hash color
+                let circleStyler = styler(node.nodeListCycle)
+                tween({
+                    from: { fill: `${G.colors['active']}` },
+                    to: { fill: `#${node.nodelistHash.slice(0, 6)}` },
+                    duration: 500,
+                }).start(circleStyler.set)
+            } else {
+                node.nodeListCycle = drawNodeListBox(node)
             }
         }
     }
@@ -622,7 +693,6 @@ let NetworkMonitor = function(config) {
             }).start(markerStyler.set)
 
             // move nodelist cycle
-            console.log(node)
             let initialXn = node.nodeListCycle.getAttribute('cx')
             let initialYn = node.nodeListCycle.getAttribute('cy')
 
