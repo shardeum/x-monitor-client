@@ -336,7 +336,7 @@ let NetworkMonitor = function(config) {
     
             tween({
                 from: 0,
-                to: { x: travelX, y: travelY, scale: 4},
+                to: { x: travelX, y: travelY },
                 duration: 500,
             }).start(circleStyler.set)
             node.initialPosition = {
@@ -402,8 +402,7 @@ let NetworkMonitor = function(config) {
     const createNewNode = function(type, id) {
         // const position = getJoiningPosition()
         const position = getJoiningNodePosition(id)
-        const radius = (type === 'joining') ? G.nodeRadius / 4 : G.nodeRadius
-        let circleId = drawCircle(position, radius, G.colors[type], 2, id)
+        let circleId = drawCircle(position, G.nodeRadius, G.colors[type], 2, id)
         let circle = $(`#${circleId}`)
         let node = {
             circle: circle,
