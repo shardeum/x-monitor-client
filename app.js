@@ -31,9 +31,27 @@ let NetworkMonitor = function(config) {
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
         $('#reset-report').addEventListener('click', flushReport)
+
+        let report = {
+            joining: {}
+        }
+        // function dec2hex (dec) {
+        //     return ('0' + dec.toString(16)).substr(-2)
+        // }
+        // function generateId (len) {
+        //     var arr = new Uint8Array((len || 40) / 2)
+        //     window.crypto.getRandomValues(arr)
+        //     return Array.from(arr, dec2hex).join('')
+        // }
+
+        // for (let i = 0; i < 100; i++) {
+        //     let randomPublicKey = generateId(10)
+        //     report.joining[randomPublicKey] = true
+        // }
         
         let updateReportInterval = setInterval(async () => {
             let report = await getReport()
+
             for(let publicKey in report.joining) {
                 if (!G.joining[publicKey]) {
                     G.joining[publicKey] = createNewNode('joining', publicKey)
@@ -398,8 +416,10 @@ let NetworkMonitor = function(config) {
     }
 
     const createNewNode = function(type, id) {
-        const position = getJoiningPosition()
-        let circleId = drawCircle(position, G.nodeRadius, G.colors[type], 2, id)
+        // const position = getJoiningPosition()
+        const position = getJoiningNodePosition(id)
+        console.log(position)
+        let circleId = drawCircle(position, G.nodeRadius / 3, G.colors[type], 2, id)
         let circle = $(`#${circleId}`)
         let node = {
             circle: circle,
@@ -813,6 +833,17 @@ let NetworkMonitor = function(config) {
             selectedPosition = sorted[0].position
         }
         return selectedPosition
+    }
+
+    const getJoiningNodePosition = function(publicKey) {
+        let minimumRadius = G.R + 2.5 * G.nodeRadius
+        let angle = 360 * parseInt(publicKey.slice(0, 4), 16) / G.maxId
+        let radiusFactor =  parseInt(publicKey.slice(4, 8), 16) / G.maxId
+        let radius = radiusFactor * (50) + minimumRadius
+
+        let x = radius * Math.sin(angle * Math.PI / 180)
+        let y = radius * Math.cos(angle * Math.PI / 180)
+        return {x: x + G.X, y: y + G.Y}
     }
 
     const makeSVGEl = function (tag, attrs) {
