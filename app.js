@@ -31,10 +31,11 @@ let NetworkMonitor = function(config) {
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
         $('#reset-report').addEventListener('click', flushReport)
-
-        let report = {
-            joining: {}
-        }
+        // FOR TESTING
+        // let report = {
+        //     joining: {},
+        //     syncing: {}
+        // }
         // function dec2hex (dec) {
         //     return ('0' + dec.toString(16)).substr(-2)
         // }
@@ -44,10 +45,21 @@ let NetworkMonitor = function(config) {
         //     return Array.from(arr, dec2hex).join('')
         // }
 
-        // for (let i = 0; i < 100; i++) {
+        // for (let i = 0; i < 10; i++) {
         //     let randomPublicKey = generateId(10)
         //     report.joining[randomPublicKey] = true
         // }
+
+        // setTimeout(() => {
+        //     for (let publicKey in report.joining) {
+        //         report.syncing[publicKey] = publicKey
+        //     }
+        // }, 5000)
+
+        // setTimeout(() => {
+        //     report.joining = {}
+        //     report.syncing = {}
+        // }, 8000)
         
         let updateReportInterval = setInterval(async () => {
             let report = await getReport()
@@ -170,7 +182,7 @@ let NetworkMonitor = function(config) {
 
     const updateUI = function(previousStatus, currentStatus, publicKey, nodeId) {
         if (previousStatus === 'joining' && currentStatus === 'syncing') {
-            relocateNode(previousStatus, G.syncing[nodeId])
+            relocateIntoNetwork(previousStatus, G.syncing[nodeId])
         } else if (previousStatus === 'syncing' && currentStatus === 'active') {
             let node = G.active[nodeId]
             node.rectangel = drawStateCircle(node)
@@ -333,9 +345,10 @@ let NetworkMonitor = function(config) {
         }
     }
 
-    const relocateNode = function(previousStatus, node) {
+    const relocateIntoNetwork = function(previousStatus, node) {
         if (previousStatus === 'joining') {
             node.circle.setAttribute('fill', '#f9cb35')
+            node.circle.setAttribute('radius', G.nodeRadius)
             let networkPosition = calculateNetworkPosition(parseInt(node.nodeId.substr(0, 4), 16))
             node.despos = networkPosition.degree  // set the desired position of the node
             let x = networkPosition.x
@@ -352,7 +365,7 @@ let NetworkMonitor = function(config) {
     
             tween({
                 from: 0,
-                to: { x: travelX, y: travelY},
+                to: { x: travelX, y: travelY, scale: 4},
                 duration: 500,
             }).start(circleStyler.set)
             node.initialPosition = {
@@ -418,8 +431,8 @@ let NetworkMonitor = function(config) {
     const createNewNode = function(type, id) {
         // const position = getJoiningPosition()
         const position = getJoiningNodePosition(id)
-        console.log(position)
-        let circleId = drawCircle(position, G.nodeRadius / 3, G.colors[type], 2, id)
+        const radius = (type === 'joining') ? G.nodeRadius / 4 : G.nodeRadius
+        let circleId = drawCircle(position, radius, G.colors[type], 2, id)
         let circle = $(`#${circleId}`)
         let node = {
             circle: circle,
@@ -530,7 +543,6 @@ let NetworkMonitor = function(config) {
             <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="0.0"/>
         </g>
         `
-
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
         let circleStyler = styler($(`#${circleId}`))
         tween({
