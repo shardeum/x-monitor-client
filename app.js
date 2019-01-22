@@ -4,7 +4,7 @@ window.$ = function(selector) { // shorthand for query selector
     return elements
 }
 
-let { tween, styler, listen, pointer, timeline, easing  } = window.popmotion
+let { tween, styler, listen, pointer, timeline, easing } = window.popmotion
 
 let NetworkMonitor = function(config) {
     let G = {} // semi-global namespace
@@ -31,35 +31,6 @@ let NetworkMonitor = function(config) {
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
         $('#reset-report').addEventListener('click', flushReport)
-        // FOR TESTING
-        // let report = {
-        //     joining: {},
-        //     syncing: {}
-        // }
-        // function dec2hex (dec) {
-        //     return ('0' + dec.toString(16)).substr(-2)
-        // }
-        // function generateId (len) {
-        //     var arr = new Uint8Array((len || 40) / 2)
-        //     window.crypto.getRandomValues(arr)
-        //     return Array.from(arr, dec2hex).join('')
-        // }
-
-        // for (let i = 0; i < 10; i++) {
-        //     let randomPublicKey = generateId(10)
-        //     report.joining[randomPublicKey] = true
-        // }
-
-        // setTimeout(() => {
-        //     for (let publicKey in report.joining) {
-        //         report.syncing[publicKey] = publicKey
-        //     }
-        // }, 5000)
-
-        // setTimeout(() => {
-        //     report.joining = {}
-        //     report.syncing = {}
-        // }, 8000)
         
         let updateReportInterval = setInterval(async () => {
             let report = await getReport()
@@ -123,7 +94,7 @@ let NetworkMonitor = function(config) {
                         } catch(e) {
                             console.log(e)
                         }
-                        positionNewNodeIntoNetwork('active', G.active[nodeId])
+                        await positionNewNodeIntoNetwork('active', G.active[nodeId])
                         G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
                     }
                 } else if (G.active[nodeId] && report.active[nodeId].appState) {
@@ -486,10 +457,20 @@ let NetworkMonitor = function(config) {
             cx: node.currentPosition.x,
             cy: node.currentPosition.y + radius,
             r: G.nodeRadius / 4,
-            fill: `#${node.appState.slice(0, 6)}`
+            fill: `#${node.appState.slice(0, 6)}`,
+            opacity: 0
         })
         let group = node.circle.parentNode
         group.appendChild(stateRec)
+        
+        let circleStyler = styler($(`#${rectId}`))
+        setTimeout(() => {
+            tween({
+                from: 0,
+                to: { opacity: 1},
+                duration: 500,
+            }).start(circleStyler.set)
+        }, 1000)
         return $(`#${rectId}`)
     }
 
@@ -506,10 +487,19 @@ let NetworkMonitor = function(config) {
             cx: node.currentPosition.x + radius,
             cy: node.currentPosition.y - radius,
             r: G.nodeRadius / 4,
-            fill: `#${node.cycleMarker.slice(0, 6)}`
+            fill: `#${node.cycleMarker.slice(0, 6)}`,
+            opacity: 0
         })
         let group = node.circle.parentNode
         group.appendChild(cycleMarkerBox)
+        let circleStyler = styler($(`#${rectId}`))
+        setTimeout(() => {
+            tween({
+                from: 0,
+                to: { opacity: 1},
+                duration: 500,
+            }).start(circleStyler.set)
+        }, 1000)
         return $(`#${rectId}`)
     }
 
@@ -526,10 +516,19 @@ let NetworkMonitor = function(config) {
             cx: node.currentPosition.x - radius,
             cy: node.currentPosition.y - radius,
             r: G.nodeRadius / 4,
-            fill: `#${node.nodelistHash.slice(0, 6)}`
+            fill: `#${node.nodelistHash.slice(0, 6)}`,
+            opacity: 0
         })
         let group = node.circle.parentNode
         group.appendChild(cycleMarkerBox)
+        let circleStyler = styler($(`#${rectId}`))
+        setTimeout(() => {
+            tween({
+                from: 0,
+                to: { opacity: 1},
+                duration: 500,
+            }).start(circleStyler.set)
+        }, 1000)
         return $(`#${rectId}`)
     }
 
