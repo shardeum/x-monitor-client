@@ -630,7 +630,11 @@ let NetworkMonitor = function(config) {
         let clone = cloneTxCircle(injectedTx)
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode, true)
-        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2) + 1000
+        let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2)
+        dur = dur < 100 ? 100 : dur
+        // console.log(`travel distance is ${travelDistance.x},${travelDistance.y}`)
+        // console.log(`dur is ${dur}`)
+        // console.log('===')
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
