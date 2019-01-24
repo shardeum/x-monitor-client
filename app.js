@@ -146,7 +146,7 @@ let NetworkMonitor = function(config) {
                     injectedTx.circle.remove()    
                 }, G.txAnimationSpeed)
                 animatedInjection += 1
-                if (animatedInjection > txs) clearInterval(injectInterval)
+                if (animatedInjection >= txs) clearInterval(injectInterval)
             }, Math.floor(interval / txs))
         }
     }
