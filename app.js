@@ -161,8 +161,8 @@ let NetworkMonitor = function(config) {
             node.nodeListCycle = drawNodeListBox(node)
             let circleStyler = styler(node.circle)
             tween({
-                from: { fill: '#f9cb35' },
-                to: { fill: '#4caf50' },
+                from: { fill: `${G.colors['syncing']}` },
+                to: { fill: `${G.colors['active']}` },
                 duration: 500,
             }).start(circleStyler.set)
         }
@@ -318,8 +318,12 @@ let NetworkMonitor = function(config) {
 
     const relocateIntoNetwork = function(previousStatus, node) {
         if (previousStatus === 'joining') {
-            node.circle.setAttribute('fill', '#f9cb35')
-            node.circle.setAttribute('radius', G.nodeRadius)
+            let circleStyler = styler(node.circle)
+            tween({
+                from: { fill: `${G.colors['joining']}` },
+                to: { fill: `${G.colors['syncing']}` },
+                duration: 2000,
+            }).start(circleStyler.set)
             let networkPosition = calculateNetworkPosition(parseInt(node.nodeId.substr(0, 4), 16))
             node.despos = networkPosition.degree  // set the desired position of the node
             let x = networkPosition.x
@@ -332,7 +336,7 @@ let NetworkMonitor = function(config) {
             travelX = x - initialX
             travelY = y - initialY
             
-            let circleStyler = styler(node.circle)
+            // let circleStyler = styler(node.circle)
     
             tween({
                 from: 0,
@@ -400,18 +404,39 @@ let NetworkMonitor = function(config) {
     }
 
     const createNewNode = function(type, id) {
-        // const position = getJoiningPosition()
         const position = getJoiningNodePosition(id)
-        let circleId = drawCircle(position, G.nodeRadius, G.colors[type], 2, id)
-        let circle = $(`#${circleId}`)
-        let node = {
-            circle: circle,
-            circleId: id,
-            status: type,
-            currentPosition: position
+        let circleId
+        if (type === 'joining') {
+            circleId = drawCircle(position, G.nodeRadius, '#272727', 2, id)
+            setTimeout(() => {
+                let circleStyler = styler($(`#${circleId}`))
+                tween({
+                    from: { fill: '#272727' },
+                    to: { fill: `${G.colors['joining']}` },
+                    duration: 2000,
+                }).start(circleStyler.set)
+            }, 200)
+            let circle = $(`#${circleId}`)
+            let node = {
+                circle: circle,
+                circleId: id,
+                status: type,
+                currentPosition: position
+            }
+            if (type === 'joining') node.publicKey = id
+            return node
+        } else {
+           circleId = drawCircle(position, G.nodeRadius, G.colors[type], 2, id)
+           let circle = $(`#${circleId}`)
+           let node = {
+               circle: circle,
+               circleId: id,
+               status: type,
+               currentPosition: position
+           }
+           if (type === 'joining') node.publicKey = id
+           return node
         }
-        if (type === 'joining') node.publicKey = id
-        return node
     }
 
     const createNewTx = function() {
@@ -538,16 +563,17 @@ let NetworkMonitor = function(config) {
         let circleSVG
         circleSVG = `
         <g id="group-${circleId.slice(0, 4)}">
-            <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="0.0"/>
+            <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="1.0"/>
         </g>
         `
         $('.background').insertAdjacentHTML('beforeend', circleSVG)
         let circleStyler = styler($(`#${circleId}`))
         tween({
             from: 0,
-            to: { opacity: 1},
-            duration: 3000 * Math.random(),
+            to: { opacity: 1 },
+            duration: 100,
         }).start(circleStyler.set)
+
         return circleId
     }
 
@@ -784,11 +810,20 @@ let NetworkMonitor = function(config) {
                 </tr>
             </tbody>
         </table>
+        <img src="earth.png" alt="" id="earth">
         <svg height="100%" width="100%" class="background" style="top: 0px; left: 0px">
-            <circle cx="${X}" cy="${Y}" r="${R}" stroke="green" stroke-width="1" fill="#ffffff" id="networkCircle"/>
+            <circle cx="${X}" cy="${Y}" r="${R}" stroke="green" stroke-width="1" fill="#ffffff" id="networkCircle" opacity="0.1"/>
         </svg>
         `
         $('#app').innerHTML = networkHTML
+        let earth = $('#earth')
+        let earthSize = (R - 0) * 2
+        earth.style.width = `${earthSize}px`
+        earth.style.height = `${earthSize}px`
+        earth.style.position = 'absolute'
+        earth.style.display = 'block'
+        earth.style.top = `${G.VH / 2 - earthSize / 2 + 8}px`
+        earth.style.left = `${G.VW / 2 - earthSize / 2 + 8}px`
     }
 
     const getReport = async function() {

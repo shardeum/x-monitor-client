@@ -64,3 +64,13 @@ thead > tr {
   .tippy-popper[x-placement^='right'] .tippy-tooltip.tomato-theme .tippy-arrow {
     border-right-color: #5f5f5fcc;
   }
+
+#earth {
+    width: 300px;
+    height: 300px;
+    position: absolute;
+    display: block;
+    left: calc(50vw - 150px);
+    top: calc(50vh - 150px);
+    z-index: -100
+}
