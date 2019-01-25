@@ -27,6 +27,7 @@ let NetworkMonitor = function(config) {
         'transaction': '#f55555cc'
     }
     G.txAnimationSpeed = 800
+    G.stateCircleRadius = G.nodeRadius / 2.5
 
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
@@ -201,41 +202,45 @@ let NetworkMonitor = function(config) {
         </div>
         `
         node.circle.setAttribute('data-tippy-content', tooltipHTML)
-        tippy(node.circle, {
+        let groupId = `group-${node.circle.id.slice(0, 8)}`
+        let group = $(`#${groupId}`)
+        group.setAttribute('data-tippy-content', tooltipHTML)
+        tippy(group, {
             theme: 'tomato',
             animation: 'perspective',
             arrow: true,
             size: 'small',
             duration: [475, 450]
         })
-        const instance = node.circle._tippy
+        const instance = group._tippy
+        // const instance = node.circle._tippy
 
-        node.rectangel.setAttribute('data-tippy-content', 'App State')
-        tippy(node.rectangel, {
-            theme: 'tomato',
-            animation: 'perspective',
-            arrow: true,
-            size: 'small',
-            duration: [475, 450]
-        })
+        // node.rectangel.setAttribute('data-tippy-content', 'App State')
+        // tippy(node.rectangel, {
+        //     theme: 'tomato',
+        //     animation: 'perspective',
+        //     arrow: true,
+        //     size: 'small',
+        //     duration: [475, 450]
+        // })
 
-        node.markerCycle.setAttribute('data-tippy-content', 'Cyclemarker')
-        tippy(node.markerCycle, {
-            theme: 'tomato',
-            animation: 'perspective',
-            arrow: true,
-            size: 'small',
-            duration: [475, 450]
-        })
+        // node.markerCycle.setAttribute('data-tippy-content', 'Cyclemarker')
+        // tippy(node.markerCycle, {
+        //     theme: 'tomato',
+        //     animation: 'perspective',
+        //     arrow: true,
+        //     size: 'small',
+        //     duration: [475, 450]
+        // })
 
-        node.nodeListCycle.setAttribute('data-tippy-content', 'Nodelist')
-        tippy(node.nodeListCycle, {
-            theme: 'tomato',
-            animation: 'perspective',
-            arrow: true,
-            size: 'small',
-            duration: [475, 450]
-        })
+        // node.nodeListCycle.setAttribute('data-tippy-content', 'Nodelist')
+        // tippy(node.nodeListCycle, {
+        //     theme: 'tomato',
+        //     animation: 'perspective',
+        //     arrow: true,
+        //     size: 'small',
+        //     duration: [475, 450]
+        // })
         return instance
     }
 
@@ -474,13 +479,13 @@ let NetworkMonitor = function(config) {
 
     const drawStateCircle = function(node) {
         if(!node.appState) return
-        let radius = G.nodeRadius / 4
+        let radius = G.stateCircleRadius
         let rectId =`abc${node.nodeId.substr(0, 6)}xyz`
         let stateRec = makeSVGEl('circle', {
             id: rectId,
             cx: node.currentPosition.x,
             cy: node.currentPosition.y + radius,
-            r: G.nodeRadius / 4,
+            r: G.stateCircleRadius,
             fill: `#${node.appState.slice(0, 6)}`,
             opacity: 0
         })
@@ -501,7 +506,7 @@ let NetworkMonitor = function(config) {
     const drawCycleMarkerBox = function(node) {
         if(!node.cycleMarker) return
 
-        let radius = G.nodeRadius / 4
+        let radius = G.stateCircleRadius
         let x = 2 * radius * Math.cos(Math.PI / 4)
         let y = 2 * radius * Math.sin(Math.PI / 4)
 
@@ -510,7 +515,7 @@ let NetworkMonitor = function(config) {
             id: rectId,
             cx: node.currentPosition.x + radius,
             cy: node.currentPosition.y - radius,
-            r: G.nodeRadius / 4,
+            r: G.stateCircleRadius,
             fill: `#${node.cycleMarker.slice(0, 6)}`,
             opacity: 0
         })
@@ -530,7 +535,7 @@ let NetworkMonitor = function(config) {
     const drawNodeListBox = function(node) {
         if(!node.nodelistHash) return
 
-        let radius = G.nodeRadius / 4
+        let radius = G.stateCircleRadius
         let x = 2 * radius * Math.cos(Math.PI / 4)
         let y = 2 * radius * Math.sin(Math.PI / 4)
 
@@ -539,7 +544,7 @@ let NetworkMonitor = function(config) {
             id: rectId,
             cx: node.currentPosition.x - radius,
             cy: node.currentPosition.y - radius,
-            r: G.nodeRadius / 4,
+            r: G.stateCircleRadius,
             fill: `#${node.nodelistHash.slice(0, 6)}`,
             opacity: 0
         })
@@ -562,7 +567,7 @@ let NetworkMonitor = function(config) {
         else circleId = `abc${parseInt(Date.now() * Math.random())}xyz`
         let circleSVG
         circleSVG = `
-        <g id="group-${circleId.slice(0, 4)}">
+        <g id="group-${circleId.slice(0, 8)}">
             <circle cx="${position.x}" cy="${position.y}" r="${radius}" stroke="#eeeeee" stroke-width="0" fill="${fill}" id="${circleId}" key="${id}" class="joining-node" opacity="1.0"/>
         </g>
         `
@@ -631,10 +636,7 @@ let NetworkMonitor = function(config) {
         let circleStyler = styler(clone.circle)
         let travelDistance = distanceBtnTwoNodes(clone, targetNode, true)
         let dur = Math.sqrt(travelDistance.x**2 + travelDistance.y**2)
-        dur = dur < 100 ? 100 : dur
-        // console.log(`travel distance is ${travelDistance.x},${travelDistance.y}`)
-        // console.log(`dur is ${dur}`)
-        // console.log('===')
+        dur = dur < 100 ? 100 : dur * 2
         tween({
             from: 0,
             to: { x: travelDistance.x, y: travelDistance.y},
@@ -717,7 +719,7 @@ let NetworkMonitor = function(config) {
         }
 
         if (node.status === 'active') {
-            let radius = G.nodeRadius / 4
+            let radius = G.stateCircleRadius
             // move app state circle
             let initialX = node.rectangel.getAttribute('cx')
             let initialY = node.rectangel.getAttribute('cy')
