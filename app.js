@@ -4,7 +4,7 @@ window.$ = function(selector) { // shorthand for query selector
     return elements
 }
 
-let { tween, styler, listen, pointer, timeline, easing } = window.popmotion
+let { tween, styler, listen, pointer, timeline, easing, chain } = window.popmotion
 
 let NetworkMonitor = function(config) {
     let G = {} // semi-global namespace
@@ -415,11 +415,20 @@ let NetworkMonitor = function(config) {
             circleId = drawCircle(position, G.nodeRadius, '#272727', 2, id)
             setTimeout(() => {
                 let circleStyler = styler($(`#${circleId}`))
-                tween({
-                    from: { fill: '#272727' },
-                    to: { fill: `${G.colors['joining']}` },
-                    duration: 2000,
-                }).start(circleStyler.set)
+                let duration = Math.random() * 600
+                duration = (duration < 200 ) ? duration + 200 : duration
+                chain(
+                    tween({
+                        from: { fill: '#292929', scale: 0.5 },
+                        to: { fill: `${G.colors['joining']}`, scale: 1.6 },
+                        duration: duration,
+                    }),
+                    tween({
+                        from: { scale: 1.6 },
+                        to: { scale: 1.0 },
+                        duration: duration,
+                    })
+                ).start(circleStyler.set)
             }, 200)
             let circle = $(`#${circleId}`)
             let node = {
