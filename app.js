@@ -140,7 +140,7 @@ let NetworkMonitor = function(config) {
                 setTimeout(() => {
                     injectedTx.currentPosition.x += travelDistance.x
                     injectedTx.currentPosition.y += travelDistance.y
-                    let randomNodes = getRandomActiveNodes(50, node)
+                    let randomNodes = getRandomActiveNodes(5, node)
                     for (let i = 0; i < randomNodes.length; i += 1) {
                         forwardInjectedTx(injectedTx, randomNodes[i])
                     }
