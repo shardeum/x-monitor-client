@@ -13,7 +13,7 @@ let NetworkMonitor = function (config) {
     G.VH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
     canvas = new fabric.StaticCanvas("c");
     canvas.selection = false
-    canvas.renderOnAddRemove = false
+    canvas.renderOnAddRemove = true
     canvas.skipTargetFind = true
 
     fabric.Object.prototype.transparentCorners = false;
@@ -73,8 +73,7 @@ let NetworkMonitor = function (config) {
                 appState: generateHash(64),
                 nodelistHash: generateHash(64),
                 cycleMarker: generateHash(64),
-                // txInjected: Math.round(Math.random()),
-                txInjected: Math.random() * 0.7,
+                txInjected: 1,
                 txApplied: 0,
                 reportInterval: 2,
                 nodeIpInfo: {
@@ -510,7 +509,7 @@ let NetworkMonitor = function (config) {
             objectCaching: false
         });
         canvas.add(circle);
-        canvas.renderAll()
+        // canvas.renderAll()
         return circle
     }
 
@@ -611,12 +610,12 @@ let NetworkMonitor = function (config) {
         let travelDistance = distanceBtnTwoNodes(injectedTx, targetNode, true)
         let dur = Math.sqrt(travelDistance.x ** 2 + travelDistance.y ** 2)
         if (dur < 100) dur = 100
-        else dur = dur * 1.5
+        else dur = dur * 0.8
         transformCircle(injectedTx.circle, targetNode.currentPosition.x, targetNode.currentPosition.y, null, dur)
         setTimeout(() => {
             canvas.remove(injectedTx.circle)
             injectedTx = null
-            canvas.renderAll()
+            // canvas.renderAll()
         }, dur)
     }
 
@@ -712,7 +711,7 @@ let NetworkMonitor = function (config) {
                 let scale = G.R * 2 / oImg.width
                 oImg.set('centeredScaling', true)
                 canvas.add(oImg.set({ left: left, top: right, angle: angle }).scale(scale));
-                canvas.renderAll()
+                // canvas.renderAll()
                 resolve(oImg)
             });
         });
