@@ -24,13 +24,12 @@ let NetworkMonitor = function(config) {
     window.innerHeight || 0
   );
 
-
   G.R = config.networkCircleRadius || 200;
   G.X = config.networkCircleX || G.VW / 2;
   G.Y = config.networkCircleY || G.VH / 2;
   G.nodeRadius = config.nodeRadius || 200;
-  G.monitorServerUrl =
-    config.monitorServerUrl || `https://tn1.shardus.com:3000/api`;
+  G.monitorServerUrl = config.monitorServerUrl || `https://tn1.shardus.com:3000/api`;
+  G.environment = config.environment || `production`;
   G.maxId = parseInt("ffff", 16);
   G.joining = {};
   G.syncing = {};
@@ -45,6 +44,9 @@ let NetworkMonitor = function(config) {
   G.txAnimationSpeed = 800;
   G.stateCircleRadius = G.nodeRadius / 2.5;
   G.nodeToForward = 5;
+
+  let testNodeCount = 0;
+  let testNodeLimit = 20
 
   let report = {
     joining: {},
@@ -78,7 +80,7 @@ let NetworkMonitor = function(config) {
     return hash;
   };
 
-  const getNode = function() {
+  const generateNode = function() {
     let hash = generateHash(64);
     report.joining[hash] = true;
     setTimeout(() => {
@@ -106,19 +108,20 @@ let NetworkMonitor = function(config) {
       delete report.syncing[hash];
     }, 10000);
   };
-  let nodeCount = 0;
-  let addNodeInterval = setInterval(() => {
-    getNode();
-    nodeCount += 1;
-    if (nodeCount > 19) clearInterval(addNodeInterval);
-  }, 3000);
 
   const init = async function() {
     drawNetworkCycle(G.R, G.X, G.Y);
     $("#reset-report").addEventListener("click", flushReport);
+    if (G.environment === 'test') {
+      let addNodeInterval = setInterval(() => {
+        generateNode();
+        testNodeCount += 1;
+        if (testNodeCount > testNodeLimit) clearInterval(addNodeInterval);
+      }, 3000);
+    }
+    
     let updateReportInterval = setInterval(async () => {
-      // let report = await getReport()
-
+      if(G.environment === 'production') report = await getReport()
       for (let publicKey in report.joining) {
         if (!G.joining[publicKey]) {
           G.joining[publicKey] = createNewNode("joining", publicKey);
