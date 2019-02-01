@@ -39,7 +39,8 @@ let NetworkMonitor = function(config) {
     joining: "#999",
     syncing: "#f9cb35",
     active: "#16c716",
-    transaction: "#f55555cc"
+    transaction: "#f55555cc",
+    tooltip: '#5f5f5fcc'
   };
   G.txAnimationSpeed = 800;
   G.stateCircleRadius = G.nodeRadius / 2.5;
@@ -103,7 +104,7 @@ let NetworkMonitor = function(config) {
     }, 8000);
     setTimeout(() => {
       delete report.syncing[hash];
-    }, 6000);
+    }, 10000);
   };
   let nodeCount = 0;
   let addNodeInterval = setInterval(() => {
@@ -214,7 +215,6 @@ let NetworkMonitor = function(config) {
             report.active[nodeId].nodeIpInfo.externalIp;
           G.active[nodeId].externalPort =
             report.active[nodeId].nodeIpInfo.externalPort;
-          updateTooltip(G.active[nodeId]);
         }
       }
       updateTables();
@@ -294,52 +294,40 @@ let NetworkMonitor = function(config) {
   };
 
   const drawTooltip = function(node) {
-    // let nodeIdShort = `${node.nodeId.slice(0,4)}...${node.nodeId.slice(59,63)}`
-    // let cycleMarkerShort = `${node.cycleMarker.slice(0,4)}...${node.cycleMarker.slice(59,63)}`
-    // let appStateShort = `${node.appState.slice(0,4)}...${node.appState.slice(59,63)}`
-    // let nodeListShort = `${node.nodelistHash.slice(0,4)}...${node.nodelistHash.slice(59,63)}`
-    // let tooltipHTML = `
-    // <div style="text-align: left" id="tooltip-${node.nodeId.slice(0,4)}">
-    //     <p>NodeId: <strong class="tooltip-nodeId">${nodeIdShort}</strong></p>
-    //     <p>Marker: <strong class="tooltip-cycleMarker">${cycleMarkerShort}</strong></p>
-    //     <p>State: <strong class="tooltip-appState">${appStateShort}</strong></p>
-    //     <p>Nodelist: <strong class="tooltip-nodeList">${nodeListShort}</strong></p>
-    //     <p>ExtIP: <strong class="tooltip-extIP">${node.externalIp}</strong></p>
-    //     <p>ExtPort: <strong class="tooltip-extPort">${node.externalPort}</strong></p>
-    // </div>
-    // `
-    // node.circle.setAttribute('data-tippy-content', tooltipHTML)
-    // let groupId = `group-${node.circle.id.slice(0, 8)}`
-    // let group = $(`#${groupId}`)
-    // group.setAttribute('data-tippy-content', tooltipHTML)
-    // tippy(group, {
-    //     theme: 'tomato',
-    //     animation: 'perspective',
-    //     arrow: true,
-    //     size: 'small',
-    //     duration: [475, 450]
-    // })
-    // const instance = group._tippy
-    // return instance
-  };
+    stage.enableMouseOver(20)
+    node.circle.on('mouseover', () => {
+      let position = {
+        x: node.currentPosition.x - 150 / 2,
+        y: node.currentPosition.y - 150 - 30
+      }
+      let nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(59, 63)}`
+      let cycleMarkerShort = `${node.cycleMarker.slice(0, 4)}...${node.cycleMarker.slice(59, 63)}`
+      let appStateShort = `${node.appState.slice(0, 4)}...${node.appState.slice(59, 63)}`
+      let nodeListShort = `${node.nodelistHash.slice(0, 4)}...${node.nodelistHash.slice(59, 63)}`
+      node.tooltipRect = drawRectangle(position, 150, 150, 5, G.colors['tooltip'])
+      node.textList = []
+      let marginBottom = 22
+      let marginLeft = 15
 
-  const updateTooltip = function(node) {
-    // let instance = node.tooltipInstance
-    // let nodeIdShort = `${node.nodeId.slice(0,4)}...${node.nodeId.slice(59,63)}`
-    // let cycleMarkerShort = `${node.cycleMarker.slice(0,4)}...${node.cycleMarker.slice(59,63)}`
-    // let appStateShort = `${node.appState.slice(0,4)}...${node.appState.slice(59,63)}`
-    // let nodeListShort = `${node.nodelistHash.slice(0,4)}...${node.nodelistHash.slice(59,63)}`
-    // let tooltipHTML = `
-    // <div style="text-align: left" id="tooltip-${node.nodeId.slice(0,4)}">
-    //     <p>NodeId: <strong class="tooltip-nodeId">${nodeIdShort}</strong></p>
-    //     <p>Marker: <strong class="tooltip-cycleMarker">${cycleMarkerShort}</strong></p>
-    //     <p>State: <strong class="tooltip-appState">${appStateShort}</strong></p>
-    //     <p>Nodelist: <strong class="tooltip-nodeList">${nodeListShort}</strong></p>
-    //     <p>ExtIP: <strong class="tooltip-extIP">${node.externalIp}</strong></p>
-    //     <p>ExtPort: <strong class="tooltip-extPort">${node.externalPort}</strong></p>
-    // </div>
-    // `
-    // instance.setContent(tooltipHTML)
+      node.textList.push(drawText(`nodeId: ${nodeIdShort}`, {x: position.x + marginLeft, y: position.y + marginBottom}, 13, "#ffffff"))
+      node.textList.push(drawText(`marker: ${cycleMarkerShort}`, {x: position.x + marginLeft, y: position.y + marginBottom * 2}, 13, "#ffffff"))
+      node.textList.push(drawText(`state: ${appStateShort}`, {x: position.x + marginLeft, y: position.y + marginBottom * 3}, 13, "#ffffff"))
+      node.textList.push(drawText(`nodeList: ${nodeListShort}`, {x: position.x + marginLeft, y: position.y + marginBottom * 4}, 13, "#ffffff"))
+      node.textList.push(drawText(`ExtIp: ${node.externalIp}`, {x: position.x + marginLeft, y: position.y + marginBottom * 5}, 13, "#ffffff"))
+      node.textList.push(drawText(`ExtPort: ${node.externalPort}`, {x: position.x + marginLeft, y: position.y + marginBottom * 6}, 13, "#ffffff"))
+    })
+
+    node.circle.on('mouseout', () => {
+      if (node.tooltipRect) {
+        node.tooltipRect.graphics.clear();
+        for (let i = 0; i < node.textList.length; i++) {
+          node.textList[i].parent.removeChild(node.textList[i]);
+        }
+        stage.update();
+        node.textList = null
+        node.tooltipRect = null
+      }
+    })    
   };
 
   const updateStateCircle = function() {
@@ -349,7 +337,7 @@ let NetworkMonitor = function(config) {
 
       if (node.rectangel) {
         // update state color
-        node.rectangel.set("fill", `#${node.appState.slice(0, 6)}`);
+        node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
       } else {
         node.rectangel = drawStateCircle(node);
       }
@@ -363,7 +351,7 @@ let NetworkMonitor = function(config) {
 
       if (node.cycleMarker) {
         // update cycle marker color
-        node.markerCycle.set("fill", `#${node.cycleMarker.slice(0, 6)}`);
+        node.markerCycle.myFill.style = `#${node.cycleMarker.slice(0, 6)}`
       } else {
         node.markerCycle = drawCycleMarkerBox(node);
       }
@@ -377,7 +365,7 @@ let NetworkMonitor = function(config) {
 
       if (node.nodelistHash) {
         // update nodelist Hash color
-        node.nodeListCycle.set("fill", `#${node.nodelistHash.slice(0, 6)}`);
+        node.nodeListCycle.myFill.style = `#${node.nodelistHash.slice(0, 6)}`
       } else {
         node.nodeListCycle = drawNodeListBox(node);
       }
@@ -464,12 +452,14 @@ let NetworkMonitor = function(config) {
       let networkPosition = calculateNetworkPosition(
         parseInt(id.substr(0, 4), 16)
       );
-      circle = drawCircle(position, G.nodeRadius, G.colors["joining"], 2, id);
+      // circle = drawCircle(position, G.nodeRadius, G.colors["joining"], 2, id, 1.0);
+      circle = drawCircle({x: 0, y: 0}, G.nodeRadius, G.colors["joining"], 2, id, 0.1);
       let node = {
         circle: circle,
         status: type,
         currentPosition: circle
       };
+      growAndShrink(circle, position)
       if (type === "joining") node.publicKey = id;
       return node;
     } else {
@@ -523,8 +513,12 @@ let NetworkMonitor = function(config) {
         y: node.currentPosition.y + radius
       },
       radius,
-      `#${node.appState.slice(0, 6)}`
+      `#${node.appState.slice(0, 6)}`,
+      null,
+      null,
+      0.1
     );
+    animateFadeIn(stateCircle, 500, 1000)
     return stateCircle;
   };
 
@@ -541,8 +535,12 @@ let NetworkMonitor = function(config) {
         y: node.currentPosition.y - radius
       },
       radius,
-      `#${node.cycleMarker.slice(0, 6)}`
+      `#${node.cycleMarker.slice(0, 6)}`,
+      null,
+      null,
+      0.1
     );
+    animateFadeIn(cycleMarkerCircle, 500, 1000)
     return cycleMarkerCircle;
   };
 
@@ -559,16 +557,21 @@ let NetworkMonitor = function(config) {
         y: node.currentPosition.y - radius
       },
       radius,
-      `#${node.nodelistHash.slice(0, 6)}`
+      `#${node.nodelistHash.slice(0, 6)}`,
+      null,
+      null,
+      0.1
     );
+    animateFadeIn(nodeListCircle, 500, 1000)
     return nodeListCircle;
   };
 
-  const drawCircle = function(position, radius, fill, stroke, id, tooltip) {
+  const drawCircle = function(position, radius, fill, stroke, id, alpha) {
     var circle = new createjs.Shape();
     var myFill = circle.graphics.beginFill(fill).command;
     // circle.graphics.beginFill(fill).drawCircle(position.x, position.y, radius);
     circle.graphics.drawCircle(position.x, position.y, radius);
+    if (alpha) circle.alpha = alpha
     circle.myFill = myFill;
     circle.name = generateHash(4);
     stage.addChild(circle);
@@ -577,6 +580,27 @@ let NetworkMonitor = function(config) {
 
     stage.update();
     return circle;
+  };
+
+  const drawRectangle = function(position, width, height, borderRadius, fill) {
+    var rect = new createjs.Shape();
+    var myFill = rect.graphics.beginFill(fill).command;
+    rect.graphics.drawRoundRectComplex(position.x, position.y, width, height, borderRadius, borderRadius, borderRadius, borderRadius);
+    rect.myFill = myFill;
+    rect.name = generateHash(4);
+    stage.addChild(rect);
+    stage.update();
+    return rect;
+  };
+
+  const drawText = function(message, position, fontSize, fontColor) {
+    var text = new createjs.Text(message, `${fontSize}px Arial`, fontColor);
+    text.x = position.x;
+    text.y = position.y;
+    text.textBaseline = "alphabetic";
+    stage.addChild(text);
+    stage.update();
+    return text;
   };
 
   function transformCircle(circle, x, y, fill, duration) {
@@ -599,6 +623,34 @@ let NetworkMonitor = function(config) {
     // TweenLite.ticker.addEventListener("tick", stage.update, stage);
     // stage.update();
     // TweenLite.to(circle, duration / 1000, {x: travelX, y: travelY, easel:{tint:0x00FF00}, ease: Power0.easeNone});
+  }
+
+  function animateFadeIn(circle, duration, wait) {
+    createjs.Tween.get(circle, { loop: false }).wait(wait).to(
+      { alpha: 1.0 },
+      duration,
+      createjs.Ease.linear
+    );
+    createjs.Ticker.framerate = 60;
+    createjs.Ticker.addEventListener("tick", stage);
+  }
+
+  function growAndShrink(rec, position) {
+        rec.scaleX = .5;		
+        rec.scaleY = .5;
+        rec.x = position.x;
+        rec.y = position.y;
+        rec.regX = rec.radius/4;
+        rec.regY = rec.radius/4;
+        let duration = Math.random() * 800
+        duration = (duration < 400) ? 400 : duration
+         
+        createjs.Tween.get(rec, { loop: false })
+          .to({ scale: 1.4, alpha: 0.5},duration,createjs.Ease.linear)
+          .to({ scale: 1.0, alpha: 1.0},duration,createjs.Ease.linear)
+        
+        createjs.Ticker.framerate = 60;
+        createjs.Ticker.addEventListener("tick", stage);
   }
 
   const distanceBtnTwoNodes = function(node1, node2, substract) {
