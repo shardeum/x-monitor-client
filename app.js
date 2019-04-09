@@ -362,7 +362,7 @@ let NetworkMonitor = function (config) {
 			node.tooltipRect = drawRectangle(
 				position,
 				150,
-				150,
+				190,
 				5,
 				G.colors['tooltip']
 			)
@@ -425,6 +425,26 @@ let NetworkMonitor = function (config) {
 					`ExtPort: ${node.externalPort}`, {
 						x: position.x + marginLeft,
 						y: position.y + marginBottom * 6
+					},
+					13,
+					'#ffffff'
+				)
+			)
+			node.textList.push(
+				drawText(
+					`TxInjected: ${node.txInjected.toFixed(1)} tx/s`, {
+						x: position.x + marginLeft,
+						y: position.y + marginBottom * 7
+					},
+					13,
+					'#ffffff'
+				)
+			)
+			node.textList.push(
+				drawText(
+					`TxApplied: ${node.txApplied.toFixed(1)} tx/s`, {
+						x: position.x + marginLeft,
+						y: position.y + marginBottom * 8
 					},
 					13,
 					'#ffffff'

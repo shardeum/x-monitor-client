@@ -1,34 +1,33 @@
 <html>
-	<head>
-		<title>Network Monitor</title>
-		<link rel="stylesheet" href="style.css" />
-		<script
-			src="https://code.jquery.com/jquery-3.3.1.min.js"
-			integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-			crossorigin="anonymous"
-		></script>
-		<script src="fabric.js"></script>
-		<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-		<script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.0.2/TweenLite.min.js"></script>
-	</head>
 
-	<body>
-		<div id="app"></div>
+<head>
+    <title>Network Monitor</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="fabric.js"></script>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.0.2/TweenLite.min.js"></script>
+</head>
 
-		<canvas id="demoCanvas" width="1500" height="800"></canvas>
-		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-		<script src="https://unpkg.com/popmotion/dist/popmotion.global.min.js"></script>
-		<script src="app.js"></script>
-		<script>
-			NetworkMonitor({
-				networkCircleRadius: 250,
-				nodeRadius: 20,
-				// monitorServerUrl: 'http://172.104.57.87:3000/api'
-				monitorServerUrl: 'http://139.162.21.171:5000/api',
-				environment: 'test'
-			})
-		</script>
-		<script src="https://unpkg.com/tippy.js@3/dist/tippy.all.min.js"></script>
-	</body>
+<body>
+    <div id="app"></div>
+
+    <canvas id="demoCanvas" width="1500" height="800"></canvas>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/popmotion/dist/popmotion.global.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        NetworkMonitor({
+            networkCircleRadius: 250,
+            nodeRadius: 20,
+            // monitorServerUrl: 'http://172.104.57.87:3000/api'
+            monitorServerUrl: 'http://139.162.21.171:5000/api',
+            environment: 'production'
+        })
+    </script>
+    <script src="https://unpkg.com/tippy.js@3/dist/tippy.all.min.js"></script>
+</body>
+
 </html>
