@@ -44,7 +44,7 @@ let NetworkMonitor = function(config) {
 	}
 	G.txAnimationSpeed = 800
 	G.stateCircleRadius = G.nodeRadius / 2.5
-	G.nodeToForward = 5
+	G.nodeToForward = 4
 	G.generatedTxArray = {}
 
 	let testNodeCount = 0
@@ -97,7 +97,7 @@ let NetworkMonitor = function(config) {
 				appState: generateHash(64),
 				nodelistHash: generateHash(64),
 				cycleMarker: generateHash(64),
-				txInjected: 0.5,
+				txInjected: 1,
 				txApplied: 0,
 				reportInterval: 2,
 				nodeIpInfo: {
@@ -278,12 +278,10 @@ let NetworkMonitor = function(config) {
 					injectedTx.currentPosition = node.currentPosition
 					let randomNodes = getRandomActiveNodes(G.nodeToForward, node)
 					for (let i = 0; i < randomNodes.length; i += 1) {
-						// let clonedTx = cloneTxCircle(injectedTx)
-
 						let clonedTx = G.generatedTxArray[nodeId][i]
-						clonedTx.circle.currentPosition = node.currentPosition
+						// clonedTx.circle.currentPosition = node.currentPosition
+						// clonedTx.currentPosition = node.currentPosition
 						clonedTx.data = injectedTx.data
-						clonedTx.currentPosition = node.currentPosition
 						forwardInjectedTx(clonedTx, randomNodes[i], node)
 					}
 					injectedTx.circle.graphics.clear()
@@ -956,16 +954,15 @@ let NetworkMonitor = function(config) {
 	}
 
 	const forwardInjectedTx = function(clonedTx, targetNode, sourceNode) {
+		if (clonedTx.circle.currentPosition.x !== sourceNode.currentPosition.x) {
+			clonedTx.circle.currentPosition = sourceNode.currentPosition
+		}
 		if (clonedTx.circle.currentPosition.x === sourceNode.currentPosition.x) {
 			let endPoint = distanceBtnTwoNodes(clonedTx, targetNode, true)
 			let dur = Math.sqrt(endPoint.x ** 2 + endPoint.y ** 2)
 			if (dur < 100) dur = 100
 			else dur = dur
-			dur = dur * 1.5
-			// console.log(clonedTx.currentPosition)
-			// console.log(endPoint)
-			// console.log(targetNode.currentPosition)
-			// console.log('=================================')
+			// dur = dur * 1.5
 			clonedTx.circle.visible = true
 			transformCircle(
 				clonedTx.circle,
@@ -974,8 +971,7 @@ let NetworkMonitor = function(config) {
 				endPoint.x + sourceNode.currentPosition.x,
 				endPoint.y + sourceNode.currentPosition.y,
 				null,
-				dur,
-				true
+				dur
 			)
 
 			// hide tx circle and move it back to starting position for later REUSE
@@ -983,12 +979,14 @@ let NetworkMonitor = function(config) {
 				clonedTx.circle.visible = false
 				// transformCircle(
 				// 	clonedTx.circle,
-				// 	clonedTx.circle.currentPosition.x,
-				// 	clonedTx.circle.currentPosition.y,
+				// 	sourceNode.currentPosition.x,
+				// 	sourceNode.currentPosition.y,
 				// 	null,
 				// 	20
 				// )
 			}, dur)
+		} else {
+			console.log('source node and tx circle are not at same place..')
 		}
 	}
 
