@@ -1130,7 +1130,7 @@ let NetworkMonitor = function (config) {
             <thead>
                 <tr>
                     <td>Cycle Marker</td>
-                    <td>Average TPS Applied / Node</td>
+                    <td>Average TPS</td>
                 </tr>
             </thead>
             <tbody>
