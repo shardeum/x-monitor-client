@@ -99,6 +99,7 @@ let NetworkMonitor = function (config) {
 				cycleMarker: generateHash(64),
 				txInjected: Math.random(),
 				txApplied: Math.random(),
+				desiredNodes: Math.random(),
 				reportInterval: 2,
 				nodeIpInfo: {
 					externalIp: '127.0.0.1',
@@ -182,6 +183,7 @@ let NetworkMonitor = function (config) {
 							G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 							G.active[nodeId].txInjected = report.active[nodeId].txInjected
 							G.active[nodeId].txApplied = report.active[nodeId].txApplied
+							G.active[nodeId].desiredNodes = report.active[nodeId].desiredNodes
 							G.active[nodeId].reportInterval =
 								report.active[nodeId].reportInterval
 							G.active[nodeId].externalIp =
@@ -204,6 +206,7 @@ let NetworkMonitor = function (config) {
 							G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 							G.active[nodeId].txInjected = report.active[nodeId].txInjected
 							G.active[nodeId].txApplied = report.active[nodeId].txApplied
+							G.active[nodeId].desiredNodes = report.active[nodeId].desiredNodes
 							G.active[nodeId].reportInterval =
 								report.active[nodeId].reportInterval
 							G.active[nodeId].externalIp =
@@ -222,6 +225,7 @@ let NetworkMonitor = function (config) {
 					G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 					G.active[nodeId].txInjected = report.active[nodeId].txInjected
 					G.active[nodeId].txApplied = report.active[nodeId].txApplied
+					G.active[nodeId].desiredNodes = report.active[nodeId].desiredNodes
 					G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
 					G.active[nodeId].externalIp =
 						report.active[nodeId].nodeIpInfo.externalIp
@@ -241,7 +245,9 @@ let NetworkMonitor = function (config) {
 				}
 			}
 			let totalTxApplied = 0
+			let totalDesiredNodes = 0
 			let averageTpsApplied = 0
+			let averageDesiredNodes = 0
 			let activeNodeCount = 0
 			for (let nodeId in G.active) {
 				if (nodeId !== null) {
@@ -249,13 +255,17 @@ let NetworkMonitor = function (config) {
 					if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
 					else {
 						const txApplied = G.active[nodeId].txApplied
+						const desiredNodes = G.active[nodeId].desiredNodes
 						totalTxApplied += txApplied
+						totalDesiredNodes += desiredNodes
 						activeNodeCount += 1
 					}
 				}
 			}
 			averageTpsApplied = Math.ceil(totalTxApplied / activeNodeCount)
 			if (!Number.isNaN(averageTpsApplied)) $("#current-averagetps").innerHTML = averageTpsApplied
+			averageDesiredNodes = Math.ceil(totalDesiredNodes / activeNodeCount)
+			if (!Number.isNaN(averageDesiredNodes)) $("#node-info-desired").innerHTML = averageDesiredNodes
 			updateTables()
 			injectTransactions()
 			updateStateCircle()
@@ -1111,6 +1121,7 @@ let NetworkMonitor = function (config) {
         <table id="node-info-table">
             <thead>
                 <tr>
+                    <td>Desired</td>
                     <td>Joining</td>
                     <td>Syncing</td>
                     <td>Active</td>
@@ -1119,6 +1130,7 @@ let NetworkMonitor = function (config) {
             </thead>
             <tbody>
                 <tr>
+                    <td id="node-info-desired">0</td>
                     <td id="node-info-joining">0</td>
                     <td id="node-info-syncing">0</td>
                     <td id="node-info-active">0</td>
