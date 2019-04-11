@@ -1130,10 +1130,10 @@ let NetworkMonitor = function (config) {
             </thead>
             <tbody>
                 <tr>
-                    <td id="node-info-desired">0</td>
                     <td id="node-info-joining">0</td>
                     <td id="node-info-syncing">0</td>
                     <td id="node-info-active">0</td>
+                    <td id="node-info-desired">0</td>
                     <td id="node-info-total">0</td>
                 </tr>
             </tbody>
