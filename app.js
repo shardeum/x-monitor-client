@@ -97,6 +97,7 @@ let NetworkMonitor = function (config) {
 				appState: generateHash(64),
 				nodelistHash: generateHash(64),
 				cycleMarker: generateHash(64),
+				cycleCounter: Math.random(),
 				txInjected: Math.random(),
 				txApplied: Math.random(),
 				txRejected: Math.random(),
@@ -184,6 +185,7 @@ let NetworkMonitor = function (config) {
 						try {
 							G.active[nodeId].appState = report.active[nodeId].appState
 							G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+							G.active[nodeId].cycleCounter = report.active[nodeId].cycleCounter
 							G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 							G.active[nodeId].txInjected = report.active[nodeId].txInjected
 							G.active[nodeId].txApplied = report.active[nodeId].txApplied
@@ -209,6 +211,7 @@ let NetworkMonitor = function (config) {
 						try {
 							G.active[nodeId].appState = report.active[nodeId].appState
 							G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+							G.active[nodeId].cycleCounter = report.active[nodeId].cycleCounter
 							G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 							G.active[nodeId].txInjected = report.active[nodeId].txInjected
 							G.active[nodeId].txApplied = report.active[nodeId].txApplied
@@ -230,6 +233,7 @@ let NetworkMonitor = function (config) {
 				} else if (G.active[nodeId] && report.active[nodeId].appState) {
 					G.active[nodeId].appState = report.active[nodeId].appState
 					G.active[nodeId].cycleMarker = report.active[nodeId].cycleMarker
+					G.active[nodeId].cycleCounter = report.active[nodeId].cycleCounter
 					G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 					G.active[nodeId].txInjected = report.active[nodeId].txInjected
 					G.active[nodeId].txApplied = report.active[nodeId].txApplied
@@ -361,6 +365,8 @@ let NetworkMonitor = function (config) {
 				0,
 				4
 			)}...${currentCycleMarker.slice(59, 63)}`
+			let currentCycleCounter = Math.round(G.active[Object.keys(G.active)[0]].cycleCounter || 0)
+			$('#current-cyclecounter').innerHTML = currentCycleCounter
 		}
 	}
 
@@ -1193,6 +1199,7 @@ let NetworkMonitor = function (config) {
             <thead>
                 <tr>
                     <td>Cycle Marker</td>
+                    <td>Cycle Counter</td>
                     <td>Average TPS</td>
                     <td>Rejected Txs</td>
                     <td>Expired Txs</td>
@@ -1201,6 +1208,7 @@ let NetworkMonitor = function (config) {
             <tbody>
                 <tr>
                     <td id="current-cyclemarker">-</td>
+                    <td id="current-cyclecounter">-</td>
                     <td id="current-averagetps">-</td>
                     <td id="total-tx-rejected">-</td>
                     <td id="total-tx-expired">-</td>
