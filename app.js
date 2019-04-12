@@ -262,9 +262,9 @@ let NetworkMonitor = function (config) {
 					}
 				}
 			}
-			averageTpsApplied = Math.ceil(totalTxApplied / activeNodeCount)
+			averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
 			if (!Number.isNaN(averageTpsApplied)) $("#current-averagetps").innerHTML = averageTpsApplied
-			averageDesiredNodes = Math.ceil(totalDesiredNodes / activeNodeCount)
+			averageDesiredNodes = Math.round(totalDesiredNodes / activeNodeCount)
 			if (!Number.isNaN(averageDesiredNodes)) $("#node-info-desired").innerHTML = averageDesiredNodes
 			updateTables()
 			injectTransactions()
