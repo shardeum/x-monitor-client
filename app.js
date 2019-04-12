@@ -137,7 +137,9 @@ let NetworkMonitor = function (config) {
 			if (G.environment === 'production') report = await getReport()
 			for (let publicKey in report.joining) {
 				if (!G.joining[publicKey]) {
-					G.joining[publicKey] = createNewNode('joining', publicKey)
+					// Pass in a list of positions to avoid overlapping grey cicles
+					const existingPositions = Object.values(G.joining).map(node => node.currentPosition)
+					G.joining[publicKey] = createNewNode('joining', publicKey, existingPositions)
 				}
 			}
 
@@ -630,8 +632,20 @@ let NetworkMonitor = function (config) {
 		delete G.active[nodeId]
 	}
 
-	const createNewNode = function (type, id) {
-		const position = getJoiningNodePosition(id)
+	const createNewNode = function (type, id, existingPositions = []) {
+		function isTooClose (position, existingPositions) {
+			if (existingPositions.length < 1) return false
+			console.log('DBG', 'positions', existingPositions)
+			for (const existingPosition of existingPositions) {
+				if (distanceBtnTwoPoints(position, existingPosition) < (3 * G.nodeRadius)) return true
+			}
+			return false
+		}
+		let position = getJoiningNodePosition(id)
+		// Make sure this position doesn't overlap an existing one
+		while (isTooClose(position, existingPositions)) {
+			position = getJoiningNodePosition(generateHash(64))
+		}
 		let circle
 		if (type === 'joining') {
 			let networkPosition = calculateNetworkPosition(
@@ -651,7 +665,7 @@ let NetworkMonitor = function (config) {
 			let node = {
 				circle: circle,
 				status: type,
-				currentPosition: circle
+				currentPosition: position
 			}
 			growAndShrink(circle, position)
 			if (type === 'joining') node.publicKey = id
@@ -661,7 +675,7 @@ let NetworkMonitor = function (config) {
 			let node = {
 				circle: circle,
 				status: type,
-				currentPosition: circle
+				currentPosition: position
 			}
 			if (type === 'joining') node.publicKey = id
 			return node
