@@ -247,9 +247,9 @@ let NetworkMonitor = function (config) {
 				}
 			}
 			let totalTxApplied = 0
-			let totalDesiredNodes = 0
+			let listOfDesiredNodes = []
 			let averageTpsApplied = 0
-			let averageDesiredNodes = 0
+			let modeDesiredNodes = 0
 			let activeNodeCount = 0
 			for (let nodeId in G.active) {
 				if (nodeId !== null) {
@@ -259,15 +259,15 @@ let NetworkMonitor = function (config) {
 						const txApplied = G.active[nodeId].txApplied
 						const desiredNodes = G.active[nodeId].desiredNodes
 						totalTxApplied += txApplied
-						totalDesiredNodes += desiredNodes
+						listOfDesiredNodes.push(desiredNodes)
 						activeNodeCount += 1
 					}
 				}
 			}
 			averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
 			if (!Number.isNaN(averageTpsApplied)) $("#current-averagetps").innerHTML = averageTpsApplied
-			averageDesiredNodes = Math.round(totalDesiredNodes / activeNodeCount)
-			if (!Number.isNaN(averageDesiredNodes)) $("#node-info-desired").innerHTML = averageDesiredNodes
+			modeDesiredNodes = mode(listOfDesiredNodes) || 0
+			if (!Number.isNaN(modeDesiredNodes)) $("#node-info-desired").innerHTML = modeDesiredNodes
 			updateTables()
 			injectTransactions()
 			updateStateCircle()
@@ -1295,6 +1295,14 @@ let NetworkMonitor = function (config) {
 	stage.canvas.height = G.VH
 	stage.canvas.width = G.VW
 	init()
+}
+
+// From https://stackoverflow.com/a/20762713
+function mode (list) {
+	const arr = [...list]
+	return arr.sort((a, b) =>
+		arr.filter(v => v === a).length - arr.filter(v => v === b).length
+	).pop()
 }
 
 // $('body').addEventListener('click', (e) => {
