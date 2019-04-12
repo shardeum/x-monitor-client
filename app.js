@@ -136,6 +136,9 @@ let NetworkMonitor = function (config) {
 			// }, 6000)
 		}
 
+		let totalTxRejected = 0
+		let totalTxExpired = 0
+
 		let updateReportInterval = setInterval(async () => {
 			if (G.environment === 'production') report = await getReport()
 			for (let publicKey in report.joining) {
@@ -259,8 +262,6 @@ let NetworkMonitor = function (config) {
 				}
 			}
 			let totalTxApplied = 0
-			let totalTxRejected = 0
-			let totalTxExpired = 0
 			let listOfDesiredNodes = []
 			let averageTpsApplied = 0
 			let modeDesiredNodes = 0
