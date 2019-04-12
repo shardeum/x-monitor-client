@@ -99,6 +99,8 @@ let NetworkMonitor = function (config) {
 				cycleMarker: generateHash(64),
 				txInjected: Math.random(),
 				txApplied: Math.random(),
+				txRejected: Math.random(),
+				txExpired: Math.random(),
 				desiredNodes: Math.random(),
 				reportInterval: 2,
 				nodeIpInfo: {
@@ -185,6 +187,8 @@ let NetworkMonitor = function (config) {
 							G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 							G.active[nodeId].txInjected = report.active[nodeId].txInjected
 							G.active[nodeId].txApplied = report.active[nodeId].txApplied
+							G.active[nodeId].txRejected = report.active[nodeId].txRejected
+							G.active[nodeId].txExpired = report.active[nodeId].txExpired
 							G.active[nodeId].desiredNodes = report.active[nodeId].desiredNodes
 							G.active[nodeId].reportInterval =
 								report.active[nodeId].reportInterval
@@ -208,6 +212,8 @@ let NetworkMonitor = function (config) {
 							G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 							G.active[nodeId].txInjected = report.active[nodeId].txInjected
 							G.active[nodeId].txApplied = report.active[nodeId].txApplied
+							G.active[nodeId].txRejected = report.active[nodeId].txRejected
+							G.active[nodeId].txExpired = report.active[nodeId].txExpired
 							G.active[nodeId].desiredNodes = report.active[nodeId].desiredNodes
 							G.active[nodeId].reportInterval =
 								report.active[nodeId].reportInterval
@@ -227,6 +233,8 @@ let NetworkMonitor = function (config) {
 					G.active[nodeId].nodelistHash = report.active[nodeId].nodelistHash
 					G.active[nodeId].txInjected = report.active[nodeId].txInjected
 					G.active[nodeId].txApplied = report.active[nodeId].txApplied
+					G.active[nodeId].txRejected = report.active[nodeId].txRejected
+					G.active[nodeId].txExpired = report.active[nodeId].txExpired
 					G.active[nodeId].desiredNodes = report.active[nodeId].desiredNodes
 					G.active[nodeId].reportInterval = report.active[nodeId].reportInterval
 					G.active[nodeId].externalIp =
@@ -247,6 +255,8 @@ let NetworkMonitor = function (config) {
 				}
 			}
 			let totalTxApplied = 0
+			let totalTxRejected = 0
+			let totalTxExpired = 0
 			let listOfDesiredNodes = []
 			let averageTpsApplied = 0
 			let modeDesiredNodes = 0
@@ -257,8 +267,12 @@ let NetworkMonitor = function (config) {
 					if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
 					else {
 						const txApplied = G.active[nodeId].txApplied
+						const txRejected = G.active[nodeId].txRejected
+						const txExpired = G.active[nodeId].txExpired
 						const desiredNodes = G.active[nodeId].desiredNodes
 						totalTxApplied += txApplied
+						totalTxRejected += txRejected
+						totalTxExpired += txExpired
 						listOfDesiredNodes.push(desiredNodes)
 						activeNodeCount += 1
 					}
@@ -268,6 +282,8 @@ let NetworkMonitor = function (config) {
 			if (!Number.isNaN(averageTpsApplied)) $("#current-averagetps").innerHTML = averageTpsApplied
 			modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
 			if (!Number.isNaN(modeDesiredNodes)) $("#node-info-desired").innerHTML = modeDesiredNodes
+			$("#total-tx-rejected").innerHTML = Math.round(totalTxRejected)
+			$("#total-tx-expired").innerHTML = Math.round(totalTxExpired)
 			updateTables()
 			injectTransactions()
 			updateStateCircle()
@@ -1158,12 +1174,16 @@ let NetworkMonitor = function (config) {
                 <tr>
                     <td>Cycle Marker</td>
                     <td>Average TPS</td>
+                    <td>Rejected Txs</td>
+                    <td>Expired Txs</td>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-					<td id="current-cyclemarker">-</td>
-					<td id="current-averagetps">-</td>
+                    <td id="current-cyclemarker">-</td>
+                    <td id="current-averagetps">-</td>
+                    <td id="total-tx-rejected">-</td>
+                    <td id="total-tx-expired">-</td>
                 </tr>
             </tbody>
         </table>
