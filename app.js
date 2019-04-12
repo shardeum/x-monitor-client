@@ -138,7 +138,7 @@ let NetworkMonitor = function (config) {
 			for (let publicKey in report.joining) {
 				if (!G.joining[publicKey]) {
 					// Pass in a list of positions to avoid overlapping grey cicles
-					const existingPositions = Object.values(G.joining).map(node => node.currentPosition)
+					const existingPositions = Object.values(G.joining).map(node => node.realPosition)
 					G.joining[publicKey] = createNewNode('joining', publicKey, existingPositions)
 				}
 			}
@@ -665,7 +665,8 @@ let NetworkMonitor = function (config) {
 			let node = {
 				circle: circle,
 				status: type,
-				currentPosition: position
+				currentPosition: circle,
+				realPosition: position
 			}
 			growAndShrink(circle, position)
 			if (type === 'joining') node.publicKey = id
@@ -675,7 +676,8 @@ let NetworkMonitor = function (config) {
 			let node = {
 				circle: circle,
 				status: type,
-				currentPosition: position
+				currentPosition: circle,
+				realPosition: position
 			}
 			if (type === 'joining') node.publicKey = id
 			return node
