@@ -635,7 +635,6 @@ let NetworkMonitor = function (config) {
 	const createNewNode = function (type, id, existingPositions = []) {
 		function isTooClose (position, existingPositions) {
 			if (existingPositions.length < 1) return false
-			console.log('DBG', 'positions', existingPositions)
 			for (const existingPosition of existingPositions) {
 				if (distanceBtnTwoPoints(position, existingPosition) < (3 * G.nodeRadius)) return true
 			}
