@@ -369,7 +369,7 @@ let NetworkMonitor = function (config) {
 		node.circle.on('mouseover', () => {
 			let position = {
 				x: node.currentPosition.x - 150 / 2,
-				y: node.currentPosition.y - 150 - 30
+				y: node.currentPosition.y - 150 - 80
 			}
 			let nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(
 				59,
@@ -390,7 +390,7 @@ let NetworkMonitor = function (config) {
 			node.tooltipRect = drawRectangle(
 				position,
 				150,
-				190,
+				230,
 				5,
 				G.colors['tooltip']
 			)
@@ -473,6 +473,26 @@ let NetworkMonitor = function (config) {
 					`TxApplied: ${node.txApplied.toFixed(1)} tx/s`, {
 						x: position.x + marginLeft,
 						y: position.y + marginBottom * 8
+					},
+					13,
+					'#ffffff'
+				)
+			)
+			node.textList.push(
+				drawText(
+					`TxRejected: ${node.txRejected.toFixed(1)} tx/s`, {
+						x: position.x + marginLeft,
+						y: position.y + marginBottom * 9
+					},
+					13,
+					'#ffffff'
+				)
+			)
+			node.textList.push(
+				drawText(
+					`TxExpired: ${node.txExpired.toFixed(1)} tx/s`, {
+						x: position.x + marginLeft,
+						y: position.y + marginBottom * 10
 					},
 					13,
 					'#ffffff'
