@@ -266,7 +266,7 @@ let NetworkMonitor = function (config) {
 			}
 			averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
 			if (!Number.isNaN(averageTpsApplied)) $("#current-averagetps").innerHTML = averageTpsApplied
-			modeDesiredNodes = mode(listOfDesiredNodes) || 0
+			modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
 			if (!Number.isNaN(modeDesiredNodes)) $("#node-info-desired").innerHTML = modeDesiredNodes
 			updateTables()
 			injectTransactions()
