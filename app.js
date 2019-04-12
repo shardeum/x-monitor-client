@@ -1121,11 +1121,11 @@ let NetworkMonitor = function (config) {
         <table id="node-info-table">
             <thead>
                 <tr>
-                    <td>Desired</td>
                     <td>Joining</td>
                     <td>Syncing</td>
                     <td>Active</td>
                     <td>Total</td>
+                    <td>Desired</td>
                 </tr>
             </thead>
             <tbody>
@@ -1133,8 +1133,8 @@ let NetworkMonitor = function (config) {
                     <td id="node-info-joining">0</td>
                     <td id="node-info-syncing">0</td>
                     <td id="node-info-active">0</td>
-                    <td id="node-info-desired">0</td>
                     <td id="node-info-total">0</td>
+                    <td id="node-info-desired">0</td>
                 </tr>
             </tbody>
         </table>
