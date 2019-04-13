@@ -1043,7 +1043,7 @@ let NetworkMonitor = function (config) {
 		}
 		if (clonedTx.circle.currentPosition.x === sourceNode.currentPosition.x) {
 			let endPoint = distanceBtnTwoNodes(clonedTx, targetNode, true)
-			let dur = Math.sqrt(endPoint.x ** 2 + endPoint.y ** 2)
+			let dur = Math.sqrt(endPoint.x ** 2 + endPoint.y ** 2) * 2
 			if (dur < 100) dur = 100
 			else dur = dur
 			// dur = dur * 1.5
