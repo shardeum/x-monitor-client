@@ -21,11 +21,15 @@
 		<script src="https://unpkg.com/popmotion/dist/popmotion.global.min.js"></script>
 		<script src="app.js"></script>
 		<script>
+			const url = new URL(window.location.href)
+			const host = url.searchParams.get('serverHost') || 'localhost'
+			const port = url.searchParams.get('serverPort') || 3000
+			const monitorServerUrl = `http://${host}:${port}/api`
+			console.log(c);
 			NetworkMonitor({
 				networkCircleRadius: 250,
 				nodeRadius: 20,
-				// monitorServerUrl: 'http://172.104.57.87:3000/api'
-				monitorServerUrl: 'http://139.162.21.171:5000/api',
+				monitorServerUrl,
 				environment: 'production'
 			})
 		</script>
