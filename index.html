@@ -24,7 +24,7 @@
 			const url = new URL(window.location.href)
 			const host = url.searchParams.get('serverHost') || 'localhost'
 			const port = url.searchParams.get('serverPort') || 3000
-			const monitorServerUrl = `http://${host}:${port}/api`
+			const monitorServerUrl = `http://${self.location.host}/api` // `http://${host}:${port}/api`
 			NetworkMonitor({
 				networkCircleRadius: 250,
 				nodeRadius: 20,
