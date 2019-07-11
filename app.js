@@ -29,7 +29,7 @@ let NetworkMonitor = function (config) {
 	G.Y = config.networkCircleY || G.VH / 2
 	G.nodeRadius = config.nodeRadius || 200
 	G.monitorServerUrl =
-		config.monitorServerUrl || `https://tn1.shardus.com:3000/api`
+		config.monitorServerUrl || `https://127.0.0.1:3000/api`
 	G.environment = config.environment || `production`
 	G.maxId = parseInt('ffff', 16)
 	G.joining = {}
