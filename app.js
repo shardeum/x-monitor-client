@@ -327,8 +327,8 @@ const NetworkMonitor = function (config) {
           }
         }
       }
-      // averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
-      // if (!Number.isNaN(averageTpsApplied))
+      averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
+      if (!Number.isNaN(averageTpsApplied))
       $('#current-averagetps').innerHTML = report.avgApplied
       modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
       if (!Number.isNaN(modeDesiredNodes)) {
@@ -337,10 +337,10 @@ const NetworkMonitor = function (config) {
       $('#total-tx-rejected').innerHTML = report.totalRejected
       $('#total-tx-expired').innerHTML = report.totalExpired
       updateTables()
-      // injectTransactions()
-      // updateStateCircle()
-      // updateMarkerCycle()
-      // updateNodelistCycle()
+      injectTransactions()
+      updateStateCircle()
+      updateMarkerCycle()
+      updateNodelistCycle()
     }, 2000)
   }
 
@@ -384,7 +384,7 @@ const NetworkMonitor = function (config) {
     }
   }
 
-  const updateUI_old = function (previousStatus, currentStatus, publicKey, nodeId) {
+  const updateUI = function (previousStatus, currentStatus, publicKey, nodeId) {
     if (previousStatus === 'joining' && currentStatus === 'syncing') {
       relocateIntoNetwork(previousStatus, G.syncing[nodeId])
     } else if (previousStatus === 'syncing' && currentStatus === 'active') {
@@ -396,7 +396,7 @@ const NetworkMonitor = function (config) {
     }
   }
 
-  const updateUI = function (previousStatus, currentStatus, publicKey, nodeId) {
+  const updateUI_old = function (previousStatus, currentStatus, publicKey, nodeId) {
     return
   }
 
@@ -857,7 +857,7 @@ const NetworkMonitor = function (config) {
     function isTooClose (position, existingPositions) {
       if (existingPositions.length < 1) return false
       for (const existingPosition of existingPositions) {
-        if (distanceBtnTwoPoints(position, existingPosition) < 3 * G.nodeRadius)
+        if (distanceBtnTwoPoints(position, existingPosition) < 1 * G.nodeRadius)
           {return true}
       }
       return false
