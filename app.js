@@ -372,7 +372,7 @@ const NetworkMonitor = function (config) {
         console.log(JSON.stringify(LoadMsg))
         console.log(JSON.stringify(txQueueLenMsg))
         console.log(JSON.stringify(txQueueTimeMsg))
-        console.log()
+        console.log('===')
       }
 
       updateTables()
