@@ -341,7 +341,7 @@ const NetworkMonitor = function (config) {
       updateStateCircle()
       updateMarkerCycle()
       updateNodelistCycle()
-    }, 2000)
+    }, 1000)
   }
 
   const injectTransactions = function () {
