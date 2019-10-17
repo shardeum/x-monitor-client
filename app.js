@@ -1389,39 +1389,39 @@ const NetworkMonitor = function (config) {
                 </tr>
             </tbody>
         </table>
-        <table id="transaction-table">
-            <thead>
-                <tr>
-                    <td>Max Tps</td>
-                    <td>Avg Tps</td>
-                    <td>Total Applied</td>
-                    <td>Rejected Txs</td>
-                    <td>Expired Txs</td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td id="current-maxtps">-</td>
-                    <td id="current-avgtps">-</td>
-                    <td id="total-tx-applied">-</td>
-                    <td id="total-tx-rejected">-</td>
-                    <td id="total-tx-expired">-</td>
-                </tr>
-            </tbody>
-        </table>
         <table id="cycle-info-table">
-            <thead>
-                <tr>
-                  <td>Cycle Marker</td>
-                  <td>Cycle Counter</td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                  <td id="current-cyclemarker">-</td>
-                  <td id="current-cyclecounter">-</td>
-                </tr>
-            </tbody>
+          <thead>
+              <tr>
+                <td>Cycle Marker</td>
+                <td>Cycle Counter</td>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                <td id="current-cyclemarker">-</td>
+                <td id="current-cyclecounter">-</td>
+              </tr>
+          </tbody>
+        </table>
+        <table id="transaction-table">
+          <thead>
+              <tr>
+                  <td>Max Tps</td>
+                  <td>Avg Tps</td>
+                  <td>Total Applied</td>
+                  <td>Rejected Txs</td>
+                  <td>Expired Txs</td>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
+                  <td id="current-maxtps">-</td>
+                  <td id="current-avgtps">-</td>
+                  <td id="total-tx-applied">-</td>
+                  <td id="total-tx-rejected">-</td>
+                  <td id="total-tx-expired">-</td>
+              </tr>
+          </tbody>
         </table>
         `
 
