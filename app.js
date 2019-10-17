@@ -1392,7 +1392,7 @@ const NetworkMonitor = function (config) {
                 <tr>
                     <td>Cycle Marker</td>
                     <td>Cycle Counter</td>
-                    <td>Average TPS</td>
+                    <td>Total Applied</td>
                     <td>Rejected Txs</td>
                     <td>Expired Txs</td>
                 </tr>
