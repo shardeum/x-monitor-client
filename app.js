@@ -209,6 +209,9 @@ const NetworkMonitor = function (config) {
         }
       }
 
+      const load = []
+      const txQueueLen = []
+      const txQueueTime = []
       for (const nodeId in report.nodes.active) {
         if (
           !G.active[nodeId] &&
@@ -278,6 +281,10 @@ const NetworkMonitor = function (config) {
             G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
           }
         } else if (G.active[nodeId] && report.nodes.active[nodeId].appState) {
+          load.push(report.nodes.active[nodeId].currentLoad.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}))
+          txQueueLen.push(report.nodes.active[nodeId].queueLength)
+          txQueueTime.push(report.nodes.active[nodeId].txTimeInQueue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}))
+
           G.active[nodeId].appState = report.nodes.active[nodeId].appState
           G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
           G.active[nodeId].cycleCounter = report.nodes.active[nodeId].cycleCounter
@@ -338,6 +345,36 @@ const NetworkMonitor = function (config) {
       }
       $('#total-tx-rejected').innerHTML = report.totalRejected
       $('#total-tx-expired').innerHTML = report.totalExpired
+
+      if (Object.keys(load).length > 0) {
+        const LoadMsg = {
+          // time: new Date().toLocaleTimeString('en-US'),
+          injected: report.totalInjected,
+          rejected: report.totalRejected,
+          expired: report.totalExpired,
+          applied: report.avgApplied,
+          load
+        }
+        const txQueueLenMsg = {
+          injected: report.totalInjected,
+          rejected: report.totalRejected,
+          expired: report.totalExpired,
+          applied: report.avgApplied,
+          txQueueLen
+        }
+        const txQueueTimeMsg = {
+          injected: report.totalInjected,
+          rejected: report.totalRejected,
+          expired: report.totalExpired,
+          applied: report.avgApplied,
+          txQueueTime
+        }
+        console.log(JSON.stringify(LoadMsg))
+        console.log(JSON.stringify(txQueueLenMsg))
+        console.log(JSON.stringify(txQueueTimeMsg))
+        console.log()
+      }
+
       updateTables()
       injectTransactions()
       updateStateCircle()
