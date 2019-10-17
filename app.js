@@ -329,7 +329,9 @@ const NetworkMonitor = function (config) {
       }
       averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
       if (!Number.isNaN(averageTpsApplied))
-      $('#current-averagetps').innerHTML = report.avgApplied
+      $('#current-avgtps').innerHTML = report.avgTps
+      $('#current-maxtps').innerHTML = report.maxTps
+      $('#total-tx-applied').innerHTML = report.totalApplied
       modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
       if (!Number.isNaN(modeDesiredNodes)) {
         $('#node-info-desired').innerHTML = modeDesiredNodes
@@ -1387,11 +1389,11 @@ const NetworkMonitor = function (config) {
                 </tr>
             </tbody>
         </table>
-        <table id="cyclemarker-table">
+        <table id="transaction-table">
             <thead>
                 <tr>
-                    <td>Cycle Marker</td>
-                    <td>Cycle Counter</td>
+                    <td>Max Tps</td>
+                    <td>Avg Tps</td>
                     <td>Total Applied</td>
                     <td>Rejected Txs</td>
                     <td>Expired Txs</td>
@@ -1399,11 +1401,25 @@ const NetworkMonitor = function (config) {
             </thead>
             <tbody>
                 <tr>
-                    <td id="current-cyclemarker">-</td>
-                    <td id="current-cyclecounter">-</td>
-                    <td id="current-averagetps">-</td>
+                    <td id="current-maxtps">-</td>
+                    <td id="current-avgtps">-</td>
+                    <td id="total-tx-applied">-</td>
                     <td id="total-tx-rejected">-</td>
                     <td id="total-tx-expired">-</td>
+                </tr>
+            </tbody>
+        </table>
+        <table id="cycle-info-table">
+            <thead>
+                <tr>
+                  <td>Cycle Marker</td>
+                  <td>Cycle Counter</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                  <td id="current-cyclemarker">-</td>
+                  <td id="current-cyclecounter">-</td>
                 </tr>
             </tbody>
         </table>

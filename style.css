@@ -57,8 +57,12 @@ thead>tr {
     color: #fff;
 }
 
-#cyclemarker-table {
+#transaction-table {
     top: 100px;
+}
+
+#cycle-info-table {
+  top: 100px;
 }
 
 .tippy-tooltip.tomato-theme {
