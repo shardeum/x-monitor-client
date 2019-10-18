@@ -5,6 +5,9 @@ window.$ = function (selector) {
   return elements
 }
 
+let avgTps = 0
+let maxTps = 0
+
 const {
   tween,
   styler,
@@ -14,8 +17,6 @@ const {
   easing,
   chain
 } = window.popmotion
-
-let avgTps = 0
 
 const NetworkMonitor = function (config) {
   const G = {} // semi-global namespace
@@ -340,9 +341,10 @@ const NetworkMonitor = function (config) {
       if (!Number.isNaN(averageTpsApplied))
 
       avgTps = report.totalApplied - avgTps
+      if (avgTps > maxTps) maxTps = avgTps
+
       $('#current-avgtps').innerHTML = avgTps
-      $('#current-maxtps').innerHTML = report.maxTps
-      $('#total-tx-applied').innerHTML = report.totalApplied
+      $('#current-maxtps').innerHTML = maxTps
       modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
       $('#total-processed-txs').innerHTML = report.totalProcessed
       if (!Number.isNaN(modeDesiredNodes)) {
@@ -1468,7 +1470,6 @@ const NetworkMonitor = function (config) {
               <tr>
                   <td>Max Tps</td>
                   <td>Avg Tps</td>
-                  <td>Total Applied</td>
                   <td>Rejected Txs</td>
                   <td>Expired Txs</td>
               </tr>
@@ -1477,7 +1478,6 @@ const NetworkMonitor = function (config) {
               <tr>
                   <td id="current-maxtps">-</td>
                   <td id="current-avgtps">-</td>
-                  <td id="total-tx-applied">-</td>
                   <td id="total-tx-rejected">-</td>
                   <td id="total-tx-expired">-</td>
               </tr>
