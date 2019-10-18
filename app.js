@@ -340,7 +340,7 @@ const NetworkMonitor = function (config) {
       averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
       if (!Number.isNaN(averageTpsApplied))
 
-      avgTps = report.totalApplied - avgTps
+      avgTps = report.totalProcessed - avgTps
       if (avgTps > maxTps) maxTps = avgTps
 
       $('#current-avgtps').innerHTML = avgTps
