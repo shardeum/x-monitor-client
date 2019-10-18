@@ -5,9 +5,6 @@ window.$ = function (selector) {
   return elements
 }
 
-let avgTps = 0
-let maxTps = 0
-
 const {
   tween,
   styler,
@@ -157,6 +154,9 @@ const NetworkMonitor = function (config) {
 
     let totalTxRejected = 0
     let totalTxExpired = 0
+
+    let avgTps = 0
+    let maxTps = 0
 
     const updateReportInterval = setInterval(async () => {
       if (G.environment === 'production') report = await getReport()
