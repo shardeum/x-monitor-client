@@ -157,6 +157,7 @@ const NetworkMonitor = function (config) {
 
     let avgTps = 0
     let maxTps = 0
+    let lastTotalProcessed = 0;
 
     const updateReportInterval = setInterval(async () => {
       if (G.environment === 'production') report = await getReport()
@@ -340,7 +341,9 @@ const NetworkMonitor = function (config) {
       averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
       if (!Number.isNaN(averageTpsApplied))
 
-      avgTps = report.totalProcessed - avgTps
+      avgTps = report.totalProcessed - lastTotalProcessed
+      lastTotalProcessed = report.totalProcessed
+      
       if (avgTps > maxTps) maxTps = avgTps
 
       $('#current-avgtps').innerHTML = avgTps
