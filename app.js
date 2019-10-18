@@ -15,6 +15,8 @@ const {
   chain
 } = window.popmotion
 
+let avgTps = 0
+
 const NetworkMonitor = function (config) {
   const G = {} // semi-global namespace
   G.nodes = []
@@ -336,7 +338,9 @@ const NetworkMonitor = function (config) {
       }
       averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
       if (!Number.isNaN(averageTpsApplied))
-      $('#current-avgtps').innerHTML = report.avgTps
+
+      avgTps = report.totalApplied - avgTps
+      $('#current-avgtps').innerHTML = avgTps
       $('#current-maxtps').innerHTML = report.maxTps
       $('#total-tx-applied').innerHTML = report.totalApplied
       modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
@@ -1158,6 +1162,22 @@ const NetworkMonitor = function (config) {
   }
 
   function animateFadeIn (circle, duration, wait) {
+    createjs.Tween.get(circle, {
+      loop: false
+    })
+      .wait(wait)
+      .to(
+        {
+          alpha: 1.0
+        },
+        duration,
+        createjs.Ease.linear
+      )
+    createjs.Ticker.framerate = 60
+    createjs.Ticker.addEventListener('tick', stage)
+  }
+
+  function animateFadeIn2 (circle, duration, wait) {
     createjs.Tween.get(circle, {
       loop: false
     })
