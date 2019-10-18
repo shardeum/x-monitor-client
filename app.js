@@ -340,6 +340,7 @@ const NetworkMonitor = function (config) {
       $('#current-maxtps').innerHTML = report.maxTps
       $('#total-tx-applied').innerHTML = report.totalApplied
       modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
+      $('#total-processed-txs').innerHTML = report.totalProcessed
       if (!Number.isNaN(modeDesiredNodes)) {
         $('#node-info-desired').innerHTML = modeDesiredNodes
       }
@@ -1430,12 +1431,14 @@ const NetworkMonitor = function (config) {
           <thead>
               <tr>
                 <td>Cycle Marker</td>
+                <td>Total Processed</td>
                 <td>Cycle Counter</td>
               </tr>
           </thead>
           <tbody>
               <tr>
                 <td id="current-cyclemarker">-</td>
+                <td id="total-processed-txs">-</td>
                 <td id="current-cyclecounter">-</td>
               </tr>
           </tbody>
