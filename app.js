@@ -1495,14 +1495,14 @@ const NetworkMonitor = function (config) {
     drawCircle(networkCenter, G.R, '#ffffff')
     $('#app').innerHTML = networkHTML
 
-    var image = new createjs.Bitmap('earth.png')
+    var image = new createjs.Bitmap('sun.png')
     image.set({
-      x: G.VW / 2 - G.R
+      x: G.VW / 2.18 - G.R
     })
     image.set({
-      y: G.VH / 2 - G.R
+      y: G.VH / 2.35 - G.R
     })
-    const scale = (G.R * 2) / 720
+    const scale = (G.R * 2.7) / 720
     image.set({
       scale: scale
     })
@@ -1516,6 +1516,7 @@ const NetworkMonitor = function (config) {
 
   const getReport = async function () {
     const response = await axios.get(`${G.monitorServerUrl}/report`)
+    console.log(response.data)
     return response.data
   }
 
