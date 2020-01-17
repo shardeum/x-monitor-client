@@ -1497,12 +1497,12 @@ const NetworkMonitor = function (config) {
 
     var image = new createjs.Bitmap('moon.png')
     image.set({
-      x: G.VW / 2.03 - G.R
+      x: G.VW / 2.001 - G.R
     })
     image.set({
-      y: G.VH / 2.01 - G.R
+      y: G.VH / 2 - G.R
     })
-    const scale = (G.R * 2.1) / 800
+    const scale = (G.R * 2) / 800
     image.set({
       scale: scale
     })
