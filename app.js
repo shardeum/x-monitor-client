@@ -1495,14 +1495,14 @@ const NetworkMonitor = function (config) {
     drawCircle(networkCenter, G.R, '#ffffff')
     $('#app').innerHTML = networkHTML
 
-    var image = new createjs.Bitmap('moon.png')
+    var image = new createjs.Bitmap('death_star.png')
     image.set({
-      x: G.VW / 2.01 - G.R
+      x: G.VW / 2.04 - G.R
     })
     image.set({
-      y: G.VH / 2 - G.R
+      y: G.VH / 2.07 - G.R
     })
-    const scale = (G.R * 2.03) / 800
+    const scale = (G.R * 2.12) / 1000
     image.set({
       scale: scale
     })
