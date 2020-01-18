@@ -29,8 +29,8 @@ const NetworkMonitor = function (config) {
   G.Y = config.networkCircleY || G.VH / 2
   G.nodeRadius = config.nodeRadius || 200
   G.monitorServerUrl =
-		config.monitorServerUrl || 'https://tn1.shardus.com:3000/api'
-  G.environment = config.environment || 'production'
+		config.monitorServerUrl || `https://127.0.0.1:3000/api`
+  G.environment = config.environment || `production`
   G.maxId = parseInt('ffff', 16)
   G.joining = {}
   G.syncing = {}
@@ -1495,14 +1495,14 @@ const NetworkMonitor = function (config) {
     drawCircle(networkCenter, G.R, '#ffffff')
     $('#app').innerHTML = networkHTML
 
-    var image = new createjs.Bitmap('death_star.png')
+    var image = new createjs.Bitmap('logo.png')
     image.set({
-      x: G.VW / 2.04 - G.R
+      x: (G.VW / 2 - G.R * 1.08)
     })
     image.set({
-      y: G.VH / 2.07 - G.R
+      y: (G.VH / 2 - G.R * 1.08)
     })
-    const scale = (G.R * 2.12) / 1000
+    const scale = (G.R * 1.94) / 720
     image.set({
       scale: scale
     })
