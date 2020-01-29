@@ -22,9 +22,9 @@
 		<script src="app.js"></script>
 		<script>
 			const url = new URL(window.location.href)
-			const host = url.searchParams.get('serverHost') || 'localhost'
-			const port = url.searchParams.get('serverPort') || 3000
-			const monitorServerUrl = `http://${host}:${port}/api`
+			const server = url.searchParams.get('server') || window.location.host
+			const monitorServerUrl = `http://${server}/api` // `http://${host}:${port}/api`
+			console.log('monitorServerUrl', monitorServerUrl)
 			NetworkMonitor({
 				networkCircleRadius: 250,
 				nodeRadius: 20,
