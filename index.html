@@ -21,9 +21,9 @@
     <script src="https://unpkg.com/popmotion/dist/popmotion.global.min.js"></script>
     <script src="app.js"></script>
     <script>
-      // const url = new URL(window.location.href)
-      const server = 'app.liberdus.com:3000'
-      //   const server = url.searchParams.get('server') || window.location.host
+      const url = new URL(window.location.href)
+      //   const server = 'app.liberdus.com:3000'
+      const server = url.searchParams.get('server') || window.location.host
       const monitorServerUrl = `http://${server}/api` // `http://${host}:${port}/api`
       console.log('monitorServerUrl', monitorServerUrl)
       NetworkMonitor({
