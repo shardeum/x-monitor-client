@@ -1,60 +1,81 @@
 body {
-    background: #f5f3f3;
-    background: #28262f;
-    overflow: hidden;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.85) 100%), url('milky-way2.png') no-repeat;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+  background: #f5f3f3;
+  background: #28262f;
+  overflow: hidden;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(0, 0, 0, 0.85) 100%
+    ),
+    url('milky-way2.png') no-repeat;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 canvas {
-    overflow: hidden;
-    display: block;
-    margin: 0 auto;
+  overflow: hidden;
+  display: block;
+  margin: 0 auto;
 }
 
 .background {
-    display: block;
-    margin: 0 auto;
+  display: block;
+  margin: 0 auto;
 }
 
 #reset-report {
-    height: 40px;
-    border: none;
-    border-radius: 5px;
-    padding: 0px 15px;
-    background: #f55555;
-    color: #fff;
-    cursor: pointer;
-    /* box-shadow: 0px 3px 5px #b3b3b3; */
-    position: absolute;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  padding: 0px 15px;
+  background: #f55555;
+  color: #fff;
+  cursor: pointer;
+  /* box-shadow: 0px 3px 5px #b3b3b3; */
+  position: absolute;
+}
+
+#cycle-counter-container {
+  position: absolute;
+  top: 15px;
+  left: 130px;
+}
+
+#cycle-counter-container button {
+  background: #ffffff;
+  border: none;
+  border-radius: 100px;
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+  color: #333;
 }
 
 table {
-    width: 400px;
-    text-align: center;
-    position: absolute;
-    right: 0px;
-    margin-right: 50px;
-    font-size: 15px;
-    font-weight: bold;
-    border-collapse: collapse;
-    /* box-shadow: 0px 3px 5px #c5c5c5; */
-    background: #fff;
+  width: 400px;
+  text-align: center;
+  position: absolute;
+  right: 0px;
+  margin-right: 50px;
+  font-size: 15px;
+  font-weight: bold;
+  border-collapse: collapse;
+  /* box-shadow: 0px 3px 5px #c5c5c5; */
+  background: #fff;
 }
 
 tr {
-    height: 40px;
+  height: 40px;
 }
 
-thead>tr>td {
-    padding: 0 5px;
+thead > tr > td {
+  padding: 0 5px;
 }
 
-thead>tr {
-    background: #8c8c8c;
-    color: #fff;
+thead > tr {
+  background: #8c8c8c;
+  color: #fff;
 }
 
 #transaction-table {
@@ -66,31 +87,31 @@ thead>tr {
 }
 
 .tippy-tooltip.tomato-theme {
-    background: #5f5f5fcc;
+  background: #5f5f5fcc;
 }
 
 .tippy-popper[x-placement^='top'] .tippy-tooltip.tomato-theme .tippy-arrow {
-    border-top-color: #5f5f5fcc;
+  border-top-color: #5f5f5fcc;
 }
 
 .tippy-popper[x-placement^='bottom'] .tippy-tooltip.tomato-theme .tippy-arrow {
-    border-bottom-color: #5f5f5fcc;
+  border-bottom-color: #5f5f5fcc;
 }
 
 .tippy-popper[x-placement^='left'] .tippy-tooltip.tomato-theme .tippy-arrow {
-    border-left-color: #5f5f5fcc;
+  border-left-color: #5f5f5fcc;
 }
 
 .tippy-popper[x-placement^='right'] .tippy-tooltip.tomato-theme .tippy-arrow {
-    border-right-color: #5f5f5fcc;
+  border-right-color: #5f5f5fcc;
 }
 
 #earth {
-    width: 300px;
-    height: 300px;
-    position: absolute;
-    display: block;
-    left: calc(50vw - 150px);
-    top: calc(50vh - 150px);
-    z-index: -100
+  width: 300px;
+  height: 300px;
+  position: absolute;
+  display: block;
+  left: calc(50vw - 150px);
+  top: calc(50vh - 150px);
+  z-index: -100;
 }
