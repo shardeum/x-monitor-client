@@ -1567,7 +1567,10 @@ const NetworkMonitor = function (config) {
   const drawMatrix = function (cycleCounter, startX, startY) {
     if (!cycleCounter) return
     try {
-      const nodeList = Object.keys(G.partitionMatrix[cycleCounter])
+      // console.log(G.partitionMatrix[cycleCounter])
+      let nodeList = Object.keys(G.partitionMatrix[cycleCounter])
+      nodeList = nodeList.sort()
+      // console.log(nodeList)
       const totalNodeCount = Object.keys(G.active).length
       let nodeCount = 0
       let gap = 2
