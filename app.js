@@ -1570,7 +1570,6 @@ const NetworkMonitor = function (config) {
       // console.log(G.partitionMatrix[cycleCounter])
       let nodeList = Object.keys(G.partitionMatrix[cycleCounter])
       nodeList = nodeList.sort()
-      // console.log(nodeList)
       const totalNodeCount = Object.keys(G.active).length
       let nodeCount = 0
       let gap = 2
@@ -1585,17 +1584,21 @@ const NetworkMonitor = function (config) {
         '#ffffff'
       )
       recList.push(background)
+      // let globalIndexList = []
       for (let nodeId of nodeList) {
         nodeCount += 1
         const partitionReport = G.partitionMatrix[cycleCounter][nodeId].res
+        // let indexListInNode = []
         for (let i in partitionReport) {
           const index = partitionReport[i].i
+          // console.log(index)
+          // indexListInNode.push(index)
           let hash = partitionReport[i].h
           hash = hash.split('0').join('')
           hash = hash.split('x').join('')
           const position = {
             x: startX + gap * nodeCount + width * nodeCount,
-            y: startY + height * i + gap * i
+            y: startY + height * index + gap * index
           }
           let rec = drawRectangle(
             position,
@@ -1606,7 +1609,10 @@ const NetworkMonitor = function (config) {
           )
           recList.push(rec)
         }
+        // let maxIndexInNode = Math.max(...indexListInNode)
+        // globalIndexList.push(maxIndexInNode)
       }
+      // console.log(`globalIndexList`, globalIndexList)
       return recList
     } catch (e) {
       console.warn(e)
