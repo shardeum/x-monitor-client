@@ -1584,15 +1584,11 @@ const NetworkMonitor = function (config) {
         '#ffffff'
       )
       recList.push(background)
-      // let globalIndexList = []
       for (let nodeId of nodeList) {
         nodeCount += 1
         const partitionReport = G.partitionMatrix[cycleCounter][nodeId].res
-        // let indexListInNode = []
         for (let i in partitionReport) {
           const index = partitionReport[i].i
-          // console.log(index)
-          // indexListInNode.push(index)
           let hash = partitionReport[i].h
           hash = hash.split('0').join('')
           hash = hash.split('x').join('')
@@ -1609,10 +1605,7 @@ const NetworkMonitor = function (config) {
           )
           recList.push(rec)
         }
-        // let maxIndexInNode = Math.max(...indexListInNode)
-        // globalIndexList.push(maxIndexInNode)
       }
-      // console.log(`globalIndexList`, globalIndexList)
       return recList
     } catch (e) {
       console.warn(e)
