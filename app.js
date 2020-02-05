@@ -21,6 +21,7 @@ const NetworkMonitor = function (config) {
   G.partitionMatrix = {}
   G.partitionGraphic = {}
   G.partitionButtons = {}
+  G.nodeSyncState = {}
   G.currentCycleCounter = 0
   G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
   G.VH = Math.max(
@@ -420,21 +421,12 @@ const NetworkMonitor = function (config) {
           applied: report.avgApplied,
           txQueueTime
         }
-        // console.log(JSON.stringify(LoadMsg))
-        // console.log(JSON.stringify(txQueueLenMsg))
-        // console.log(JSON.stringify(txQueueTimeMsg))
-        // console.log('===')
       }
-
       updateTables()
       injectTransactions()
       updateStateCircle()
       updateMarkerCycle()
       updateNodelistCycle()
-      // if (newCycleCounter > G.currentCycleCounter) {
-      //   drawCycleCounterButton(newCycleCounter)
-      //   G.currentCycleCounter = newCycleCounter
-      // }
     }, 1000)
   }
 
@@ -788,10 +780,10 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.appState) return
-
       if (node.rectangel) {
         // update state color
-        node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
+        // node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
+        node.rectangel.myFill.style = getStateColor(node.nodeId)
       } else {
         node.rectangel = drawStateCircle(node)
       }
@@ -1056,6 +1048,15 @@ const NetworkMonitor = function (config) {
     return tx
   }
 
+  const getStateColor = function (nodeId) {
+    if (G.nodeSyncState[nodeId] === 0) return '#49fd58'
+    // green
+    else if (G.nodeSyncState[nodeId] === 1) return '#f8cf37'
+    // yellow
+    else if (G.nodeSyncState[nodeId] === 2) return '#ec3434' // red
+    return `#ffffff00`
+  }
+
   const cloneTxCircle = function (injectedTx) {
     const circle = drawCircle(
       injectedTx.currentPosition,
@@ -1069,8 +1070,6 @@ const NetworkMonitor = function (config) {
     cloneTx.circle.currentPosition = injectedTx.currentPosition
     cloneTx.data = injectedTx.data
     cloneTx.currentPosition = injectTransactions.currentPosition
-    // console.log(injectedTx)
-    // console.log(cloneTx)
     return cloneTx
   }
 
@@ -1083,7 +1082,7 @@ const NetworkMonitor = function (config) {
         y: node.currentPosition.y + radius
       },
       radius,
-      `#${node.appState.slice(0, 6)}`,
+      getStateColor(node.nodeId),
       null,
       null,
       0.1
@@ -1564,6 +1563,70 @@ const NetworkMonitor = function (config) {
     }
   }
 
+  const mode = function (arr) {
+    return arr
+      .sort(
+        (a, b) =>
+          arr.filter(v => v === a).length - arr.filter(v => v === b).length
+      )
+      .pop()
+  }
+
+  const checkNodeSyncedState = function (cycleCounter) {
+    if (!cycleCounter || !G.partitionMatrix[cycleCounter]) return
+    let nodeList = Object.keys(G.partitionMatrix[cycleCounter])
+    nodeList = nodeList.sort()
+    let syncedObj = {}
+    for (let nodeId of nodeList) {
+      const partitionReport = G.partitionMatrix[cycleCounter][nodeId].res
+      for (let i in partitionReport) {
+        const index = partitionReport[i].i
+        let hash = partitionReport[i].h
+        hash = hash.split('0').join('')
+        hash = hash.split('x').join('')
+        // collect to syncedObj to decide synced status of nodes later
+        if (!syncedObj[index]) {
+          syncedObj[index] = []
+        } else {
+          syncedObj[index].push({
+            nodeId,
+            hash
+          })
+        }
+      }
+      let syncedPenaltyObj = {}
+      for (let nodeId of nodeList) {
+        syncedPenaltyObj[nodeId] = 0
+      }
+      for (let index in syncedObj) {
+        let hashArr = syncedObj[index].map(obj => obj.hash)
+        let mostCommonHash = mode(hashArr)
+        // console.log(`Most common hash in partition ${index}: ${mostCommonHash}`)
+        syncedObj[index].forEach(obj => {
+          // TO TEST
+          // if (Math.random() * 30 > 28) {
+          //   obj.hash = '#wrong'
+          // }
+          if (obj.hash !== mostCommonHash) {
+            syncedPenaltyObj[obj.nodeId] += 1
+          }
+        })
+      }
+
+      for (let nodeId in syncedPenaltyObj) {
+        if (syncedPenaltyObj[nodeId] === 0) {
+          G.nodeSyncState[nodeId] = 0
+        } else if (syncedPenaltyObj[nodeId] <= 3) {
+          G.nodeSyncState[nodeId] = 1
+        } else if (syncedPenaltyObj[nodeId] > 3) {
+          G.nodeSyncState[nodeId] = 2
+        }
+      }
+      // console.log(syncedPenaltyObj)
+      // console.log(G.nodeSyncState)
+    }
+  }
+
   const drawMatrix = function (cycleCounter, startX, startY) {
     if (!cycleCounter) return
     try {
@@ -1689,6 +1752,10 @@ const NetworkMonitor = function (config) {
         clearPartitionButton(counter)
         delete G.partitionMatrix[counter]
       }
+    }
+    if (Object.keys(G.partitionMatrix).length > 0) {
+      const currentCycleCounter = Math.max(...Object.keys(G.partitionMatrix))
+      checkNodeSyncedState(currentCycleCounter)
     }
 
     return response.data
