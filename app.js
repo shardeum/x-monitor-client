@@ -783,7 +783,7 @@ const NetworkMonitor = function (config) {
       if (node.rectangel) {
         // update state color
         // node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
-        node.rectangel.myFill.style = getStateColor(node.nodeId)
+        node.rectangel.myFill.style = getStateColor(node)
       } else {
         node.rectangel = drawStateCircle(node)
       }
@@ -1048,13 +1048,19 @@ const NetworkMonitor = function (config) {
     return tx
   }
 
-  const getStateColor = function (nodeId) {
-    if (G.nodeSyncState[nodeId] === 0) return '#49fd58'
-    // green
-    else if (G.nodeSyncState[nodeId] === 1) return '#f8cf37'
-    // yellow
-    else if (G.nodeSyncState[nodeId] === 2) return '#ec3434' // red
-    return `#ffffff00`
+  const getStateColor = function (node) {
+    let nodeId = node.nodeId
+    let appState = node.appState
+    if (appState === '00ff00ff') {
+      if (G.nodeSyncState[nodeId] === 0) return '#00ff00ff'
+      // green
+      else if (G.nodeSyncState[nodeId] === 1) return '#f8cf37'
+      // yellow
+      else if (G.nodeSyncState[nodeId] === 2) return '#fc6600' // red
+      return `#ffffff00`
+    } else {
+      return appState
+    }
   }
 
   const cloneTxCircle = function (injectedTx) {
@@ -1082,7 +1088,7 @@ const NetworkMonitor = function (config) {
         y: node.currentPosition.y + radius
       },
       radius,
-      getStateColor(node.nodeId),
+      getStateColor(node),
       null,
       null,
       0.1
@@ -1622,15 +1628,12 @@ const NetworkMonitor = function (config) {
           G.nodeSyncState[nodeId] = 2
         }
       }
-      // console.log(syncedPenaltyObj)
-      // console.log(G.nodeSyncState)
     }
   }
 
   const drawMatrix = function (cycleCounter, startX, startY) {
     if (!cycleCounter) return
     try {
-      // console.log(G.partitionMatrix[cycleCounter])
       let nodeList = Object.keys(G.partitionMatrix[cycleCounter])
       nodeList = nodeList.sort()
       const totalNodeCount = Object.keys(G.active).length
