@@ -1736,7 +1736,7 @@ const NetworkMonitor = function (config) {
     for (let nodeId in activeNodes) {
       const partitionReport = activeNodes[nodeId].partitionReport
       cycleCounter = activeNodes[nodeId].cycleCounter
-      if (partitionReport.hasOwnProperty('res')) {
+      if (partitionReport && partitionReport.hasOwnProperty('res')) {
         if (!G.partitionMatrix[cycleCounter]) {
           G.partitionMatrix[cycleCounter] = {}
           G.partitionMatrix[cycleCounter][nodeId] = partitionReport
