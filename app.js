@@ -162,10 +162,23 @@ const NetworkMonitor = function (config) {
     let avgTps = 0
     let maxTps = 0
     let lastTotalProcessed = 0
+    // FOR TESTING ONLY
+    // let nodeDead = false
+    // setTimeout(() => {
+    //   nodeDead = true
+    // }, 10000)
 
     const updateReportInterval = setInterval(async () => {
       let newCycleCounter
       if (G.environment === 'production') report = await getReport()
+      // FOR TESTING ONLY
+      // for (let nodeId in report.nodes.active) {
+      //   if (!nodeDead) report.nodes.active[nodeId].timestamp = Date.now()
+      //   else if (nodeDead) {
+      //     console.log('node crashed...')
+      //     report.nodes.active[nodeId].timestamp = Date.now() - 20000
+      //   }
+      // }
       for (const publicKey in report.nodes.joining) {
         if (!G.joining[publicKey]) {
           // Pass in a list of positions to avoid overlapping grey cicles
@@ -277,6 +290,12 @@ const NetworkMonitor = function (config) {
             G.active[nodeId] = createNewNode('active', nodeId)
             G.active[nodeId].nodeId = nodeId
             try {
+              G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
+              if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
+                G.active[nodeId].crashed = true
+              } else {
+                G.active[nodeId].crashed = false
+              }
               G.active[nodeId].appState = report.nodes.active[nodeId].appState
               G.active[nodeId].cycleMarker =
                 report.nodes.active[nodeId].cycleMarker
@@ -321,7 +340,12 @@ const NetworkMonitor = function (config) {
               { minimumFractionDigits: 2, maximumFractionDigits: 2 }
             )
           )
-
+          if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
+            G.active[nodeId].crashed = true
+          } else {
+            G.active[nodeId].crashed = false
+          }
+          G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
           G.active[nodeId].appState = report.nodes.active[nodeId].appState
           G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
           G.active[nodeId].cycleCounter =
@@ -367,7 +391,9 @@ const NetworkMonitor = function (config) {
             nodeId,
             report.nodes
           )
+          const isNodeCrashed = G.active[nodeId].crashed
           if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
+          else if (isNodeCrashed) setNodeAsCrashed(nodeId)
           else {
             const txApplied = G.active[nodeId].txApplied
             const txRejected = G.active[nodeId].txRejected
@@ -538,7 +564,15 @@ const NetworkMonitor = function (config) {
         0,
         4
       )}...${node.nodelistHash.slice(59, 63)}`
-      node.tooltipRect = drawRectangle(position, 150, 230, 5, G.colors.tooltip)
+      let toolTipHeight = 230
+      if (node.crashed) toolTipHeight += 23
+      node.tooltipRect = drawRectangle(
+        position,
+        150,
+        toolTipHeight,
+        5,
+        G.colors.tooltip
+      )
       node.textList = []
       const marginBottom = 22
       const marginLeft = 15
@@ -653,6 +687,20 @@ const NetworkMonitor = function (config) {
           '#ffffff'
         )
       )
+      if (node.crashed) {
+        let timeDiff = Date.now() - node.timestamp
+        node.textList.push(
+          drawText(
+            `LastHeartB: ${(timeDiff / 60000).toFixed(1)} min`,
+            {
+              x: position.x + marginLeft,
+              y: position.y + marginBottom * 11
+            },
+            14,
+            '#ffffff'
+          )
+        )
+      }
     })
 
     node.circle.on('mouseout', () => {
@@ -780,6 +828,7 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.appState) return
+      if (node.crashed) return
       if (node.rectangel) {
         // update state color
         // node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
@@ -794,6 +843,7 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.cycleMarker) return
+      if (node.crashed) return
 
       if (node.cycleMarker) {
         // update cycle marker color
@@ -808,6 +858,7 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.nodelistHash) return
+      if (node.crashed) return
 
       if (node.nodelistHash) {
         // update nodelist Hash color
@@ -929,6 +980,16 @@ const NetworkMonitor = function (config) {
       stage.update()
     }, 1000)
     delete G.active[nodeId]
+  }
+  const setNodeAsCrashed = function (nodeId) {
+    const node = G.active[nodeId]
+    const redColor = '#e61c1c'
+    if (node.crashed === true) {
+      changeCircleColor(node.circle, redColor, 1000)
+      changeCircleColor(node.rectangel, redColor, 1000)
+      changeCircleColor(node.markerCycle, redColor, 1000)
+      changeCircleColor(node.nodeListCycle, redColor, 1000)
+    }
   }
 
   const createNewNode = function (
@@ -1215,6 +1276,16 @@ const NetworkMonitor = function (config) {
     // TweenLite.ticker.addEventListener("tick", stage.update, stage);
     // stage.update();
     // TweenLite.to(circle, duration / 1000, {x: travelX, y: travelY, easel:{tint:0x00FF00}, ease: Power0.easeNone});
+  }
+
+  function changeCircleColor (circle, fill, duration) {
+    if (fill) {
+      setTimeout(() => {
+        circle.myFill.style = fill
+      }, duration / 2)
+    }
+    createjs.Ticker.framerate = 60
+    createjs.Ticker.addEventListener('tick', stage)
   }
 
   function animateFadeIn (circle, duration, wait) {
