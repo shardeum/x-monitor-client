@@ -237,6 +237,7 @@ const NetworkMonitor = function (config) {
       const txQueueLen = []
       const txQueueTime = []
       for (const nodeId in report.nodes.active) {
+        report.nodes.active[nodeId].appState = '00ff00ff'
         if (
           !G.active[nodeId] &&
           nodeId !== null &&
@@ -251,7 +252,8 @@ const NetworkMonitor = function (config) {
             })
             delete G.syncing[nodeId]
             try {
-              G.active[nodeId].appState = report.nodes.active[nodeId].appState
+              G.active[nodeId].appState =
+                report.nodes.active[nodeId].appState || '00ff00ff'
               G.active[nodeId].cycleMarker =
                 report.nodes.active[nodeId].cycleMarker
               G.active[nodeId].cycleCounter =
