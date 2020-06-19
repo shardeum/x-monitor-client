@@ -241,7 +241,8 @@ const NetworkMonitor = function (config) {
         if (
           !G.active[nodeId] &&
           nodeId !== null &&
-          report.nodes.active[nodeId].appState
+          report.nodes.active[nodeId].appState &&
+          report.nodes.active[nodeId].nodeIpInfo
         ) {
           if (G.syncing[nodeId]) {
             // active node is already drawn as yellow circle
