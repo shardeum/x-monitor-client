@@ -60,6 +60,31 @@ const NetworkMonitor = function (config) {
     active: {}
   }
 
+  const resetState = () => {
+    for (let counter in G.partitionButtons) {
+      clearPartitionButton(counter)
+      clearPartitionGraphic(counter)
+    }
+    for (const nodeId in G.active) {
+       removeNodeFromNetwork(nodeId)
+    }
+    for (const nodeId in G.syncing) {
+       removeNodeFromNetwork(nodeId)
+    }
+    for (const nodeId in G.joining) {
+       removeNodeFromNetwork(nodeId)
+    }
+    G.nodes = []
+    G.partitionMatrix = {}
+    G.partitionGraphic = {}
+    G.partitionButtons = {}
+    G.nodeSyncState = {}
+    G.active = {}
+    G.syncing = {}
+    G.joining = {}
+    G.currentCycleCounter = 0
+  }
+
   const generateHash = function (num) {
     const table = [
       '1',
@@ -170,7 +195,15 @@ const NetworkMonitor = function (config) {
 
     const updateReportInterval = setInterval(async () => {
       let newCycleCounter
-      if (G.environment === 'production') report = await getReport()
+      if (G.environment === 'production') {
+        try {
+          report = await getReport()
+        } catch (e) {
+          console.warn('Error while getting report from monitor server')
+          resetState()
+          return
+        }
+      }
       // FOR TESTING ONLY
       // for (let nodeId in report.nodes.active) {
       //   if (!nodeDead) report.nodes.active[nodeId].timestamp = Date.now()
@@ -1692,7 +1725,6 @@ const NetworkMonitor = function (config) {
           }
         })
       }
-
       for (let nodeId in syncedPenaltyObj) {
         if (syncedPenaltyObj[nodeId] === 0) {
           G.nodeSyncState[nodeId] = 0
