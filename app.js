@@ -308,9 +308,11 @@ const NetworkMonitor = function (config) {
                 report.nodes.active[nodeId].nodeIpInfo.externalIp
               G.active[nodeId].externalPort =
                 report.nodes.active[nodeId].nodeIpInfo.externalPort
+              G.active[nodeId].shardusVersion =
+                report.nodes.active[nodeId].shardusVersion
 
               if (!newCycleCounter) {
-                newCycleCounter = report.nodes.active[nodeId].cycleCounter
+                newCycleCounter = report.nodes.active[nodeId].shardusVersion
               }
             } catch (e) {
               console.log(e)
@@ -353,6 +355,8 @@ const NetworkMonitor = function (config) {
                 report.nodes.active[nodeId].nodeIpInfo.externalIp
               G.active[nodeId].externalPort =
                 report.nodes.active[nodeId].nodeIpInfo.externalPort
+              G.active[nodeId].shardusVersion =
+                report.nodes.active[nodeId].shardusVersion
             } catch (e) {
               console.log(e)
             }
@@ -400,6 +404,8 @@ const NetworkMonitor = function (config) {
             report.nodes.active[nodeId].nodeIpInfo.externalIp
           G.active[nodeId].externalPort =
             report.nodes.active[nodeId].nodeIpInfo.externalPort
+          G.active[nodeId].shardusVersion =
+            report.nodes.active[nodeId].shardusVersion
           if (!newCycleCounter) {
             newCycleCounter = report.nodes.active[nodeId].cycleCounter
           }
@@ -582,7 +588,7 @@ const NetworkMonitor = function (config) {
     node.circle.on('mouseover', () => {
       const position = {
         x: node.currentPosition.x - 150 / 2,
-        y: node.currentPosition.y - 150 - 80
+        y: node.currentPosition.y - 150 - 100
       }
       const nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(
         59,
@@ -600,7 +606,7 @@ const NetworkMonitor = function (config) {
         0,
         4
       )}...${node.nodelistHash.slice(59, 63)}`
-      let toolTipHeight = 230
+      let toolTipHeight = 255
       if (node.crashed) toolTipHeight += 23
       node.tooltipRect = drawRectangle(
         position,
@@ -718,6 +724,17 @@ const NetworkMonitor = function (config) {
           {
             x: position.x + marginLeft,
             y: position.y + marginBottom * 10
+          },
+          13,
+          '#ffffff'
+        )
+      )
+      node.textList.push(
+        drawText(
+          `Version: ${node.shardusVersion}`,
+          {
+            x: position.x + marginLeft,
+            y: position.y + marginBottom * 11
           },
           13,
           '#ffffff'
