@@ -22,10 +22,10 @@
     <script src="app.js"></script>
     <script>
       const url = new URL(window.location.href)
-      //   const server = 'app.liberdus.com:3000'
-      const server = url.searchParams.get('server') || window.location.host
-      const monitorServerUrl = `http://${server}/api` // `http://${host}:${port}/api`
+      const server = url.searchParams.get('server') || window.location.href
+      const monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
       console.log('monitorServerUrl', monitorServerUrl)
+      console.log('window.location', window.location)
       NetworkMonitor({
         networkCircleRadius: 250,
         nodeRadius: 20,
