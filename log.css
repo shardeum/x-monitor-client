@@ -1,0 +1,32 @@
+#app {
+  width: 1200px;
+  margin: 0 auto;
+  margin-top: 20px;
+}
+
+.log-output-container,
+#search-output-container {
+  background: #333;
+  color: #fff;
+  padding: 15px;
+  font-size: 13px;
+  line-height: 14px;
+  font-family: 'san-serif';
+  margin: 20px auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: calc((100vh - 250px) / 2);
+  min-height: 300px;
+  font-family: 'Roboto Mono';
+  line-height: 1.5;
+  width: 600px;
+}
+
+#search-output-container {
+  background: #22680e;
+  max-height: 300px;
+}
+
+.search-container {
+  margin: 20px;
+}

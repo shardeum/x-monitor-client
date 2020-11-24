@@ -585,6 +585,11 @@ const NetworkMonitor = function (config) {
 
   const drawTooltip = function (node) {
     stage.enableMouseOver(20)
+    node.circle.on('click', () => {
+      console.log('node clicked', node)
+      console.log('url', `/log?port=${node.externalPort}`)
+      window.open(`/log?port=${node.externalPort}`)
+    })
     node.circle.on('mouseover', () => {
       const position = {
         x: node.currentPosition.x - 150 / 2,
