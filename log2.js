@@ -20,11 +20,12 @@ socket.on('connect', async () => {
       slider: null,
       fileContent: '',
       emptyFileMessage: 'List files in the directory',
+      tail: false,
     },
     methods: {
       async onListFiles() {
         console.log('list...')
-        const files = await this.asyncEmit('list')
+        const files = await asyncEmit('list')
         this.files = [...files]
         this.emptyFileMessage = 'Pls select a file from the list.'
       },
@@ -37,7 +38,7 @@ socket.on('connect', async () => {
         // Open new file and set max and end based on its size
         this.file = file
         console.log(`open ${this.file}...`)
-        this.size = await this.asyncEmit('open', this.file)
+        this.size = await asyncEmit('open', this.file)
         this.min = 0
         this.max = this.size
         this.start = 0
@@ -106,12 +107,35 @@ socket.on('connect', async () => {
         const closed = await asyncEmit('close')
         console.log(closed)
       },
-      async asyncEmit(ev, ...args) {
-        return new Promise((resolve) => {
-          socket.emit(ev, ...args, (response) => {
-            resolve(response)
+      async toggleTailFile() {
+        this.tail = !this.tail
+        if (this.tail) this.startTailingFile()
+        else this.stopTailingFile()
+      },
+      async startTailingFile() {
+        // Listen for 'change' events
+        socket.on('change', async (newSize) => {
+          // Update size
+          this.size = newSize
+          // Move slider to the end
+          const selectionSize = this.end - this.start
+          const viewportSize = this.max - this.min
+          this.max = this.size
+          this.min = this.max - viewportSize
+          this.end = this.max
+          this.start = this.end - selectionSize
+          this.slider.update({
+            min: this.min,
+            max: this.max,
+            from: this.start,
+            to: this.end,
           })
+          // Read bytes
+          await this.onReadFile()
         })
+      },
+      async stopTailingFile() {
+        socket.off('change')
       },
     },
     async mounted() {

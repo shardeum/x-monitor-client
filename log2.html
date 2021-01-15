@@ -46,6 +46,7 @@
       <section style="margin: 20px 0px">
         <v-select :value="file || emptyFileMessage " :options="files" @input="onSelectFile"></v-select>
       </section>
+      <input type="checkbox" id="tail" :value="tail" @change="toggleTailFile($event)" />
       <p>File selected: <strong>{{ file }}</strong></p>
       <p>File size: <strong>{{ size }} Bytes</strong></p>
       <br />
