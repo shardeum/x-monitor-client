@@ -1,4 +1,5 @@
-const server = document.querySelector('#server') || 'http://localhost:3334'
+const urlParams = new URLSearchParams(window.location.search)
+const server = urlParams.get('server')
 
 const socket = io(server)
 socket.on('connection', async () => {
