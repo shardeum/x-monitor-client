@@ -1,4 +1,6 @@
-const socket = io('http://localhost:3334')
+const server = document.querySelector('#server') || 'http://localhost:3334'
+
+const socket = io(server)
 socket.on('connection', async () => {
   console.log('connected')
 })
