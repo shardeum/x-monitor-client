@@ -66,13 +66,13 @@ const NetworkMonitor = function (config) {
       clearPartitionGraphic(counter)
     }
     for (const nodeId in G.active) {
-       removeNodeFromNetwork(nodeId)
+      removeNodeFromNetwork(nodeId)
     }
     for (const nodeId in G.syncing) {
-       removeNodeFromNetwork(nodeId)
+      removeNodeFromNetwork(nodeId)
     }
     for (const nodeId in G.joining) {
-       removeNodeFromNetwork(nodeId)
+      removeNodeFromNetwork(nodeId)
     }
     G.nodes = []
     G.partitionMatrix = {}
@@ -465,8 +465,10 @@ const NetworkMonitor = function (config) {
       }
       $('#total-tx-rejected').innerHTML = report.totalRejected
       $('#total-tx-expired').innerHTML = report.totalExpired
+      $('#current-load').innerHTML = calculateAverageLoad(load)
 
-      if (Object.keys(load).length > 0) {
+      console.log('load.length', load.length)
+      if (load.length > 0) {
         const LoadMsg = {
           // time: new Date().toLocaleTimeString('en-US'),
           injected: report.totalInjected,
@@ -489,6 +491,9 @@ const NetworkMonitor = function (config) {
           applied: report.avgApplied,
           txQueueTime
         }
+        console.log('Load', LoadMsg)
+        console.log('Tx Queue Length', txQueueLenMsg)
+        console.log('Tx Queue Time', txQueueTimeMsg)
       }
       updateTables()
       injectTransactions()
@@ -1056,7 +1061,7 @@ const NetworkMonitor = function (config) {
     existingPositions = [],
     nodeIpInfo = null
   ) {
-    function isTooClose (position, existingPositions) {
+    function isTooClose(position, existingPositions) {
       if (existingPositions.length < 1) return false
       for (const existingPosition of existingPositions) {
         if (
@@ -1306,11 +1311,11 @@ const NetworkMonitor = function (config) {
     return text
   }
   /*
-	x = x cordinate of target position
-	y = y cordinate of target position
-	circle = cirlce to transform
-	*/
-  function transformCircle (circle, x, y, fill, duration) {
+  x = x cordinate of target position
+  y = y cordinate of target position
+  circle = cirlce to transform
+  */
+  function transformCircle(circle, x, y, fill, duration) {
     const travelX = x - circle.currentPosition.x
     const travelY = y - circle.currentPosition.y
 
@@ -1336,7 +1341,7 @@ const NetworkMonitor = function (config) {
     // TweenLite.to(circle, duration / 1000, {x: travelX, y: travelY, easel:{tint:0x00FF00}, ease: Power0.easeNone});
   }
 
-  function changeCircleColor (circle, fill, duration) {
+  function changeCircleColor(circle, fill, duration) {
     if (fill) {
       setTimeout(() => {
         circle.myFill.style = fill
@@ -1346,7 +1351,7 @@ const NetworkMonitor = function (config) {
     createjs.Ticker.addEventListener('tick', stage)
   }
 
-  function animateFadeIn (circle, duration, wait) {
+  function animateFadeIn(circle, duration, wait) {
     createjs.Tween.get(circle, {
       loop: false
     })
@@ -1362,7 +1367,7 @@ const NetworkMonitor = function (config) {
     createjs.Ticker.addEventListener('tick', stage)
   }
 
-  function animateFadeIn2 (circle, duration, wait) {
+  function animateFadeIn2(circle, duration, wait) {
     createjs.Tween.get(circle, {
       loop: false
     })
@@ -1378,7 +1383,7 @@ const NetworkMonitor = function (config) {
     createjs.Ticker.addEventListener('tick', stage)
   }
 
-  function growAndShrink (rec, position) {
+  function growAndShrink(rec, position) {
     rec.scaleX = 0.5
     rec.scaleY = 0.5
     rec.x = position.x
@@ -1659,6 +1664,7 @@ const NetworkMonitor = function (config) {
                   <td>Avg Tps</td>
                   <td>Rejected Txs</td>
                   <td>Expired Txs</td>
+                  <td>Load</td>
               </tr>
           </thead>
           <tbody>
@@ -1667,6 +1673,7 @@ const NetworkMonitor = function (config) {
                   <td id="current-avgtps">-</td>
                   <td id="total-tx-rejected">-</td>
                   <td id="total-tx-expired">-</td>
+                  <td id="current-load">-</td>
               </tr>
           </tbody>
         </table>
@@ -1693,7 +1700,7 @@ const NetworkMonitor = function (config) {
     stage.addChild(image)
     createjs.Ticker.addEventListener('tick', handleTick)
 
-    function handleTick (event) {
+    function handleTick(event) {
       stage.update()
     }
   }
@@ -1990,8 +1997,15 @@ const NetworkMonitor = function (config) {
   init()
 }
 
+function calculateAverageLoad(load) {
+  if (load.length === 0) return 0
+  console.log('Average Load', load.reduce((prev, current) => prev + parseFloat(current), 0))
+  const totalLoad = load.reduce((prev, current) => prev + parseFloat(current), 0)
+  return (totalLoad / load.length).toFixed(3)
+}
+
 // From https://stackoverflow.com/a/20762713
-function mode (list) {
+function mode(list) {
   const arr = [...list]
   return arr
     .sort(
