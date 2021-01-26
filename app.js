@@ -50,6 +50,7 @@ const NetworkMonitor = function (config) {
   G.stateCircleRadius = G.nodeRadius / 2.5
   G.nodeToForward = 4
   G.generatedTxArray = {}
+  G.reportInterval = 2000
 
   let testNodeCount = 0
   const testNodeLimit = 10
@@ -167,6 +168,13 @@ const NetworkMonitor = function (config) {
     delete report.active[firstNodeId]
   }
 
+  let totalTxRejected = 0
+  let totalTxExpired = 0
+
+  let avgTps = 0
+  let maxTps = 0
+  let lastTotalProcessed = 0
+
   const init = async function () {
     drawNetworkCycle(G.R, G.X, G.Y)
     $('#reset-report').addEventListener('click', flushReport)
@@ -181,333 +189,335 @@ const NetworkMonitor = function (config) {
       // }, 6000)
     }
 
-    let totalTxRejected = 0
-    let totalTxExpired = 0
 
-    let avgTps = 0
-    let maxTps = 0
-    let lastTotalProcessed = 0
     // FOR TESTING ONLY
     // let nodeDead = false
     // setTimeout(() => {
     //   nodeDead = true
     // }, 10000)
 
-    const updateReportInterval = setInterval(async () => {
-      let newCycleCounter
-      if (G.environment === 'production') {
-        try {
-          report = await getReport()
-        } catch (e) {
-          console.warn('Error while getting report from monitor server')
-          resetState()
-          return
-        }
-      }
-      // FOR TESTING ONLY
-      // for (let nodeId in report.nodes.active) {
-      //   if (!nodeDead) report.nodes.active[nodeId].timestamp = Date.now()
-      //   else if (nodeDead) {
-      //     console.log('node crashed...')
-      //     report.nodes.active[nodeId].timestamp = Date.now() - 20000
-      //   }
-      // }
-      for (const publicKey in report.nodes.joining) {
-        if (!G.joining[publicKey]) {
-          // Pass in a list of positions to avoid overlapping grey cicles
-          const existingPositions = Object.values(G.joining).map(
-            node => node.realPosition
-          )
-          G.joining[publicKey] = createNewNode(
-            'joining',
-            publicKey,
-            existingPositions,
-            report.nodes.joining[publicKey].nodeIpInfo
-          )
-          G.joining[publicKey].tooltipInstance = drawToolipForInactiveNodes(
-            G.joining[publicKey]
-          )
-        }
-      }
 
-      for (const nodeId in report.nodes.syncing) {
-        const publicKey = report.nodes.syncing[nodeId].publicKey
-        if (!G.syncing[nodeId] && nodeId !== null && nodeId !== 'null') {
-          if (G.joining[publicKey]) {
-            // syncing node is already drawn as gray circle
-            // console.log(`Syncing node found on joining list...`)
-            G.syncing[nodeId] = Object.assign({}, G.joining[publicKey], {
-              status: 'syncing',
-              nodeId: nodeId
-            })
-            delete G.joining[publicKey]
-            updateUI('joining', 'syncing', publicKey, nodeId)
-            G.syncing[nodeId].tooltipInstance = null
-            G.syncing[nodeId].circle.removeAllEventListeners('mouseover')
-            G.syncing[nodeId].circle.removeAllEventListeners('mouseout')
-            G.syncing[nodeId].tooltipInstance = drawToolipForInactiveNodes(
-              G.syncing[nodeId]
-            )
-          } else {
-            // syncing node is not drawn as gray circle yet
-            // console.log(`New syncing node`)
-            G.syncing[nodeId] = createNewNode(
-              'syncing',
-              nodeId,
-              [],
-              report.nodes.syncing[nodeId].nodeIpInfo
-            )
-            G.syncing[nodeId].nodeId = nodeId
-            positionNewNodeIntoNetwork('syncing', G.syncing[nodeId])
-            G.syncing[nodeId].tooltipInstance = drawToolipForInactiveNodes(
-              G.syncing[nodeId]
-            )
-          }
-        }
-      }
 
-      const load = []
-      const txQueueLen = []
-      const txQueueTime = []
-      for (const nodeId in report.nodes.active) {
-        report.nodes.active[nodeId].appState = '00ff00ff'
-        if (
-          !G.active[nodeId] &&
-          nodeId !== null &&
-          report.nodes.active[nodeId].appState &&
-          report.nodes.active[nodeId].nodeIpInfo
-        ) {
-          if (G.syncing[nodeId]) {
-            // active node is already drawn as yellow circle
-            // console.log(`Active node found on syncing list...`)
-            G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {
-              status: 'active',
-              nodeId: nodeId
-            })
-            delete G.syncing[nodeId]
-            try {
-              G.active[nodeId].appState =
-                report.nodes.active[nodeId].appState || '00ff00ff'
-              G.active[nodeId].cycleMarker =
-                report.nodes.active[nodeId].cycleMarker
-              G.active[nodeId].cycleCounter =
-                report.nodes.active[nodeId].cycleCounter
-              G.active[nodeId].nodelistHash =
-                report.nodes.active[nodeId].nodelistHash
-              G.active[nodeId].txInjected =
-                report.nodes.active[nodeId].txInjected
-              G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
-              G.active[nodeId].txRejected =
-                report.nodes.active[nodeId].txRejected
-              G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
-              G.active[nodeId].desiredNodes =
-                report.nodes.active[nodeId].desiredNodes
-              G.active[nodeId].reportInterval =
-                report.nodes.active[nodeId].reportInterval
-              G.active[nodeId].externalIp =
-                report.nodes.active[nodeId].nodeIpInfo.externalIp
-              G.active[nodeId].externalPort =
-                report.nodes.active[nodeId].nodeIpInfo.externalPort
-              G.active[nodeId].shardusVersion =
-                report.nodes.active[nodeId].shardusVersion
+    setTimeout(() => {
+      console.log('new time out')
+      updateReport()
+    }, G.reportInterval)
+  }
 
-              if (!newCycleCounter) {
-                newCycleCounter = report.nodes.active[nodeId].shardusVersion
-              }
-            } catch (e) {
-              console.log(e)
-            }
-            updateUI('syncing', 'active', null, nodeId)
-            G.active[nodeId].tooltipInstance = null
-            G.active[nodeId].circle.removeAllEventListeners('mouseover')
-            G.active[nodeId].circle.removeAllEventListeners('mouseout')
-            G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
-          } else {
-            // syncing node is not drawn as gray circle yet
-            console.log('New active node')
-            G.active[nodeId] = createNewNode('active', nodeId)
-            G.active[nodeId].nodeId = nodeId
-            try {
-              G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
-              if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
-                G.active[nodeId].crashed = true
-              } else {
-                G.active[nodeId].crashed = false
-              }
-              G.active[nodeId].appState = report.nodes.active[nodeId].appState
-              G.active[nodeId].cycleMarker =
-                report.nodes.active[nodeId].cycleMarker
-              G.active[nodeId].cycleCounter =
-                report.nodes.active[nodeId].cycleCounter
-              G.active[nodeId].nodelistHash =
-                report.nodes.active[nodeId].nodelistHash
-              G.active[nodeId].txInjected =
-                report.nodes.active[nodeId].txInjected
-              G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
-              G.active[nodeId].txRejected =
-                report.nodes.active[nodeId].txRejected
-              G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
-              G.active[nodeId].desiredNodes =
-                report.nodes.active[nodeId].desiredNodes
-              G.active[nodeId].reportInterval =
-                report.nodes.active[nodeId].reportInterval
-              G.active[nodeId].externalIp =
-                report.nodes.active[nodeId].nodeIpInfo.externalIp
-              G.active[nodeId].externalPort =
-                report.nodes.active[nodeId].nodeIpInfo.externalPort
-              G.active[nodeId].shardusVersion =
-                report.nodes.active[nodeId].shardusVersion
-            } catch (e) {
-              console.log(e)
-            }
-            await positionNewNodeIntoNetwork('active', G.active[nodeId])
-            G.active[nodeId].tooltipInstance = null
-            G.active[nodeId].circle.removeAllEventListeners('mouseover')
-            G.active[nodeId].circle.removeAllEventListeners('mouseout')
-            G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
-          }
-        } else if (G.active[nodeId] && report.nodes.active[nodeId].appState) {
-          load.push(
-            report.nodes.active[nodeId].currentLoad.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })
-          )
-          txQueueLen.push(report.nodes.active[nodeId].queueLength)
-          txQueueTime.push(
-            report.nodes.active[nodeId].txTimeInQueue.toLocaleString(
-              undefined,
-              { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-            )
-          )
-          if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
-            G.active[nodeId].crashed = true
-          } else {
-            G.active[nodeId].crashed = false
-          }
-          G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
-          G.active[nodeId].appState = report.nodes.active[nodeId].appState
-          G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
-          G.active[nodeId].cycleCounter =
-            report.nodes.active[nodeId].cycleCounter
-          G.active[nodeId].nodelistHash =
-            report.nodes.active[nodeId].nodelistHash
-          G.active[nodeId].txInjected = report.nodes.active[nodeId].txInjected
-          G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
-          G.active[nodeId].txRejected = report.nodes.active[nodeId].txRejected
-          G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
-          G.active[nodeId].desiredNodes =
-            report.nodes.active[nodeId].desiredNodes
-          G.active[nodeId].reportInterval =
-            report.nodes.active[nodeId].reportInterval
-          G.active[nodeId].externalIp =
-            report.nodes.active[nodeId].nodeIpInfo.externalIp
-          G.active[nodeId].externalPort =
-            report.nodes.active[nodeId].nodeIpInfo.externalPort
-          G.active[nodeId].shardusVersion =
-            report.nodes.active[nodeId].shardusVersion
-          if (!newCycleCounter) {
-            newCycleCounter = report.nodes.active[nodeId].cycleCounter
-          }
-        }
+  async function updateReport() {
+    let newCycleCounter
+    if (G.environment === 'production') {
+      try {
+        report = await getReport()
+      } catch (e) {
+        console.warn('Error while getting report from monitor server')
+        resetState()
+        return
       }
-      let totalTxCircle = 0
-      for (const nodeId in G.active) {
-        if (!G.generatedTxArray[nodeId]) {
-          G.generatedTxArray[nodeId] = []
-          for (let i = 0; i < G.nodeToForward; i++) {
-            const plainTx = generatePlainTx(G.active[nodeId])
-            G.generatedTxArray[nodeId].push(plainTx)
-            totalTxCircle += 1
-          }
-        }
+    }
+    // FOR TESTING ONLY
+    // for (let nodeId in report.nodes.active) {
+    //   if (!nodeDead) report.nodes.active[nodeId].timestamp = Date.now()
+    //   else if (nodeDead) {
+    //     console.log('node crashed...')
+    //     report.nodes.active[nodeId].timestamp = Date.now() - 20000
+    //   }
+    // }
+    for (const publicKey in report.nodes.joining) {
+      if (!G.joining[publicKey]) {
+        // Pass in a list of positions to avoid overlapping grey cicles
+        const existingPositions = Object.values(G.joining).map(
+          node => node.realPosition
+        )
+        G.joining[publicKey] = createNewNode(
+          'joining',
+          publicKey,
+          existingPositions,
+          report.nodes.joining[publicKey].nodeIpInfo
+        )
+        G.joining[publicKey].tooltipInstance = drawToolipForInactiveNodes(
+          G.joining[publicKey]
+        )
       }
-      let totalTxApplied = 0
-      const listOfDesiredNodes = []
-      let averageTpsApplied = 0
-      let modeDesiredNodes = 0
-      let activeNodeCount = 0
-      for (const nodeId in G.active) {
-        if (nodeId !== null) {
-          const isRemovedFromNetwork = await checkRemoveStatus(
+    }
+
+    for (const nodeId in report.nodes.syncing) {
+      const publicKey = report.nodes.syncing[nodeId].publicKey
+      if (!G.syncing[nodeId] && nodeId !== null && nodeId !== 'null') {
+        if (G.joining[publicKey]) {
+          // syncing node is already drawn as gray circle
+          // console.log(`Syncing node found on joining list...`)
+          G.syncing[nodeId] = Object.assign({}, G.joining[publicKey], {
+            status: 'syncing',
+            nodeId: nodeId
+          })
+          delete G.joining[publicKey]
+          updateUI('joining', 'syncing', publicKey, nodeId)
+          G.syncing[nodeId].tooltipInstance = null
+          G.syncing[nodeId].circle.removeAllEventListeners('mouseover')
+          G.syncing[nodeId].circle.removeAllEventListeners('mouseout')
+          G.syncing[nodeId].tooltipInstance = drawToolipForInactiveNodes(
+            G.syncing[nodeId]
+          )
+        } else {
+          // syncing node is not drawn as gray circle yet
+          // console.log(`New syncing node`)
+          G.syncing[nodeId] = createNewNode(
+            'syncing',
             nodeId,
-            report.nodes
+            [],
+            report.nodes.syncing[nodeId].nodeIpInfo
           )
-          const isNodeCrashed = G.active[nodeId].crashed
-          if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
-          else if (isNodeCrashed) setNodeAsCrashed(nodeId)
-          else {
-            const txApplied = G.active[nodeId].txApplied
-            const txRejected = G.active[nodeId].txRejected
-            const txExpired = G.active[nodeId].txExpired
-            const desiredNodes = G.active[nodeId].desiredNodes
-            totalTxApplied += txApplied
-            totalTxRejected += txRejected
-            totalTxExpired += txExpired
-            listOfDesiredNodes.push(desiredNodes)
-            activeNodeCount += 1
+          G.syncing[nodeId].nodeId = nodeId
+          positionNewNodeIntoNetwork('syncing', G.syncing[nodeId])
+          G.syncing[nodeId].tooltipInstance = drawToolipForInactiveNodes(
+            G.syncing[nodeId]
+          )
+        }
+      }
+    }
+
+    const load = []
+    const txQueueLen = []
+    const txQueueTime = []
+    for (const nodeId in report.nodes.active) {
+      report.nodes.active[nodeId].appState = '00ff00ff'
+      if (
+        !G.active[nodeId] &&
+        nodeId !== null &&
+        report.nodes.active[nodeId].appState &&
+        report.nodes.active[nodeId].nodeIpInfo
+      ) {
+        if (G.syncing[nodeId]) {
+          // active node is already drawn as yellow circle
+          // console.log(`Active node found on syncing list...`)
+          G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {
+            status: 'active',
+            nodeId: nodeId
+          })
+          delete G.syncing[nodeId]
+          try {
+            G.active[nodeId].appState =
+              report.nodes.active[nodeId].appState || '00ff00ff'
+            G.active[nodeId].cycleMarker =
+              report.nodes.active[nodeId].cycleMarker
+            G.active[nodeId].cycleCounter =
+              report.nodes.active[nodeId].cycleCounter
+            G.active[nodeId].nodelistHash =
+              report.nodes.active[nodeId].nodelistHash
+            G.active[nodeId].txInjected =
+              report.nodes.active[nodeId].txInjected
+            G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
+            G.active[nodeId].txRejected =
+              report.nodes.active[nodeId].txRejected
+            G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
+            G.active[nodeId].desiredNodes =
+              report.nodes.active[nodeId].desiredNodes
+            G.active[nodeId].reportInterval =
+              report.nodes.active[nodeId].reportInterval
+            G.active[nodeId].externalIp =
+              report.nodes.active[nodeId].nodeIpInfo.externalIp
+            G.active[nodeId].externalPort =
+              report.nodes.active[nodeId].nodeIpInfo.externalPort
+            G.active[nodeId].shardusVersion =
+              report.nodes.active[nodeId].shardusVersion
+
+            if (!newCycleCounter) {
+              newCycleCounter = report.nodes.active[nodeId].shardusVersion
+            }
+          } catch (e) {
+            console.log(e)
           }
+          updateUI('syncing', 'active', null, nodeId)
+          G.active[nodeId].tooltipInstance = null
+          G.active[nodeId].circle.removeAllEventListeners('mouseover')
+          G.active[nodeId].circle.removeAllEventListeners('mouseout')
+          G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
+        } else {
+          // syncing node is not drawn as gray circle yet
+          console.log('New active node')
+          G.active[nodeId] = createNewNode('active', nodeId)
+          G.active[nodeId].nodeId = nodeId
+          try {
+            G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
+            if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
+              G.active[nodeId].crashed = true
+            } else {
+              G.active[nodeId].crashed = false
+            }
+            G.active[nodeId].appState = report.nodes.active[nodeId].appState
+            G.active[nodeId].cycleMarker =
+              report.nodes.active[nodeId].cycleMarker
+            G.active[nodeId].cycleCounter =
+              report.nodes.active[nodeId].cycleCounter
+            G.active[nodeId].nodelistHash =
+              report.nodes.active[nodeId].nodelistHash
+            G.active[nodeId].txInjected =
+              report.nodes.active[nodeId].txInjected
+            G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
+            G.active[nodeId].txRejected =
+              report.nodes.active[nodeId].txRejected
+            G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
+            G.active[nodeId].desiredNodes =
+              report.nodes.active[nodeId].desiredNodes
+            G.active[nodeId].reportInterval =
+              report.nodes.active[nodeId].reportInterval
+            G.active[nodeId].externalIp =
+              report.nodes.active[nodeId].nodeIpInfo.externalIp
+            G.active[nodeId].externalPort =
+              report.nodes.active[nodeId].nodeIpInfo.externalPort
+            G.active[nodeId].shardusVersion =
+              report.nodes.active[nodeId].shardusVersion
+            if (report.nodes.active[nodeId].reportInterval > G.reportInterval) {
+              G.reportInterval = report.nodes.active[nodeId].reportInterval
+            }
+          } catch (e) {
+            console.log(e)
+          }
+          await positionNewNodeIntoNetwork('active', G.active[nodeId])
+          G.active[nodeId].tooltipInstance = null
+          G.active[nodeId].circle.removeAllEventListeners('mouseover')
+          G.active[nodeId].circle.removeAllEventListeners('mouseout')
+          G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
+        }
+      } else if (G.active[nodeId] && report.nodes.active[nodeId].appState) {
+        load.push(
+          report.nodes.active[nodeId].currentLoad.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+        )
+        txQueueLen.push(report.nodes.active[nodeId].queueLength)
+        txQueueTime.push(
+          report.nodes.active[nodeId].txTimeInQueue.toLocaleString(
+            undefined,
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+          )
+        )
+        if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
+          G.active[nodeId].crashed = true
+        } else {
+          G.active[nodeId].crashed = false
+        }
+        G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
+        G.active[nodeId].appState = report.nodes.active[nodeId].appState
+        G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
+        G.active[nodeId].cycleCounter =
+          report.nodes.active[nodeId].cycleCounter
+        G.active[nodeId].nodelistHash =
+          report.nodes.active[nodeId].nodelistHash
+        G.active[nodeId].txInjected = report.nodes.active[nodeId].txInjected
+        G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
+        G.active[nodeId].txRejected = report.nodes.active[nodeId].txRejected
+        G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
+        G.active[nodeId].desiredNodes =
+          report.nodes.active[nodeId].desiredNodes
+        G.active[nodeId].reportInterval =
+          report.nodes.active[nodeId].reportInterval
+        G.active[nodeId].externalIp =
+          report.nodes.active[nodeId].nodeIpInfo.externalIp
+        G.active[nodeId].externalPort =
+          report.nodes.active[nodeId].nodeIpInfo.externalPort
+        G.active[nodeId].shardusVersion =
+          report.nodes.active[nodeId].shardusVersion
+        if (!newCycleCounter) {
+          newCycleCounter = report.nodes.active[nodeId].cycleCounter
         }
       }
-      averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
-      if (!Number.isNaN(averageTpsApplied))
-        avgTps = report.totalProcessed - lastTotalProcessed
-      lastTotalProcessed = report.totalProcessed
-
-      if (avgTps > maxTps) maxTps = avgTps
-
-      $('#current-avgtps').innerHTML = avgTps
-      $('#current-maxtps').innerHTML = maxTps
-      modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
-      $('#total-processed-txs').innerHTML = report.totalProcessed
-      if (!Number.isNaN(modeDesiredNodes)) {
-        $('#node-info-desired').innerHTML = modeDesiredNodes
+    }
+    let totalTxCircle = 0
+    for (const nodeId in G.active) {
+      if (!G.generatedTxArray[nodeId]) {
+        G.generatedTxArray[nodeId] = []
+        for (let i = 0; i < G.nodeToForward; i++) {
+          const plainTx = generatePlainTx(G.active[nodeId])
+          G.generatedTxArray[nodeId].push(plainTx)
+          totalTxCircle += 1
+        }
       }
-      $('#total-tx-rejected').innerHTML = report.totalRejected
-      $('#total-tx-expired').innerHTML = report.totalExpired
-      $('#current-load').innerHTML = calculateAverageLoad(load)
-
-      console.log('load.length', load.length)
-      if (load.length > 0) {
-        const LoadMsg = {
-          // time: new Date().toLocaleTimeString('en-US'),
-          injected: report.totalInjected,
-          rejected: report.totalRejected,
-          expired: report.totalExpired,
-          applied: report.avgApplied,
-          load
+    }
+    let totalTxApplied = 0
+    const listOfDesiredNodes = []
+    let averageTpsApplied = 0
+    let modeDesiredNodes = 0
+    let activeNodeCount = 0
+    for (const nodeId in G.active) {
+      if (nodeId !== null) {
+        const isRemovedFromNetwork = await checkRemoveStatus(
+          nodeId,
+          report.nodes
+        )
+        const isNodeCrashed = G.active[nodeId].crashed
+        if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
+        else if (isNodeCrashed) setNodeAsCrashed(nodeId)
+        else {
+          const txApplied = G.active[nodeId].txApplied
+          const txRejected = G.active[nodeId].txRejected
+          const txExpired = G.active[nodeId].txExpired
+          const desiredNodes = G.active[nodeId].desiredNodes
+          totalTxApplied += txApplied
+          totalTxRejected += txRejected
+          totalTxExpired += txExpired
+          listOfDesiredNodes.push(desiredNodes)
+          activeNodeCount += 1
         }
-        const txQueueLenMsg = {
-          injected: report.totalInjected,
-          rejected: report.totalRejected,
-          expired: report.totalExpired,
-          applied: report.avgApplied,
-          txQueueLen
-        }
-        const txQueueTimeMsg = {
-          injected: report.totalInjected,
-          rejected: report.totalRejected,
-          expired: report.totalExpired,
-          applied: report.avgApplied,
-          txQueueTime
-        }
-        console.log('Load', LoadMsg)
-        console.log('Tx Queue Length', txQueueLenMsg)
-        console.log('Tx Queue Time', txQueueTimeMsg)
       }
-      updateTables()
-      injectTransactions()
-      updateStateCircle()
-      updateMarkerCycle()
-      updateNodelistCycle()
-    }, 1000)
+    }
+    averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
+    if (!Number.isNaN(averageTpsApplied))
+      avgTps = report.totalProcessed - lastTotalProcessed
+    lastTotalProcessed = report.totalProcessed
+
+    if (avgTps > maxTps) maxTps = avgTps
+
+    $('#current-avgtps').innerHTML = avgTps
+    $('#current-maxtps').innerHTML = maxTps
+    modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
+    $('#total-processed-txs').innerHTML = report.totalProcessed
+    if (!Number.isNaN(modeDesiredNodes)) {
+      $('#node-info-desired').innerHTML = modeDesiredNodes
+    }
+    $('#total-tx-rejected').innerHTML = report.totalRejected
+    $('#total-tx-expired').innerHTML = report.totalExpired
+    $('#current-load').innerHTML = calculateAverageLoad(load)
+
+    if (load.length > 0) {
+      const LoadMsg = {
+        // time: new Date().toLocaleTimeString('en-US'),
+        injected: report.totalInjected,
+        rejected: report.totalRejected,
+        expired: report.totalExpired,
+        applied: report.avgApplied,
+        load
+      }
+      const txQueueLenMsg = {
+        injected: report.totalInjected,
+        rejected: report.totalRejected,
+        expired: report.totalExpired,
+        applied: report.avgApplied,
+        txQueueLen
+      }
+      const txQueueTimeMsg = {
+        injected: report.totalInjected,
+        rejected: report.totalRejected,
+        expired: report.totalExpired,
+        applied: report.avgApplied,
+        txQueueTime
+      }
+    }
+    updateTables()
+    injectTransactions()
+    updateStateCircle()
+    updateMarkerCycle()
+    updateNodelistCycle()
+    setTimeout(() => { updateReport() }, G.reportInterval)
   }
 
   const injectTransactions = function () {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       const txs = node.txInjected
-      const interval = node.reportInterval * 1000
+      const interval = node.reportInterval
       let animatedInjection = 0
 
       if (!txs || txs === 0) continue
@@ -1999,7 +2009,6 @@ const NetworkMonitor = function (config) {
 
 function calculateAverageLoad(load) {
   if (load.length === 0) return 0
-  console.log('Average Load', load.reduce((prev, current) => prev + parseFloat(current), 0))
   const totalLoad = load.reduce((prev, current) => prev + parseFloat(current), 0)
   return (totalLoad / load.length).toFixed(3)
 }
