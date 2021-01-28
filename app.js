@@ -52,13 +52,18 @@ const NetworkMonitor = function (config) {
   G.generatedTxArray = {}
   G.reportInterval = 2000
 
+  // setting desired fps
+  createjs.Ticker.interval = parseInt(1000 / config.fps)
+
   let testNodeCount = 0
-  const testNodeLimit = 10
+  const testNodeLimit = 200
 
   let report = {
-    joining: {},
-    syncing: {},
-    active: {}
+    nodes: {
+      joining: {},
+      syncing: {},
+      active: {}
+    }
   }
 
   const resetState = () => {
@@ -115,7 +120,7 @@ const NetworkMonitor = function (config) {
   const generateNodeForTesting = function () {
     const hash = generateHash(64)
     const nodeId = generateHash(64)
-    report.joining[hash] = {
+    report.nodes.joining[hash] = {
       nodeIpInfo: {
         internalIp: '127.0.0.1',
         internalPort: '9000',
@@ -124,7 +129,7 @@ const NetworkMonitor = function (config) {
       }
     }
     setTimeout(() => {
-      report.syncing[nodeId] = {
+      report.nodes.syncing[nodeId] = {
         publicKey: hash,
         nodeIpInfo: {
           internalIp: '127.0.0.1',
@@ -135,17 +140,17 @@ const NetworkMonitor = function (config) {
       }
     }, 2000)
     setTimeout(() => {
-      delete report.joining[hash]
+      delete report.nodes.joining[hash]
     }, 4000)
 
     setTimeout(() => {
-      report.active[nodeId] = {
+      report.nodes.active[nodeId] = {
         appState: generateHash(64),
         nodelistHash: generateHash(64),
         cycleMarker: generateHash(64),
         cycleCounter: Math.random(),
-        txInjected: Math.random(),
-        txApplied: Math.random(),
+        txInjected: 10,
+        txApplied: Math.random() * 10,
         txRejected: Math.random(),
         txExpired: Math.random(),
         desiredNodes: Math.random(),
@@ -157,19 +162,22 @@ const NetworkMonitor = function (config) {
       }
     }, 6000)
     setTimeout(() => {
-      delete report.syncing[nodeId]
+      delete report.nodes.syncing[nodeId]
     }, 8000)
   }
 
   const removeNodeForTesting = function () {
-    const activeNodes = Object.keys(report.active)
+    const activeNodes = Object.keys(report.nodes.active)
     let firstNodeId
-    if (activeNodes.length > 5) firstNodeId = Object.keys(report.active)[0]
-    delete report.active[firstNodeId]
+    if (activeNodes.length > 5) firstNodeId = Object.keys(report.nodes.active)[0]
+    delete report.nodes.active[firstNodeId]
   }
 
   let totalTxRejected = 0
   let totalTxExpired = 0
+
+  let loadDuringLast2Report = 0
+  let injectedLoadCollector = []
 
   let avgTps = 0
   let maxTps = 0
@@ -381,19 +389,21 @@ const NetworkMonitor = function (config) {
           G.active[nodeId].tooltipInstance = drawTooltip(G.active[nodeId])
         }
       } else if (G.active[nodeId] && report.nodes.active[nodeId].appState) {
-        load.push(
-          report.nodes.active[nodeId].currentLoad.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })
-        )
-        txQueueLen.push(report.nodes.active[nodeId].queueLength)
-        txQueueTime.push(
-          report.nodes.active[nodeId].txTimeInQueue.toLocaleString(
-            undefined,
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+        if (G.environment === 'production') {
+          load.push(
+            report.nodes.active[nodeId].currentLoad.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })
           )
-        )
+          txQueueLen.push(report.nodes.active[nodeId].queueLength)
+          txQueueTime.push(
+            report.nodes.active[nodeId].txTimeInQueue.toLocaleString(
+              undefined,
+              { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            )
+          )
+        }
         if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
           G.active[nodeId].crashed = true
         } else {
@@ -506,14 +516,20 @@ const NetworkMonitor = function (config) {
       }
     }
     updateTables()
-    injectTransactions()
+    let injectedCount = injectTransactions()
     updateStateCircle()
     updateMarkerCycle()
     updateNodelistCycle()
+
+    // if (injectedLoadCollector.length >= 2) injectedLoadCollector.shift()
+    // injectedLoadCollector.push(injectedCount)
+    // injectedLoadCollector.timestamp = Date.now()
+    // loadDuringLast2Report = injectedLoadCollector.reduce((prev, cur) => prev + cur, 0)
     setTimeout(() => { updateReport() }, G.reportInterval)
   }
 
   const injectTransactions = function () {
+    let injected = 0
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (node.crashed) continue // don't show injected txs for crashed node
@@ -522,6 +538,7 @@ const NetworkMonitor = function (config) {
       let animatedInjection = 0
 
       if (!txs || txs === 0) continue
+      injected += txs
       const injectInterval = setInterval(() => {
         const newTx = createNewTx()
         let injectedTx = createNewTxCircle(newTx, node)
@@ -545,13 +562,14 @@ const NetworkMonitor = function (config) {
           }
           injectedTx.circle.graphics.clear()
           stage.removeChild(injectedTx.circle)
-          stage.update()
+          //stage.update()
           injectedTx = null
         }, G.txAnimationSpeed)
         animatedInjection += 1
         if (animatedInjection >= txs) clearInterval(injectInterval)
       }, Math.floor(interval / txs))
     }
+    return injected
   }
 
   const updateUI = function (previousStatus, currentStatus, publicKey, nodeId) {
@@ -783,7 +801,7 @@ const NetworkMonitor = function (config) {
         for (let i = 0; i < node.textList.length; i++) {
           node.textList[i].parent.removeChild(node.textList[i])
         }
-        stage.update()
+        //stage.update()
         node.textList = null
         node.tooltipRect = null
       }
@@ -891,7 +909,7 @@ const NetworkMonitor = function (config) {
         for (let i = 0; i < node.textList.length; i++) {
           node.textList[i].parent.removeChild(node.textList[i])
         }
-        stage.update()
+        //stage.update()
         node.textList = null
         node.tooltipRect = null
       }
@@ -1051,7 +1069,7 @@ const NetworkMonitor = function (config) {
       node.rectangel.graphics.clear()
       node.nodeListCycle.graphics.clear()
       node.markerCycle.graphics.clear()
-      stage.update()
+      //stage.update()
     }, 1000)
     delete G.active[nodeId]
   }
@@ -1285,10 +1303,8 @@ const NetworkMonitor = function (config) {
     circle.myFill = myFill
     circle.name = generateHash(4)
     stage.addChild(circle)
-
     circle.currentPosition = position
-
-    stage.update()
+    //stage.update()
     return circle
   }
 
@@ -1308,9 +1324,11 @@ const NetworkMonitor = function (config) {
     rect.myFill = myFill
     rect.name = generateHash(4)
     stage.addChild(rect)
-    stage.update()
+    //stage.update()
     return rect
   }
+
+  let lastTickTimestamp = null
 
   const drawText = function (message, position, fontSize, fontColor) {
     var text = new createjs.Text(message, `${fontSize}px Arial`, fontColor)
@@ -1318,7 +1336,7 @@ const NetworkMonitor = function (config) {
     text.y = position.y
     text.textBaseline = 'alphabetic'
     stage.addChild(text)
-    stage.update()
+    //stage.update()
     return text
   }
   /*
@@ -1345,11 +1363,17 @@ const NetworkMonitor = function (config) {
       duration,
       createjs.Ease.linear
     )
-    createjs.Ticker.framerate = 60
+    //createjs.Ticker.framerate = 30
     createjs.Ticker.addEventListener('tick', stage)
-    // TweenLite.ticker.addEventListener("tick", stage.update, stage);
-    // stage.update();
-    // TweenLite.to(circle, duration / 1000, {x: travelX, y: travelY, easel:{tint:0x00FF00}, ease: Power0.easeNone});
+    // createjs.Ticker.addEventListener("tick", tick);
+  }
+
+  function tick() {
+    let frameInterval = 100
+    if (!lastTickTimestamp || Date.now() - lastTickTimestamp > frameInterval) {
+      stage.update();
+      lastTickTimestamp = Date.now()
+    }
   }
 
   function changeCircleColor(circle, fill, duration) {
@@ -1358,8 +1382,8 @@ const NetworkMonitor = function (config) {
         circle.myFill.style = fill
       }, duration / 2)
     }
-    createjs.Ticker.framerate = 60
-    createjs.Ticker.addEventListener('tick', stage)
+    //createjs.Ticker.framerate = 30
+    //createjs.Ticker.addEventListener('tick', stage)
   }
 
   function animateFadeIn(circle, duration, wait) {
@@ -1374,24 +1398,8 @@ const NetworkMonitor = function (config) {
         duration,
         createjs.Ease.linear
       )
-    createjs.Ticker.framerate = 60
-    createjs.Ticker.addEventListener('tick', stage)
-  }
-
-  function animateFadeIn2(circle, duration, wait) {
-    createjs.Tween.get(circle, {
-      loop: false
-    })
-      .wait(wait)
-      .to(
-        {
-          alpha: 1.0
-        },
-        duration,
-        createjs.Ease.linear
-      )
-    createjs.Ticker.framerate = 60
-    createjs.Ticker.addEventListener('tick', stage)
+    //createjs.Ticker.framerate = 30
+    //createjs.Ticker.addEventListener('tick', stage)
   }
 
   function growAndShrink(rec, position) {
@@ -1424,8 +1432,8 @@ const NetworkMonitor = function (config) {
         createjs.Ease.linear
       )
 
-    createjs.Ticker.framerate = 60
-    createjs.Ticker.addEventListener('tick', stage)
+    //createjs.Ticker.framerate = 30
+    //createjs.Ticker.addEventListener('tick', stage)
   }
 
   const distanceBtnTwoNodes = function (node1, node2, substract) {
@@ -1514,16 +1522,9 @@ const NetworkMonitor = function (config) {
       )
 
       // hide tx circle and move it back to starting position for later REUSE
-      setTimeout(() => {
-        clonedTx.circle.visible = false
-        // transformCircle(
-        // 	clonedTx.circle,
-        // 	sourceNode.currentPosition.x,
-        // 	sourceNode.currentPosition.y,
-        // 	null,
-        // 	20
-        // )
-      }, dur)
+      // setTimeout(() => {
+      //   clonedTx.circle.visible = false
+      // }, dur)
     } else {
       console.log('source node and tx circle are not at same place..')
     }
@@ -1712,7 +1713,7 @@ const NetworkMonitor = function (config) {
     createjs.Ticker.addEventListener('tick', handleTick)
 
     function handleTick(event) {
-      stage.update()
+      //stage.update()
     }
   }
 
@@ -1831,7 +1832,7 @@ const NetworkMonitor = function (config) {
         recList.forEach(rec => {
           rec.graphics.clear()
         })
-        stage.update()
+        //stage.update()
         delete G.partitionGraphic[cycleCounter]
       }
     } catch (e) {
@@ -1911,11 +1912,15 @@ const NetworkMonitor = function (config) {
   }
 
   const checkRemoveStatus = async function (nodeId, report) {
-    const activeNodeIds = Object.keys(report.active)
-    if (activeNodeIds.indexOf(nodeId) < 0) {
-      console.log(`${nodeId} is removed from the network`)
-      return true
-    } else return false
+    try {
+      const activeNodeIds = Object.keys(report.nodes.active)
+      if (activeNodeIds.indexOf(nodeId) < 0) {
+        console.log(`${nodeId} is removed from the network`)
+        return true
+      } else return false
+    } catch (e) {
+      return false
+    }
   }
 
   const flushReport = async function () {
