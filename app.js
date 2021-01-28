@@ -463,15 +463,15 @@ const NetworkMonitor = function (config) {
         }
       }
     }
-    averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
-    if (!Number.isNaN(averageTpsApplied))
-      avgTps = report.totalProcessed - lastTotalProcessed
-    lastTotalProcessed = report.totalProcessed
+    // averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
+    // if (!Number.isNaN(averageTpsApplied))
+    //   avgTps = report.totalProcessed - lastTotalProcessed
+    // lastTotalProcessed = report.totalProcessed
 
-    if (avgTps > maxTps) maxTps = avgTps
+    // if (avgTps > maxTps) maxTps = avgTps
 
-    $('#current-avgtps').innerHTML = avgTps
-    $('#current-maxtps').innerHTML = maxTps
+    $('#current-avgtps').innerHTML = report.avgTps
+    $('#current-maxtps').innerHTML = report.maxTps
     modeDesiredNodes = Math.round(mode(listOfDesiredNodes) || 0)
     $('#total-processed-txs').innerHTML = report.totalProcessed
     if (!Number.isNaN(modeDesiredNodes)) {
