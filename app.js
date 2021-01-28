@@ -516,6 +516,7 @@ const NetworkMonitor = function (config) {
   const injectTransactions = function () {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
+      if (node.crashed) continue // don't show injected txs for crashed node
       const txs = node.txInjected
       const interval = node.reportInterval
       let animatedInjection = 0
