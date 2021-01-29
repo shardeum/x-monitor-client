@@ -453,7 +453,7 @@ const NetworkMonitor = function (config) {
     let activeNodeCount = 0
     for (const nodeId in G.active) {
       if (nodeId !== null) {
-        const isRemovedFromNetwork = await checkRemoveStatus(
+        const isRemovedFromNetwork = checkRemoveStatus(
           nodeId,
           report.nodes
         )
@@ -1936,7 +1936,7 @@ const NetworkMonitor = function (config) {
     return response.data
   }
 
-  const checkRemoveStatus = async function (nodeId, nodes) {
+  const checkRemoveStatus = function (nodeId, nodes) {
     try {
       const activeNodeIds = Object.keys(nodes.active)
       if (activeNodeIds.indexOf(nodeId) < 0) {
