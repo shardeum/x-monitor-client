@@ -120,28 +120,28 @@ const NetworkMonitor = function (config) {
   const generateNodeForTesting = function () {
     const hash = generateHash(64)
     const nodeId = generateHash(64)
-    report.nodes.joining[hash] = {
-      nodeIpInfo: {
-        internalIp: '127.0.0.1',
-        internalPort: '9000',
-        externalIp: '123.4.5.6',
-        externalPort: '10000'
-      }
-    }
-    setTimeout(() => {
-      report.nodes.syncing[nodeId] = {
-        publicKey: hash,
-        nodeIpInfo: {
-          internalIp: '127.0.0.1',
-          internalPort: '9000',
-          externalIp: '123.4.5.6',
-          externalPort: '10000'
-        }
-      }
-    }, 2000)
-    setTimeout(() => {
-      delete report.nodes.joining[hash]
-    }, 4000)
+    // report.nodes.joining[hash] = {
+    //   nodeIpInfo: {
+    //     internalIp: '127.0.0.1',
+    //     internalPort: '9000',
+    //     externalIp: '123.4.5.6',
+    //     externalPort: '10000'
+    //   }
+    // }
+    // setTimeout(() => {
+    //   report.nodes.syncing[nodeId] = {
+    //     publicKey: hash,
+    //     nodeIpInfo: {
+    //       internalIp: '127.0.0.1',
+    //       internalPort: '9000',
+    //       externalIp: '123.4.5.6',
+    //       externalPort: '10000'
+    //     }
+    //   }
+    // }, 2000)
+    // setTimeout(() => {
+    //   delete report.nodes.joining[hash]
+    // }, 4000)
 
     setTimeout(() => {
       report.nodes.active[nodeId] = {
@@ -161,9 +161,9 @@ const NetworkMonitor = function (config) {
         }
       }
     }, 6000)
-    setTimeout(() => {
-      delete report.nodes.syncing[nodeId]
-    }, 8000)
+    // setTimeout(() => {
+    //   delete report.nodes.syncing[nodeId]
+    // }, 8000)
   }
 
   const removeNodeForTesting = function () {
@@ -962,10 +962,13 @@ const NetworkMonitor = function (config) {
   }
 
   const relocateIntoNetwork = function (previousStatus, node) {
+    console.log('relocating')
     if (previousStatus === 'joining') {
+
       const networkPosition = calculateNetworkPosition(
         parseInt(node.nodeId.substr(0, 4), 16)
       )
+      console.log(networkPosition)
       node.despos = networkPosition.degree // set the desired position of the node
       const x = networkPosition.x
       const y = networkPosition.y
@@ -989,9 +992,9 @@ const NetworkMonitor = function (config) {
         y: y
       }
       node.degree = networkPosition.degree
-      setTimeout(() => {
-        adjustNodePosition()
-      }, 800)
+      // setTimeout(() => {
+      //   adjustNodePosition()
+      // }, 800)
     }
   }
 
@@ -1028,9 +1031,9 @@ const NetworkMonitor = function (config) {
         node.nodeListCycle = drawNodeListBox(node)
       }
 
-      setTimeout(() => {
-        adjustNodePosition()
-      }, 1100)
+      // setTimeout(() => {
+      //   adjustNodePosition()
+      // }, 1100)
     }
   }
 
@@ -1109,9 +1112,9 @@ const NetworkMonitor = function (config) {
     }
     let circle
     if (type === 'joining') {
-      const networkPosition = calculateNetworkPosition(
-        parseInt(id.substr(0, 4), 16)
-      )
+      // const networkPosition = calculateNetworkPosition(
+      //   parseInt(id.substr(0, 4), 16)
+      // )
       // circle = drawCircle(position, G.nodeRadius, G.colors["joining"], 2, id, 1.0);
       circle = drawCircle(
         {
@@ -1530,15 +1533,37 @@ const NetworkMonitor = function (config) {
     }
   }
 
+  let n = 0
+  let tracker = {}
+  let maxN = 0
+  let C = 200 / (Math.log(config.idealNodeCount) + 1)
+  if (Number.isNaN(C) || C < 150) C = 150
+
   const calculateNetworkPosition = function (nodeId) {
-    const degree = 360 - (nodeId / G.maxId) * 360
-    const radian = (degree * Math.PI) / 180
-    const x = G.R * Math.cos(radian) + G.X
-    const y = G.R * Math.sin(radian) + G.Y
+    let spread = 12
+    let angle = 137.508
+
+    let totalNodeCount = Object.keys(G.active).length + Object.keys(G.syncing).length
+    let phi = angle * Math.PI / 180
+    let idRatio = parseInt((nodeId / G.maxId) * totalNodeCount)
+    if (tracker[idRatio]) {
+      idRatio = maxN + 1
+    }
+    tracker[idRatio] = true
+    if (idRatio > maxN) maxN = idRatio
+    n = idRatio
+    console.log('n, c, spread', n, C, spread)
+
+    let r = spread * Math.sqrt(n) + C
+    const theta = n * phi
+    console.log('r, theta', r, theta)
+    const x = r * Math.cos(theta) + G.X
+    const y = r * Math.sin(theta) + G.Y
+    n += 1
     return {
       x,
       y,
-      degree
+      degree: angle * n
     }
   }
 
