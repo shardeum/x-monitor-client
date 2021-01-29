@@ -1936,9 +1936,9 @@ const NetworkMonitor = function (config) {
     return response.data
   }
 
-  const checkRemoveStatus = async function (nodeId, report) {
+  const checkRemoveStatus = async function (nodeId, nodes) {
     try {
-      const activeNodeIds = Object.keys(report.nodes.active)
+      const activeNodeIds = Object.keys(nodes.active)
       if (activeNodeIds.indexOf(nodeId) < 0) {
         console.log(`${nodeId} is removed from the network`)
         return true
