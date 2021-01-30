@@ -51,6 +51,7 @@ const NetworkMonitor = function (config) {
   G.nodeToForward = 4
   G.generatedTxArray = {}
   G.reportInterval = 2000
+  G.crashedNodes = {}
 
   // setting desired fps
   createjs.Ticker.interval = parseInt(1000 / config.fps)
@@ -348,11 +349,6 @@ const NetworkMonitor = function (config) {
           G.active[nodeId].nodeId = nodeId
           try {
             G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
-            if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
-              G.active[nodeId].crashed = true
-            } else {
-              G.active[nodeId].crashed = false
-            }
             G.active[nodeId].appState = report.nodes.active[nodeId].appState
             G.active[nodeId].cycleMarker =
               report.nodes.active[nodeId].cycleMarker
@@ -457,10 +453,12 @@ const NetworkMonitor = function (config) {
           nodeId,
           report.nodes
         )
-        const isNodeCrashed = G.active[nodeId].crashed
+        const isNodeCrashed = G.active[nodeId].crashed === true
+        const isNodeIntact = G.active[nodeId].crashed === false
         if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
         else if (isNodeCrashed) setNodeAsCrashed(nodeId)
         else {
+          if (isNodeIntact) setActiveIfCrashedBefore(nodeId)
           const txApplied = G.active[nodeId].txApplied
           const txRejected = G.active[nodeId].txRejected
           const txExpired = G.active[nodeId].txExpired
@@ -1077,6 +1075,7 @@ const NetworkMonitor = function (config) {
     delete G.active[nodeId]
   }
   const setNodeAsCrashed = function (nodeId) {
+    if (G.crashedNodes[nodeId]) return
     const node = G.active[nodeId]
     const redColor = '#e61c1c'
     if (node.crashed === true) {
@@ -1084,6 +1083,17 @@ const NetworkMonitor = function (config) {
       changeCircleColor(node.rectangel, redColor, 1000)
       changeCircleColor(node.markerCycle, redColor, 1000)
       changeCircleColor(node.nodeListCycle, redColor, 1000)
+      G.crashedNodes[nodeId] = true
+    }
+  }
+  const setActiveIfCrashedBefore = function (nodeId) {
+    if (G.crashedNodes[nodeId]) {
+      const node = G.active[nodeId]
+      const greenColor = G.colors.active
+      if (node.crashed === false) {
+        changeCircleColor(node.circle, greenColor, 1000)
+        delete G.crashedNodes[nodeId]
+      }
     }
   }
 
@@ -1575,11 +1585,9 @@ const NetworkMonitor = function (config) {
     tracker[idRatio] = true
     if (idRatio > maxN) maxN = idRatio
     n = idRatio
-    console.log('n, c, spread', n, C, spread)
-
     let r = spread * Math.sqrt(n) + C
     const theta = n * phi
-    console.log('r, theta', r, theta)
+    // console.log('r, theta', r, theta)
     const x = r * Math.cos(theta) + G.X
     const y = r * Math.sin(theta) + G.Y
     n += 1
