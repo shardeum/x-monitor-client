@@ -1503,6 +1503,26 @@ const NetworkMonitor = function (config) {
     return randomNodes
   }
 
+  let clonedTxCircles = []
+  let hideCloneTxsTimeout = null
+
+  const hideClonedTxs = function () {
+    if (clonedTxCircles.length === 0) {
+      console.log(`No cloned txs to hide`)
+      if (hideCloneTxsTimeout) clearTimeout(hideCloneTxsTimeout)
+      hideCloneTxsTimeout = null
+      return
+    }
+    console.log(`Hiding ${clonedTxCircles.length} cloned txs...`)
+    for (let circle of clonedTxCircles) {
+      circle.visible = false
+    }
+    clonedTxCircles = []
+    hideCloneTxsTimeout = setTimeout(() => {
+      hideClonedTxs()
+    }, 2000)
+  }
+
   const forwardInjectedTx = function (clonedTx, targetNode, sourceNode) {
     if (clonedTx.circle.currentPosition.x !== sourceNode.currentPosition.x) {
       clonedTx.circle.currentPosition = sourceNode.currentPosition
@@ -1523,11 +1543,14 @@ const NetworkMonitor = function (config) {
         null,
         dur
       )
+      clonedTxCircles.push(clonedTx.circle)
 
       // hide tx circle and move it back to starting position for later REUSE
-      // setTimeout(() => {
-      //   clonedTx.circle.visible = false
-      // }, dur)
+      if (!hideCloneTxsTimeout) {
+        hideCloneTxsTimeout = setTimeout(() => {
+          hideClonedTxs()
+        }, dur)
+      }
     } else {
       console.log('source node and tx circle are not at same place..')
     }
