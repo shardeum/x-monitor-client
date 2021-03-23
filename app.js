@@ -52,6 +52,7 @@ const NetworkMonitor = function (config) {
   G.generatedTxArray = {}
   G.reportInterval = 2000
   G.crashedNodes = {}
+  G.lostNodes = {}
 
   // setting desired fps
   createjs.Ticker.interval = parseInt(1000 / config.fps)
@@ -405,6 +406,7 @@ const NetworkMonitor = function (config) {
         } else {
           G.active[nodeId].crashed = false
         }
+        G.active[nodeId].isLost = report.nodes.active[nodeId].isLost ? true : false
         G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
         G.active[nodeId].appState = report.nodes.active[nodeId].appState
         G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
@@ -455,8 +457,10 @@ const NetworkMonitor = function (config) {
         )
         const isNodeCrashed = G.active[nodeId].crashed === true
         const isNodeIntact = G.active[nodeId].crashed === false
+        const isNodeLost = G.active[nodeId].isLost === true
         if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
         else if (isNodeCrashed) setNodeAsCrashed(nodeId)
+        else if (isNodeLost) setNodeAsLost(nodeId)
         else {
           if (isNodeIntact) setActiveIfCrashedBefore(nodeId)
           const txApplied = G.active[nodeId].txApplied
@@ -530,7 +534,7 @@ const NetworkMonitor = function (config) {
     let injected = 0
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
-      if (node.crashed) continue // don't show injected txs for crashed node
+      if (node.crashed || node.isLost) continue // don't show injected txs for crashed node
       const txs = node.txInjected
       const interval = node.reportInterval
       let animatedInjection = 0
@@ -918,7 +922,7 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.appState) return
-      if (node.crashed) return
+      if (node.crashed || node.isLost) return
       if (node.rectangel) {
         // update state color
         // node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
@@ -933,7 +937,7 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.cycleMarker) return
-      if (node.crashed) return
+      if (node.crashed || node.isLost) return
 
       if (node.cycleMarker) {
         // update cycle marker color
@@ -948,7 +952,7 @@ const NetworkMonitor = function (config) {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
       if (!node.nodelistHash) return
-      if (node.crashed) return
+      if (node.crashed || node.isLost) return
 
       if (node.nodelistHash) {
         // update nodelist Hash color
@@ -1084,6 +1088,18 @@ const NetworkMonitor = function (config) {
       changeCircleColor(node.markerCycle, redColor, 1000)
       changeCircleColor(node.nodeListCycle, redColor, 1000)
       G.crashedNodes[nodeId] = true
+    }
+  }
+  const setNodeAsLost = function (nodeId) {
+    if (G.lostNodes[nodeId]) return
+    const node = G.active[nodeId]
+    const darkColor = '#34495e'
+    if (node.isLost === true) {
+      changeCircleColor(node.circle, darkColor, 1000)
+      changeCircleColor(node.rectangel, darkColor, 1000)
+      changeCircleColor(node.markerCycle, darkColor, 1000)
+      changeCircleColor(node.nodeListCycle, darkColor, 1000)
+      G.lostNodes[nodeId] = true
     }
   }
   const setActiveIfCrashedBefore = function (nodeId) {
