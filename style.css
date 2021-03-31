@@ -82,6 +82,9 @@ thead > tr {
   top: 200px;
 }
 
+#load-table {
+  top: 300px;
+}
 #cycle-info-table {
   top: 100px;
 }

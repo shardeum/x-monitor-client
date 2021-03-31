@@ -288,6 +288,7 @@ const NetworkMonitor = function (config) {
     }
 
     const load = []
+    const nodeLoad = []
     const txQueueLen = []
     const txQueueTime = []
     for (const nodeId in report.nodes.active) {
@@ -388,10 +389,13 @@ const NetworkMonitor = function (config) {
       } else if (G.active[nodeId] && report.nodes.active[nodeId].appState) {
         if (G.environment === 'production') {
           load.push(
-            report.nodes.active[nodeId].currentLoad.toLocaleString(undefined, {
+            report.nodes.active[nodeId].currentLoad.networkLoad.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2
             })
+          )
+          nodeLoad.push(
+            report.nodes.active[nodeId].currentLoad.nodeLoad
           )
           txQueueLen.push(report.nodes.active[nodeId].queueLength)
           txQueueTime.push(
@@ -491,7 +495,12 @@ const NetworkMonitor = function (config) {
     }
     $('#total-tx-rejected').innerHTML = report.totalRejected
     $('#total-tx-expired').innerHTML = report.totalExpired
-    $('#current-load').innerHTML = calculateAverageLoad(load)
+    $('#current-load').innerHTML = calculateAverage(load)
+    console.log("nodeLoad", nodeLoad)
+    $('#current-internal-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.internal))
+    $('#current-external-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.external))
+    $('#tx-queue-length').innerHTML = calculateAverage(txQueueLen)
+    $('#tx-queue-time').innerHTML = calculateAverage(txQueueTime)
 
     if (load.length > 0) {
       const LoadMsg = {
@@ -1748,7 +1757,6 @@ const NetworkMonitor = function (config) {
                   <td>Avg Tps</td>
                   <td>Rejected Txs</td>
                   <td>Expired Txs</td>
-                  <td>Load</td>
               </tr>
           </thead>
           <tbody>
@@ -1757,7 +1765,26 @@ const NetworkMonitor = function (config) {
                   <td id="current-avgtps">-</td>
                   <td id="total-tx-rejected">-</td>
                   <td id="total-tx-expired">-</td>
+              </tr>
+          </tbody>
+        </table>
+        <table id="load-table">
+          <thead>
+              <tr>
+                  <td>Net Load</td>
+                  <td>Int Req</td>
+                  <td>Ext Req</td>
+                  <td>Q Length</td>
+                  <td>Q Time</td>
+              </tr>
+          </thead>
+          <tbody>
+              <tr>
                   <td id="current-load">-</td>
+                  <td id="current-internal-node-load">-</td>
+                  <td id="current-external-node-load">-</td>
+                  <td id="tx-queue-length">-</td>
+                  <td id="tx-queue-time">-</td>
               </tr>
           </tbody>
         </table>
@@ -2085,7 +2112,7 @@ const NetworkMonitor = function (config) {
   init()
 }
 
-function calculateAverageLoad(load) {
+function calculateAverage(load) {
   if (load.length === 0) return 0
   const totalLoad = load.reduce((prev, current) => prev + parseFloat(current), 0)
   return (totalLoad / load.length).toFixed(3)
