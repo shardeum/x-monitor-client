@@ -286,7 +286,7 @@ const NetworkMonitor = function (config) {
         }
       }
     }
-
+    let count2 = 0
     const load = []
     const nodeLoad = []
     const txQueueLen = []
@@ -435,6 +435,8 @@ const NetworkMonitor = function (config) {
         if (!newCycleCounter) {
           newCycleCounter = report.nodes.active[nodeId].cycleCounter
         }
+        count2++
+        console.log(` ${count2} Active node: ${nodeId.slice(0,5)} ${G.active[nodeId].externalIp}:${G.active[nodeId].externalPort} isLost:${G.active[nodeId].isLost} crashed:${G.active[nodeId].crashed} appState:${G.active[nodeId].appState?.slice(0,4)} cycleMarker:${G.active[nodeId].cycleMarker?.slice(0,4)} nodelistHash:${G.active[nodeId].nodelistHash?.slice(0,4)}`)
       }
     }
     let totalTxCircle = 0
@@ -453,6 +455,7 @@ const NetworkMonitor = function (config) {
     let averageTpsApplied = 0
     let modeDesiredNodes = 0
     let activeNodeCount = 0
+    
     for (const nodeId in G.active) {
       if (nodeId !== null) {
         const isRemovedFromNetwork = checkRemoveStatus(
@@ -930,8 +933,12 @@ const NetworkMonitor = function (config) {
   const updateStateCircle = function () {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
-      if (!node.appState) return
-      if (node.crashed || node.isLost) return
+      if (!node.appState) {
+        continue
+      }
+      if (node.crashed /*|| node.isLost*/){
+        continue
+      } 
       if (node.rectangel) {
         // update state color
         // node.rectangel.myFill.style = `#${node.appState.slice(0, 6)}`
@@ -945,8 +952,12 @@ const NetworkMonitor = function (config) {
   const updateMarkerCycle = function () {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
-      if (!node.cycleMarker) return
-      if (node.crashed || node.isLost) return
+      if (!node.cycleMarker) {
+        continue
+      }
+      if (node.crashed /*|| node.isLost*/){
+        continue
+      } 
 
       if (node.cycleMarker) {
         // update cycle marker color
@@ -960,8 +971,12 @@ const NetworkMonitor = function (config) {
   const updateNodelistCycle = function () {
     for (const nodeId in G.active) {
       const node = G.active[nodeId]
-      if (!node.nodelistHash) return
-      if (node.crashed || node.isLost) return
+      if (!node.nodelistHash) {
+        continue
+      }
+      if (node.crashed /*|| node.isLost*/){
+        continue
+      } 
 
       if (node.nodelistHash) {
         // update nodelist Hash color
