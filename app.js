@@ -411,6 +411,7 @@ const NetworkMonitor = function (config) {
           G.active[nodeId].crashed = false
         }
         G.active[nodeId].isLost = report.nodes.active[nodeId].isLost ? true : false
+        G.active[nodeId].isRefuted = report.nodes.active[nodeId].isRefuted ? true : false
         G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
         G.active[nodeId].appState = report.nodes.active[nodeId].appState
         G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
@@ -465,9 +466,12 @@ const NetworkMonitor = function (config) {
         const isNodeCrashed = G.active[nodeId].crashed === true
         const isNodeIntact = G.active[nodeId].crashed === false
         const isNodeLost = G.active[nodeId].isLost === true
+        const isNodeRefuted = G.active[nodeId].isRefuted === true
+
         if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
         else if (isNodeCrashed) setNodeAsCrashed(nodeId)
         else if (isNodeLost) setNodeAsLost(nodeId)
+        else if (isNodeRefuted) setNodeAsActive(nodeId)
         else {
           if (isNodeIntact) setActiveIfCrashedBefore(nodeId)
           const txApplied = G.active[nodeId].txApplied
@@ -1120,10 +1124,16 @@ const NetworkMonitor = function (config) {
     const darkColor = '#34495e'
     if (node.isLost === true) {
       changeCircleColor(node.circle, darkColor, 1000)
-      changeCircleColor(node.rectangel, darkColor, 1000)
-      changeCircleColor(node.markerCycle, darkColor, 1000)
-      changeCircleColor(node.nodeListCycle, darkColor, 1000)
       G.lostNodes[nodeId] = true
+    }
+  }
+  const setNodeAsActive = function (nodeId) {
+    if (G.lostNodes[nodeId]) {
+      delete G.lostNodes[nodeId]
+      const node = G.active[nodeId]
+      if (node) {
+        changeCircleColor(node.circle, G.colors.active, 1000)
+      }
     }
   }
   const setActiveIfCrashedBefore = function (nodeId) {
