@@ -10,36 +10,41 @@
 
 <body>
   <section id="app">
-    <h1>Log Viewer</h1>
-
     <div class="row">
-      <section v-for="slotId in Object.keys(slots)" class="col-12">
-        <div class="my-3">
-          <p class="log-subscription-info" v-if="!slots[slotId].isSubscribed">No log subscription.</p>
-          <p class="log-subscription-info" v-else>Subscribed logs from port {{ slots[slotId].port}},
-            {{ slots[slotId].filename }}.log</p>
-        </div>
-
-        <form class="form-inline">
-          <div class="form-group mx-2 mb-2">
-            <input v-model="slots[slotId].port" type="text" class="form-control" placeholder="Enter port number">
-          </div>
-          <div class="form-group mx-2 mb-2">
-            <select class="form-control" id="exampleFormControlSelect1" v-model="slots[slotId].filename">
-              <option value="main">main.log</option>
-              <option value="out">out.log</option>
-              <option value="p2p">p2p.log</option>
-              <option value="fatal">fatal.log</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary mb-2" @click="onClickSubscribe($event, slotId)">Subscribe
-            {{slotId}}</button>
-        </form>
-        <textarea class="log-output-container" :id="`output-${slotId}`" spellcheck="false"
-          v-if="slots[slotId].isSubscribed && slots[slotId].output" width="100%">{{ slots[slotId].output }}</textarea>
-        <textarea class="log-output-container" v-else-if="slots[slotId].isSubscribed"
-          width="100%">Waiting log output from server...</textarea>
-      </section>
+      <div class="col-md-12">
+        <h4>Node Info</h4>
+      </div>
+      <div class="col-md-12">
+        <p>Node IP address: <strong>{{ ip }}</strong></p>
+        <p>Node Port: <strong>{{ port }}</strong></p>
+      </div>
+      <div class="col-md-12">
+        <h4>Useful Endpoints</h4>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/perf`" target="_blank">/perf</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/counts`" target="_blank">/counts</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/counts-reset`" target="_blank">/counts-reset</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/memory`" target="_blank">/memory</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/log-default`" target="_blank">/log-default</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/log-fatal`" target="_blank">/log-fatal</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/log-default-all`" target="_blank">/log-default-all</a>
+      </div>
+      <div class="col-md-12">
+        <a :href="`http://${ip}:${port}/log-fatal-all`" target="_blank">/log-fatal-all</a>
+      </div>
     </div>
   </section>
   <script src="log.js"></script>

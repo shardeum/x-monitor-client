@@ -53,6 +53,7 @@ const NetworkMonitor = function (config) {
   G.reportInterval = 2000
   G.crashedNodes = {}
   G.lostNodes = {}
+  G.smallToolTipShown = false
 
   // setting desired fps
   createjs.Ticker.interval = parseInt(1000 / config.fps)
@@ -640,7 +641,7 @@ const NetworkMonitor = function (config) {
     node.circle.on('click', () => {
       console.log('node clicked', node)
       console.log('url', `/log?port=${node.externalPort}`)
-      window.open(`/log?port=${node.externalPort}`)
+      window.open(`/log?ip=${node.externalIp}`)
     })
     node.circle.on('mouseover', () => {
       const position = {
@@ -2135,6 +2136,77 @@ const NetworkMonitor = function (config) {
   stage.canvas.height = G.VH
   stage.canvas.width = G.VW
   init()
+  
+  const drawSmallToolTip = function(node) {
+    console.log("Drawing small tooltip", node)
+      const position = {
+        x: node.currentPosition.x - 150 / 2,
+        y: node.currentPosition.y - 60
+      }
+      let toolTipHeight = 30
+      node.smallToolTipRect = drawRectangle(
+        position,
+        150,
+        toolTipHeight,
+        5,
+        G.colors.tooltip
+      )
+      node.smallTextList = []
+      const marginBottom = 22
+      const marginLeft = 15
+
+      node.smallTextList.push(
+        drawText(
+          `${node.externalIp}:${node.externalPort}`,
+          {
+            x: position.x + marginLeft,
+            y: position.y + marginBottom
+          },
+          13,
+          '#ffffff'
+        )
+      )
+  }
+
+  const hideSmallToolTip = function(node) {
+      if (node.smallToolTipRect) {
+        node.smallToolTipRect.graphics.clear()
+        for (let i = 0; i < node.smallTextList.length; i++) {
+          node.smallTextList[i].parent.removeChild(node.smallTextList[i])
+        }
+        //stage.update()
+        node.smallTextList = null
+        node.smallToolTipRect = null
+      }
+  }
+
+  const showNodesInfo = function() {
+    console.log("Showing node info")
+    for (let nodeId in G.active) {
+      let node = G.active[nodeId]
+      drawSmallToolTip(node)
+    }
+    G.smallToolTipShown = true
+  }
+
+  const hideNodesInfo = function() {
+    console.log("Hiding node info")
+    for (let nodeId in G.active) {
+      let node = G.active[nodeId]
+      hideSmallToolTip(node)
+    }
+    G.smallToolTipShown = false
+  }
+
+  function KeyPress(e) {
+        var evtobj = window.event? event : e
+        if (evtobj.keyCode == 73 && evtobj.ctrlKey) {
+          if (G.smallToolTipShown) hideNodesInfo()
+          else showNodesInfo()
+        }
+  }
+
+  document.onkeydown = KeyPress;
 }
 
 function calculateAverage(load) {
