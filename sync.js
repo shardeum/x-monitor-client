@@ -65,8 +65,8 @@ function initSyncChart() {
                 }
             },
             async getReport() {
-                const response = await axios.get(`http://localhost:3000/api/sync-report`)
-                const heartbeatResponse = await axios.get(`http://localhost:3000/api/report`)
+                const response = await axios.get(`/api/sync-report`)
+                const heartbeatResponse = await axios.get(`/api/report`)
                 const report = response.data
                 if (Object.keys(report).length === 0) return
                 if (Object.keys(report).length <= this.nodeCount) return false
