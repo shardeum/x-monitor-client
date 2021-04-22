@@ -1,23 +1,18 @@
-<html>
-
 <head>
-    <title>Sync Timeline</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <title>Node Sync Timeline</title>
     <style>
-        .chart-container {
-            max-width: 95vw;
-            max-height: 95vh;
+        #myDiv {
+            width: 100%;
+            height: 100vh
         }
     </style>
 </head>
 
-<body id="sync-page">
-    <h1>Sync Timeline</h1>
-    <div class="chart-container" style="position: relative; height:70vh; width:95vw">
-        <canvas id="myChart" style="position: relative; height:70vh; width:95vw"></canvas>
+<body>
+    <div id='myDiv'>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="chart.min.js"></script>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
     <script src="sync.js"></script>
 </body>
-<html>
