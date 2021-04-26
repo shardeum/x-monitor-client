@@ -641,7 +641,7 @@ const NetworkMonitor = function (config) {
         node.circle.on('click', () => {
             console.log('node clicked', node)
             console.log('url', `/log?port=${node.externalPort}`)
-            window.open(`/log?ip=${node.externalIp}`)
+            window.open(`/log?ip=${node.externalIp}&port=${node.externalPort}`)
         })
         node.circle.on('mouseover', () => {
             const position = {

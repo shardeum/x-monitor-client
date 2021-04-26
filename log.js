@@ -7,12 +7,13 @@ new Vue({
   el: '#app',
   data: {
     ip: null,
-    port: 9001
+    port: null
   },
   mounted: function () {
     console.log('mounted')
     const urlParams = new URLSearchParams(window.location.search)
     this.ip = urlParams.get('ip')
+    this.port = urlParams.get('port')
   },
   methods: {
     onClickSubscribe (e, slotId) {
