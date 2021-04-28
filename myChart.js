@@ -8,6 +8,7 @@ new Vue({
     txProcessed: [],
     loads: [],
     internalLoad: [],
+    activeCount: [],
     xValue: [],
     data: [],
     chart: null,
@@ -15,11 +16,13 @@ new Vue({
     currentTotalProcessed: null,
     lastxValue: null,
     lastCycleStart: null,
+    currentNodeCount: 0,
     limit: 100,
     collector: {
       tps: [],
       loads: [],
       internalLoad: [],
+      activeCount: [],
       txProcessed: [],
       count: 0
     }
@@ -36,12 +39,31 @@ new Vue({
           text: this.tps.map(item => item.toFixed(0)),
           textposition: 'top',
           mode: 'lines+markers+text',
-          //hoverinfo: 'none',
+          hoverinfo: 'none',
           marker: {
             color: 'rgb(158,202,225)',
             opacity: 0.6,
             line: {
               color: 'rgb(8,48,107)',
+              width: 1.5
+            }
+          }
+        },
+        {
+          x: this.xValue,
+          y: this.activeCount,
+          type: 'scatter',
+          line: {shape: 'linear'},
+          name: 'Active Nodes',
+          text: this.activeCount.map(item => item.toFixed(0)),
+          textposition: 'top',
+          mode: 'lines+markers+text',
+          hoverinfo: 'none',
+          marker: {
+            color: '#c1c1c1',
+            opacity: 0.6,
+            line: {
+              color: '#c1c1c1',
               width: 1.5
             }
           }
@@ -152,6 +174,7 @@ new Vue({
       if (this.tps.length > this.limit) this.tps.splice(0, 1)
       if (this.loads.length > this.limit) this.loads.splice(0, 1)
       if (this.internalLoad.length > this.limit) this.internalLoad.splice(0, 1)
+      if (this.activeCount.length > this.limit) this.activeCount.splice(0, 1)
       if (this.txProcessed.length > this.limit) this.txProcessed.splice(0, 1)
       if (this.xValue.length > this.limit) this.xValue.splice(0, 1)
       const shouldRedraw = this.collector.count >= 3
@@ -159,6 +182,7 @@ new Vue({
         this.tps.push(this.calcuateAvg(this.collector.tps))
         this.loads.push(this.calcuateAvg(this.collector.loads))
         this.internalLoad.push(this.calcuateAvg(this.collector.internalLoad))
+        this.activeCount.push(this.currentNodeCount)
         this.xValue.push(this.lastxValue)
         Plotly.newPlot('myDiv', this.traces, this.layout)
         //Plotly.redraw('myDiv', this.traces)
@@ -169,6 +193,7 @@ new Vue({
       const response = await axios.get(`/api/report`)
       if (Object.keys(response.data.nodes.active).length > 0) {
         let numberOfActiveNodes = Object.keys(response.data.nodes.active).length
+        this.currentNodeCount = numberOfActiveNodes
         let loads = []
         let cycleCounter
         for (let nodeId in response.data.nodes.active) {
