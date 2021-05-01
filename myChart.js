@@ -6,6 +6,7 @@ new Vue({
     labels: [],
     tps: [],
     txProcessed: [],
+    txRejected: [],
     loads: [],
     internalLoad: [],
     activeCount: [],
@@ -13,7 +14,8 @@ new Vue({
     data: [],
     chart: null,
     currentCounter: null,
-    currentTotalProcessed: null,
+    currentTotalProcessed: 0,
+    currentTotalRejected: 0,
     lastxValue: null,
     lastCycleStart: null,
     currentNodeCount: 0,
@@ -24,6 +26,7 @@ new Vue({
       internalLoad: [],
       activeCount: [],
       txProcessed: [],
+      txRejected: [],
       count: 0
     }
   },
@@ -70,6 +73,25 @@ new Vue({
         },
         {
           x: this.xValue,
+          y: this.txRejected,
+          type: 'scatter',
+          line: {shape: 'linear'},
+          name: 'Rejected Txs',
+          text: this.txRejected.map(item => item.toFixed(0)),
+          textposition: 'top',
+          mode: 'lines+markers+text',
+          hoverinfo: 'none',
+          marker: {
+            color: '#fc9803',
+            opacity: 0.6,
+            line: {
+              color: '#fc9803',
+              width: 1.5
+            }
+          }
+        },
+        {
+          x: this.xValue,
           y: this.loads,
           type: 'scatter',
           yaxis: 'y2',
@@ -108,7 +130,6 @@ new Vue({
               width: 1.5
             }
           }
-
         }
       ]
     },
@@ -118,9 +139,10 @@ new Vue({
     this.labels = []
     this.tps = []
     this.txProcessed = []
+    this.txRejected = []
     let data = [this.traces]
     this.layout = {
-      title: 'Network Traffic',
+      title: 'Network Trafficsss',
       barmode: 'stack',
       xaxis: {
         autorange: true,
@@ -158,6 +180,7 @@ new Vue({
       this.collector.loads = []
       this.collector.internalLoad = []
       this.collector.txProcessed = []
+      this.collector.txRejected = []
     },
     logCollector() {
       console.log("collector count", this.collector.count)
@@ -176,6 +199,7 @@ new Vue({
       if (this.internalLoad.length > this.limit) this.internalLoad.splice(0, 1)
       if (this.activeCount.length > this.limit) this.activeCount.splice(0, 1)
       if (this.txProcessed.length > this.limit) this.txProcessed.splice(0, 1)
+      if (this.txRejected.length > this.limit) this.txRejected.splice(0, 1)
       if (this.xValue.length > this.limit) this.xValue.splice(0, 1)
       const shouldRedraw = this.collector.count >= 3
       if (shouldRedraw) {
@@ -183,6 +207,7 @@ new Vue({
         this.loads.push(this.calcuateAvg(this.collector.loads))
         this.internalLoad.push(this.calcuateAvg(this.collector.internalLoad))
         this.activeCount.push(this.currentNodeCount)
+        this.txRejected.push(this.calcuateAvg(this.collector.txRejected))
         this.xValue.push(this.lastxValue)
         Plotly.newPlot('myDiv', this.traces, this.layout)
         //Plotly.redraw('myDiv', this.traces)
@@ -221,6 +246,15 @@ new Vue({
         } else {
           this.collector.txProcessed.push(0)
         }
+
+        if (response.data.totalRejected > this.currentTotalRejected) {
+          let increment = response.data.totalRejected - this.currentTotalRejected
+          if (this.currentTotalRejected !== null) this.collector.txRejected.push(increment)
+          this.currentTotalRejected = response.data.totalRejected
+        } else {
+          this.collector.txRejected.push(0)
+        }
+
         this.collector.tps.push(response.data.avgTps)
         let averageLoad = {
           networkLoad: loads.map(l => l.networkLoad).reduce((p, c) => p + c, 0) / loads.length,
