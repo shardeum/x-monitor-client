@@ -50,7 +50,7 @@ const NetworkMonitor = function (config) {
     G.stateCircleRadius = G.nodeRadius / 2.5
     G.nodeToForward = 4
     G.generatedTxArray = {}
-    G.reportInterval = 2000
+  G.reportInterval = 1000
     G.crashedNodes = {}
     G.lostNodes = {}
     G.smallToolTipShown = false
@@ -434,11 +434,15 @@ const NetworkMonitor = function (config) {
                     report.nodes.active[nodeId].nodeIpInfo.externalPort
                 G.active[nodeId].shardusVersion =
                     report.nodes.active[nodeId].shardusVersion
+              if (report.nodes.active[nodeId].reportInterval !== G.reportInterval) {
+                G.reportInterval = report.nodes.active[nodeId].reportInterval
+                console.log("Global report interval is set to", G.reportInterval)
+              }
                 if (!newCycleCounter) {
                     newCycleCounter = report.nodes.active[nodeId].cycleCounter
                 }
                 count2++
-                console.log(` ${count2} Active node: ${nodeId.slice(0, 5)} ${G.active[nodeId].externalIp}:${G.active[nodeId].externalPort} isLost:${G.active[nodeId].isLost} crashed:${G.active[nodeId].crashed} appState:${G.active[nodeId].appState?.slice(0, 4)} cycleMarker:${G.active[nodeId].cycleMarker?.slice(0, 4)} nodelistHash:${G.active[nodeId].nodelistHash?.slice(0, 4)}`)
+                // console.log(` ${count2} Active node: ${nodeId.slice(0, 5)} ${G.active[nodeId].externalIp}:${G.active[nodeId].externalPort} isLost:${G.active[nodeId].isLost} crashed:${G.active[nodeId].crashed} appState:${G.active[nodeId].appState?.slice(0, 4)} cycleMarker:${G.active[nodeId].cycleMarker?.slice(0, 4)} nodelistHash:${G.active[nodeId].nodelistHash?.slice(0, 4)}`)
             }
         }
         let totalTxCircle = 0
@@ -503,8 +507,7 @@ const NetworkMonitor = function (config) {
         }
         $('#total-tx-rejected').innerHTML = report.totalRejected
         $('#total-tx-expired').innerHTML = report.totalExpired
-        $('#current-load').innerHTML = calculateAverage(load)
-        console.log("nodeLoad", nodeLoad)
+      $('#current-load').innerHTML = calculateAverage(load)
         $('#current-internal-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.internal))
         $('#current-external-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.external))
         $('#tx-queue-length').innerHTML = calculateAverage(txQueueLen)
@@ -1569,12 +1572,12 @@ const NetworkMonitor = function (config) {
 
     const hideClonedTxs = function () {
         if (clonedTxCircles.length === 0) {
-            console.log(`No cloned txs to hide`)
+            // console.log(`No cloned txs to hide`)
             if (hideCloneTxsTimeout) clearTimeout(hideCloneTxsTimeout)
             hideCloneTxsTimeout = null
             return
         }
-        console.log(`Hiding ${clonedTxCircles.length} cloned txs...`)
+        // console.log(`Hiding ${clonedTxCircles.length} cloned txs...`)
         for (let circle of clonedTxCircles) {
             circle.visible = false
         }
@@ -1978,6 +1981,8 @@ const NetworkMonitor = function (config) {
     }
 
     const drawCycleCounterButton = function (cycleCounter) {
+      // console.log(`Drawing cycle counter for`, cycleCounter)
+      if (!cycleCounter) return
         let container = document.querySelector('#cycle-counter-container')
         console.log(container)
         const html = `
@@ -2010,6 +2015,7 @@ const NetworkMonitor = function (config) {
             const partitionReport = activeNodes[nodeId].partitionReport
             cycleCounter = activeNodes[nodeId].cycleCounter
             if (partitionReport && partitionReport.hasOwnProperty('res')) {
+              // console.log(`partition report for cycle ${cycleCounter}, port ${activeNodes[nodeId].nodeIpInfo.externalPort}`)
                 if (!G.partitionMatrix[cycleCounter]) {
                     G.partitionMatrix[cycleCounter] = {}
                     G.partitionMatrix[cycleCounter][nodeId] = partitionReport
