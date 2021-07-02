@@ -37,7 +37,7 @@ new Vue({
           x: this.xValue,
           y: this.tps,
           type: 'scatter',
-          line: {shape: 'linear'},
+          line: { shape: 'linear' },
           name: 'Avg TPS',
           text: this.tps.map(item => item.toFixed(0)),
           textposition: 'top',
@@ -56,7 +56,7 @@ new Vue({
           x: this.xValue,
           y: this.activeCount,
           type: 'scatter',
-          line: {shape: 'linear'},
+          line: { shape: 'linear' },
           name: 'Active Nodes',
           text: this.activeCount.map(item => item.toFixed(0)),
           textposition: 'top',
@@ -75,8 +75,8 @@ new Vue({
           x: this.xValue,
           y: this.txRejected,
           type: 'scatter',
-          line: {shape: 'linear'},
-          name: 'Rejected Txs',
+          line: { shape: 'linear' },
+          name: 'Rejected TPS',
           text: this.txRejected.map(item => item.toFixed(0)),
           textposition: 'top',
           mode: 'lines+markers+text',
@@ -95,7 +95,7 @@ new Vue({
           y: this.loads,
           type: 'scatter',
           yaxis: 'y2',
-          line: {shape: 'linear'},
+          line: { shape: 'linear' },
           name: 'Load',
           text: this.loads.map(item => item.toFixed(2)),
           textposition: 'top',
@@ -116,7 +116,7 @@ new Vue({
           y: this.internalLoad,
           type: 'scatter',
           yaxis: 'y2',
-          line: {shape: 'linear'},
+          line: { shape: 'linear' },
           name: 'Internal Load',
           text: this.internalLoad.map(item => item.toFixed(2)),
           textposition: 'top',
@@ -160,8 +160,8 @@ new Vue({
       },
       yaxis2: {
         title: 'Load Ratio',
-        titlefont: {color: 'rgb(148, 103, 189)'},
-        tickfont: {color: 'rgb(148, 103, 189)'},
+        titlefont: { color: 'rgb(148, 103, 189)' },
+        tickfont: { color: 'rgb(148, 103, 189)' },
         overlaying: 'y',
         side: 'right',
         range: [0, 1],
@@ -216,54 +216,69 @@ new Vue({
     },
     async getReport() {
       const response = await axios.get(`/api/report`)
-      if (Object.keys(response.data.nodes.active).length > 0) {
-        let numberOfActiveNodes = Object.keys(response.data.nodes.active).length
-        this.currentNodeCount = numberOfActiveNodes
-        let loads = []
-        let cycleCounter
-        for (let nodeId in response.data.nodes.active) {
-          let activeNode = response.data.nodes.active[nodeId]
-          if (!cycleCounter) cycleCounter = activeNode.cycleCounter
-          loads.push(activeNode.currentLoad)
-        }
-        if (!this.currentCounter) {
-          this.currentCounter = cycleCounter
-          return
-        } else if (this.currentCounter && cycleCounter > this.currentCounter) {
-          this.lastCycleStart = response.data.timestamp
-          this.lastxValue = cycleCounter
-          this.currentCounter = cycleCounter
-        } else if (this.lastCycleStart && this.currentCounter === cycleCounter && response.data.timestamp > this.lastCycleStart) {
-          let cycleIncrement = (response.data.timestamp - this.lastCycleStart) / (30 * 1000)
-          this.lastxValue = this.currentCounter + cycleIncrement
-        } else {
-          return
-        }
-        if (response.data.totalProcessed > this.currentTotalProcessed) {
-          let increment = response.data.totalProcessed - this.currentTotalProcessed
-          if (this.currentTotalProcessed !== null) this.collector.txProcessed.push(increment)
-          this.currentTotalProcessed = response.data.totalProcessed
-        } else {
-          this.collector.txProcessed.push(0)
-        }
+      try {
+        if (Object.keys(response.data.nodes.active).length > 0) {
+          let numberOfActiveNodes = Object.keys(response.data.nodes.active).length
+          this.currentNodeCount = numberOfActiveNodes
+          let loads = []
+          let cycleCounter
+          // collect load
+          for (let nodeId in response.data.nodes.active) {
+            let activeNode = response.data.nodes.active[nodeId]
+            if (!cycleCounter) cycleCounter = activeNode.cycleCounter
+            loads.push(activeNode.currentLoad)
+          }
 
-        if (response.data.totalRejected > this.currentTotalRejected) {
-          let increment = response.data.totalRejected - this.currentTotalRejected
-          if (this.currentTotalRejected !== null) this.collector.txRejected.push(increment)
-          this.currentTotalRejected = response.data.totalRejected
-        } else {
-          this.collector.txRejected.push(0)
-        }
+          // collect cycleCounter
+          if (!this.currentCounter) {
+            this.currentCounter = cycleCounter
+            return
+          } else if (this.currentCounter && cycleCounter > this.currentCounter) {
+            this.lastCycleStart = response.data.timestamp
+            this.lastxValue = cycleCounter
+            this.currentCounter = cycleCounter
+          } else if (this.lastCycleStart && this.currentCounter === cycleCounter && response.data.timestamp > this.lastCycleStart) {
+            let cycleIncrement = (response.data.timestamp - this.lastCycleStart) / (30 * 1000)
+            this.lastxValue = this.currentCounter + cycleIncrement
+          } else {
+            console.log("lastxValue cannot be calculated")
+            return
+          }
 
-        this.collector.tps.push(response.data.avgTps)
-        let averageLoad = {
-          networkLoad: loads.map(l => l.networkLoad).reduce((p, c) => p + c, 0) / loads.length,
-          internal: loads.map(l => l.nodeLoad.internal).reduce((p, c) => p + c, 0) / loads.length,
-          external: loads.map(l => l.nodeLoad.external).reduce((p, c) => p + c, 0) / loads.length,
+          // collected txProcessed
+          if (response.data.totalProcessed > this.currentTotalProcessed) {
+            let increment = response.data.totalProcessed - this.currentTotalProcessed
+            if (this.currentTotalProcessed !== null) this.collector.txProcessed.push(increment)
+            this.currentTotalProcessed = response.data.totalProcessed
+          } else {
+            this.collector.txProcessed.push(0)
+          }
+
+          // collect txRejected
+          if (response.data.totalRejected > this.currentTotalRejected) {
+            console.log("response.data.totalRejected", response.data.totalRejected)
+            console.log("currentTotalRejected", this.currentTotalRejected)
+            let increment = response.data.totalRejected - this.currentTotalRejected
+            console.log("increment", increment)
+            //if (this.currentTotalRejected !== null) this.collector.txRejected.push(increment)
+            if (this.currentTotalRejected > 0) this.collector.txRejected.push(increment / 2) // divided by 2s so that results is rejectedTps
+            this.currentTotalRejected = response.data.totalRejected
+          } else {
+            this.collector.txRejected.push(0)
+          }
+
+          this.collector.tps.push(response.data.avgTps)
+          let averageLoad = {
+            networkLoad: loads.map(l => l.networkLoad).reduce((p, c) => p + c, 0) / loads.length,
+            internal: loads.map(l => l.nodeLoad.internal).reduce((p, c) => p + c, 0) / loads.length,
+            external: loads.map(l => l.nodeLoad.external).reduce((p, c) => p + c, 0) / loads.length,
+          }
+          this.collector.loads.push(averageLoad.networkLoad)
+          this.collector.internalLoad.push(averageLoad.internal)
+          this.collector.count += 1
         }
-        this.collector.loads.push(averageLoad.networkLoad)
-        this.collector.internalLoad.push(averageLoad.internal)
-        this.collector.count += 1
+      } catch (e) {
+        console.log("Error while processing the report", e)
       }
     },
   }
