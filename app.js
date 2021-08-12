@@ -50,7 +50,7 @@ const NetworkMonitor = function (config) {
     G.stateCircleRadius = G.nodeRadius / 2.5
     G.nodeToForward = 4
     G.generatedTxArray = {}
-  G.reportInterval = 1000
+    G.reportInterval = 1000
     G.crashedNodes = {}
     G.lostNodes = {}
     G.smallToolTipShown = false
@@ -375,6 +375,10 @@ const NetworkMonitor = function (config) {
                             report.nodes.active[nodeId].nodeIpInfo.externalPort
                         G.active[nodeId].shardusVersion =
                             report.nodes.active[nodeId].shardusVersion
+                        G.active[nodeId].lastScalingTypeWinner =
+                            report.nodes.active[nodeId].lastScalingTypeWinner
+                        G.active[nodeId].lastScalingTypeRequested =
+                            report.nodes.active[nodeId].lastScalingTypeRequested
                         if (report.nodes.active[nodeId].reportInterval > G.reportInterval) {
                             G.reportInterval = report.nodes.active[nodeId].reportInterval
                         }
@@ -434,10 +438,14 @@ const NetworkMonitor = function (config) {
                     report.nodes.active[nodeId].nodeIpInfo.externalPort
                 G.active[nodeId].shardusVersion =
                     report.nodes.active[nodeId].shardusVersion
-              if (report.nodes.active[nodeId].reportInterval !== G.reportInterval) {
-                G.reportInterval = report.nodes.active[nodeId].reportInterval
-                console.log("Global report interval is set to", G.reportInterval)
-              }
+                G.active[nodeId].lastScalingTypeWinner =
+                    report.nodes.active[nodeId].lastScalingTypeWinner
+                G.active[nodeId].lastScalingTypeRequested =
+                    report.nodes.active[nodeId].lastScalingTypeRequested
+                if (report.nodes.active[nodeId].reportInterval !== G.reportInterval) {
+                    G.reportInterval = report.nodes.active[nodeId].reportInterval
+                    console.log("Global report interval is set to", G.reportInterval)
+                }
                 if (!newCycleCounter) {
                     newCycleCounter = report.nodes.active[nodeId].cycleCounter
                 }
@@ -507,7 +515,7 @@ const NetworkMonitor = function (config) {
         }
         $('#total-tx-rejected').innerHTML = report.totalRejected
         $('#total-tx-expired').innerHTML = report.totalExpired
-      $('#current-load').innerHTML = calculateAverage(load)
+        $('#current-load').innerHTML = calculateAverage(load)
         $('#current-internal-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.internal))
         $('#current-external-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.external))
         $('#tx-queue-length').innerHTML = calculateAverage(txQueueLen)
@@ -542,6 +550,7 @@ const NetworkMonitor = function (config) {
         updateStateCircle()
         updateMarkerCycle()
         updateNodelistCycle()
+        updateScaleArrow()
 
         // if (injectedLoadCollector.length >= 2) injectedLoadCollector.shift()
         // injectedLoadCollector.push(injectedCount)
@@ -938,6 +947,14 @@ const NetworkMonitor = function (config) {
         })
     }
 
+    const updateScaleArrow = function () {
+        for (const nodeId in G.active) {
+            const node = G.active[nodeId]
+            node.lastScalingTypeWinnerArrow = drawScaleArrow(node, node.lastScalingTypeWinner, 'winner')
+            node.lastScalingTypeRequestedArrow = drawScaleArrow(node, node.lastScalingTypeRequested, 'requested')
+        }
+    }
+
     const updateStateCircle = function () {
         for (const nodeId in G.active) {
             const node = G.active[nodeId]
@@ -1106,6 +1123,8 @@ const NetworkMonitor = function (config) {
             node.rectangel.graphics.clear()
             node.nodeListCycle.graphics.clear()
             node.markerCycle.graphics.clear()
+            clearArrow(node.lastScalingTypeWinnerArrow)
+            clearArrow(node.lastScalingTypeRequestedArrow)
             //stage.update()
         }, 1000)
         delete G.active[nodeId]
@@ -1375,6 +1394,19 @@ const NetworkMonitor = function (config) {
         return circle
     }
 
+    const drawTriangle = function (position, radius, angle, fill, alpha) {
+        var triangle = new createjs.Shape()
+        var myFill = triangle.graphics.beginFill(fill).command
+        triangle.graphics.beginFill(fill).drawPolyStar(position.x, position.y, radius, 3, 0, angle);
+        if (alpha) triangle.alpha = alpha
+        triangle.myFill = myFill
+        triangle.name = generateHash(4)
+        stage.addChild(triangle)
+        triangle.currentPosition = position
+        //stage.update()
+        return triangle
+    }
+
     const drawRectangle = function (position, width, height, borderRadius, fill) {
         var rect = new createjs.Shape()
         var myFill = rect.graphics.beginFill(fill).command
@@ -1406,6 +1438,34 @@ const NetworkMonitor = function (config) {
         //stage.update()
         return text
     }
+
+    const drawScaleArrow = function (node, scaleType, winnerOrRequested) {
+        if (!scaleType) {
+            return
+        }
+        const radius = G.stateCircleRadius
+        const angle = scaleType === 'up' ? -90 : 90
+        const color = scaleType === 'up' ? '#f1c40f' : '#3498db'
+        const xOffset = winnerOrRequested === 'winner' ? radius : -1 * radius
+        const size = winnerOrRequested === 'winner' ? 1.5 * radius : radius
+        const Triangle = drawTriangle(
+            {
+                x: node.currentPosition.x + xOffset,
+                y: node.currentPosition.y - 4 * radius
+            },
+            size,
+            angle,
+            color,
+            0.1
+        )
+        animateFadeIn(Triangle, 500, 1000)
+        setTimeout(() => {
+            clearArrow(Triangle)
+        }, 2000)
+
+        return Triangle
+    }
+
     /*
     x = x cordinate of target position
     y = y cordinate of target position
@@ -1980,9 +2040,18 @@ const NetworkMonitor = function (config) {
         }
     }
 
+    const clearArrow = function (triangle) {
+        if (!triangle) return
+        try {
+            triangle.graphics.clear()
+        } catch (e) {
+            console.warn(e)
+        }
+    }
+
     const drawCycleCounterButton = function (cycleCounter) {
-      // console.log(`Drawing cycle counter for`, cycleCounter)
-      if (!cycleCounter) return
+        // console.log(`Drawing cycle counter for`, cycleCounter)
+        if (!cycleCounter) return
         let container = document.querySelector('#cycle-counter-container')
         console.log(container)
         const html = `
@@ -2015,7 +2084,7 @@ const NetworkMonitor = function (config) {
             const partitionReport = activeNodes[nodeId].partitionReport
             cycleCounter = activeNodes[nodeId].cycleCounter
             if (partitionReport && partitionReport.hasOwnProperty('res')) {
-              // console.log(`partition report for cycle ${cycleCounter}, port ${activeNodes[nodeId].nodeIpInfo.externalPort}`)
+                // console.log(`partition report for cycle ${cycleCounter}, port ${activeNodes[nodeId].nodeIpInfo.externalPort}`)
                 if (!G.partitionMatrix[cycleCounter]) {
                     G.partitionMatrix[cycleCounter] = {}
                     G.partitionMatrix[cycleCounter][nodeId] = partitionReport
