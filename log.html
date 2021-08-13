@@ -22,6 +22,11 @@
                 <h4>Useful Endpoints</h4>
             </div>
             <div class="col-md-12">
+                <a :href="`http://${ip}:${port}/combined-debug?wait=60`" target="_blank">/combined-debug(60s)</a>
+                <a :href="`http://${ip}:${port}/combined-debug?wait=30`" target="_blank">/combined-debug(30s)</a>
+                <a :href="`http://${ip}:${port}/combined-debug?wait=15`" target="_blank">/combined-debug(15s)</a>
+            </div>
+            <div class="col-md-12">
                 <a :href="`http://${ip}:${port}/perf`" target="_blank">/perf</a>
             </div>
             <div class="col-md-12">
@@ -64,7 +69,7 @@
                 <a :href="`http://${ip}:${port}/get-tree-last-insync`" target="_blank">/get-tree-last-insync</a>
             </div>
             <div class="col-md-12">
-              <a :href="`http://${ip}:${port}/get-stats-report-all`" target="_blank">/get-stats-report-all</a>
+                <a :href="`http://${ip}:${port}/get-stats-report-all`" target="_blank">/get-stats-report-all</a>
             </div>
         </div>
     </section>
