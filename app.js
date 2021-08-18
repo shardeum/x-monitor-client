@@ -15,6 +15,7 @@ const {
     chain
 } = window.popmotion
 
+
 const NetworkMonitor = function (config) {
     const G = {} // semi-global namespace
     G.nodes = []
@@ -1803,6 +1804,7 @@ const NetworkMonitor = function (config) {
         const networkHTML = `
         <button id="reset-report">Reset Report</button>
         <a href="chart.html" target="_blank"><button id="chart-button">Charts</button></a>
+        <a href="history.html" target="_blank"><button id="history-button">History</button></a>
         <div id="cycle-counter-container"></div>
         <table id="node-info-table">
             <thead>

@@ -24,7 +24,7 @@ canvas {
   margin: 0 auto;
 }
 
-#reset-report, #chart-button {
+#reset-report, #chart-button, #history-button {
   height: 40px;
   border: none;
   border-radius: 5px;
@@ -41,6 +41,13 @@ canvas {
     background: #1ca7dc;
     left: 120px;
     width: 100px;
+}
+
+#history-button {
+  background: #53b17e;
+  left: 10px;
+  top: 60px;
+  width: 100px;;
 }
 
 #cycle-counter-container {

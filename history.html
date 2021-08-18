@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <!-- import style -->
+    <link
+            rel="stylesheet"
+            href="https://unpkg.com/vue-easytable/libs/theme-default/index.css"
+    />
+</head>
+<body>
+<div id="app">
+    <h2>Node History Table</h2>
+    <p>Table is sorted by <strong>{{sortBy}}</strong> in <strong>{{sortDir}}</strong> order.</p>
+    <p>Double click on the rows to open node detail page.</p>
+    <ve-table :columns="columns" :table-data="tableData" :sort-option="sortOption" :event-custom-option="eventCustomOption"></ve-table>
+</div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<!-- import Vue -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import library -->
+<script src="https://unpkg.com/vue-easytable/libs/umd/index.js"></script>
+<script src="history.js"></script>
+</html>
