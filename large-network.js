@@ -1,4 +1,4 @@
-(function main () {
+(function main() {
     const url = new URL(window.location.href)
     // const monitorServerUrl = 'http://localhost:3000/api'
     const monitorServerUrl = window.origin + '/api'
@@ -9,7 +9,6 @@
         document.documentElement.clientHeight,
         window.innerHeight || 0
     )
-
     G.R = 100
     G.X = 0
     G.Y = 0
@@ -40,7 +39,8 @@
                     processed: 0,
                     rejected: 0,
                     netLoad: 0
-                }
+                },
+                colorMode: 'state'
             }
         },
         async mounted() {
@@ -104,17 +104,31 @@
                     y: position.y,
                     physics: false,
                     title: this.getTitle(nodeId, node),
-                    color: `#${node.cycleMarker.substr(0, 6)}`
+                    color: this.getNodeColor(node)
                 }
             },
             getUpdatedVisNode(nodeId, node) {
                 return {
                     id: nodeId,
                     title: this.getTitle(nodeId, node),
-                    color: `#${node.cycleMarker.substr(0, 6)}`
+                    color: this.getNodeColor(node)
                 }
             },
-            async  fetchChanges(timestamp) {
+            getNodeColor(node) {
+                let color = '#000000'
+                if (this.colorMode === 'state') {
+                    color = node.isDataSynced ? '#80ED99' : '#FFB319'
+                    if (node.crashed && !node.isRefuted) color = '#FF2442'
+                } else if (this.colorMode === 'marker') color = `#${node.cycleMarker.substr(0, 6)}`
+                else if (this.colorMode === 'nodelist') color = `#${node.nodelistHash.substr(0, 6)}`
+                return color
+            },
+            onColorModeChange(event) {
+                if (event.target.value === this.colorMode) return
+                this.colorMode = event.target.value
+                this.changeNodeColor()
+            },
+            async fetchChanges(timestamp) {
                 let res = await axios.get(`${monitorServerUrl}/report?timestamp=${G.lastUpdatedTimestamp}`)
                 return res.data
             },
@@ -157,7 +171,7 @@
                     let res = await axios.get(`${monitorServerUrl}/removed`)
                     const removed = res.data.removed
                     if (removed.length === 0) {
-                        console.log("No node removed in counter", this.networkStatus.counter)
+                        console.log('No node removed in counter', this.networkStatus.counter)
                         return
                     }
                     let removedNodeIds = []
@@ -169,13 +183,13 @@
                         delete G.nodes.active[nodeId]
                     }
                     if (removedNodeIds.length === 0) return
-                    console.log("removed ids", removedNodeIds)
+                    console.log('removed ids', removedNodeIds)
                     G.data.remove(removedNodeIds)
                 } catch (e) {
-                    console.log("Error while trying to remove nodes", e)
+                    console.log('Error while trying to remove nodes', e)
                 }
             },
-            async  updateNodes() {
+            async updateNodes() {
                 try {
                     let changes = await this.fetchChanges()
                     this.updateNetworkStatus(changes)
@@ -197,8 +211,8 @@
                     await this.deleteRemovedNodes()
                     G.lastUpdatedTimestamp = Date.now()
                     if (this.shouldChangeNodesSize()) this.changeNodesSize()
-                } catch(e) {
-                    console.log("Error while trying to update nodes.", e)
+                } catch (e) {
+                    console.log('Error while trying to update nodes.', e)
                 }
             },
             getNodeSize(count) {
@@ -234,6 +248,19 @@
                 G.network.redraw()
                 G.currentNodeSize = nodeSize
             },
+            changeNodeColor() {
+                try {
+                    let updatedNodes = []
+                    for (let nodeId in G.nodes.active) {
+                        let node = G.nodes.active[nodeId]
+                        let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
+                        updatedNodes.push(updatedVisNode)
+                    }
+                    G.data.update(updatedNodes)
+                } catch (e) {
+                    console.log('Error while trying to update nodes.', e)
+                }
+            },
             average(list) {
                 if (list.length === 0) return 0
                 const total = list.reduce((p, c) => p + c, 0)
@@ -248,7 +275,7 @@
                     )
                     .pop()
             },
-            async  start() {
+            async start() {
                 let res = await axios.get(`${monitorServerUrl}/report`)
                 let newNodes = []
                 for (let nodeId in res.data.nodes.active) {
@@ -281,16 +308,15 @@
                 // initialize your network!
                 G.network = new vis.Network(container, data, options)
                 G.currentNodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
-                G.network.on('click',  (params) => {
-                    console.log("params", params)
+                G.network.on('click', (params) => {
                     const nodeId = params.nodes[0]
                     const node = G.nodes.active[nodeId]
                     if (!node) return
-                    window.open(`/log?ip=${node.externalIp}&port=${node.externalPort}`)
+                    window.open(`/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`)
                 })
                 setInterval(this.updateNodes, 5000)
 
-            },
+            }
         }
     })
 })()

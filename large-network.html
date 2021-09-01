@@ -14,26 +14,29 @@
         body {
             margin: 0;
             background: rgb(243 243 243);
+            background: #E0EAFC;  /* fallback for old browsers */
+            background: -webkit-linear-gradient(to right, #CFDEF3, #E0EAFC);  /* Chrome 10-25, Safari 5.1-6 */
+            background: linear-gradient(to right, #CFDEF3, #E0EAFC); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
         }
 
         #mynetwork {
             width: 100%;
-            height: 100vh;
-            background: #E0EAFC;  /* fallback for old browsers */
-            background: -webkit-linear-gradient(to right, #CFDEF3, #E0EAFC);  /* Chrome 10-25, Safari 5.1-6 */
-            background: linear-gradient(to right, #CFDEF3, #E0EAFC); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+            height: calc(100vh - 140px);
             margin: 0;
             padding: 0;
         }
         tr > td {
             padding: 5px;
         }
+        #color-mode-selector {
+            /*position: relative;*/
+            /*bottom: 100px;*/
+        }
     </style>
 </head>
 <body>
 <div id="app">
-<!--    <p>{{ networkStatus }}</p>-->
-        <div class="p-2 absolute w-full">
+        <div class="p-2 w-full">
             <table class="w-full font-sans text-sm font-light text-center bg-gray-100 shadow">
                 <tr class="font-medium text-xs text-gray-800">
                     <td>Counter</td>
@@ -58,8 +61,33 @@
                     <td>{{ networkStatus.load ? networkStatus.load.toFixed(2) : 0.0 }}</td>
                 </tr>
             </table>
+
+
     </div>
     <div id="mynetwork"></div>
+    <div class="grid grid-cols-12">
+    <div class="col-span-3 px-3 mb-6 md:mb-0" id="color-mode-selector">
+        <label class="block tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-state">
+            Nodes Color By:
+        </label>
+        <div class="relative">
+            <select @change="onColorModeChange" class="block appearance-none w-full bg-gray-100 border text-sm border-gray-100 text-gray-700 py-2 px-2 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-state">
+                <option value="state">Data Sync</option>
+                <option value="marker">Cycle Marker</option>
+                <option value="nodelist">NodeList Hash</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+        </div>
+    </div>
+    <div class="col-span-9 px-3 mb-6 md:mb-0 align-middle flex flex-row items-end justify-end space-x-6">
+        <a href="/chart.html" target="_blank" class="text-sm text-blue-400">Charts</a>
+        <a href="/sync.html" target="_blank" class="text-sm text-blue-400">Sync History</a>
+        <a href="/history.html" target="_blank" class="text-sm text-blue-400">Node History</a>
+        <a href="/history-log.html" target="_blank" class="text-sm text-blue-400">Monitor Logs</a>
+    </div>
+        </div>
 </div>
 
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
