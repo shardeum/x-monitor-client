@@ -44,6 +44,7 @@
             }
         },
         async mounted() {
+            console.log("Mounted")
             this.start()
         },
         methods: {
@@ -242,6 +243,10 @@
                     nodes: {
                         // size: 2,
                         size: nodeSize
+                    },
+                    interaction: {
+                        zoomSpeed: 0.1,
+                        zoomView: true
                     }
                 }
                 G.network.setOptions(options)
@@ -301,7 +306,11 @@
                         font: {
                             size: 12,
                             face: 'Arial'
-                        }
+                        },
+                    },
+                    interaction: {
+                        zoomSpeed: 0.1,
+                        zoomView: true
                     }
                 }
 
