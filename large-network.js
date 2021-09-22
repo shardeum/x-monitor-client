@@ -116,9 +116,10 @@
                 }
             },
             getNodeColor(node) {
+                if (!node.cycleMarker) return '#fcbf49' // syncing node
                 let color = '#000000'
                 if (this.colorMode === 'state') {
-                    color = node.isDataSynced ? '#80ED99' : '#FFB319'
+                    color = node.isDataSynced ? '#80ED99' : '#FF2EFF'
                     if (node.crashed && !node.isRefuted) color = '#FF2442'
                 } else if (this.colorMode === 'marker') color = `#${node.cycleMarker.substr(0, 6)}`
                 else if (this.colorMode === 'nodelist') color = `#${node.nodelistHash.substr(0, 6)}`
@@ -172,7 +173,6 @@
                     let res = await axios.get(`${monitorServerUrl}/removed`)
                     const removed = res.data.removed
                     if (removed.length === 0) {
-                        console.log('No node removed in counter', this.networkStatus.counter)
                         return
                     }
                     let removedNodeIds = []
@@ -199,16 +199,35 @@
                     for (let nodeId in changes.nodes.active) {
                         let node = changes.nodes.active[nodeId]
                         if (!G.nodes.active[nodeId]) {
-                            console.log('New node joined the network')
+                            console.log('New active node')
                             G.nodes.active[nodeId] = node
+                            if (!G.nodes.syncing[nodeId]) newNodes.push(node)
+                            continue
+                        }
+                        let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
+                        updatedNodes.push(updatedVisNode)
+                        if (G.nodes.syncing[nodeId]) delete G.nodes.syncing[nodeId]
+                    }
+
+                    for (let nodeId in changes.nodes.syncing) {
+                        let node = changes.nodes.syncing[nodeId]
+                        node.nodeId = nodeId
+                        if (!G.nodes.syncing[nodeId]) {
+                            console.log('New syncing node')
+                            G.nodes.syncing[nodeId] = node
                             newNodes.push(node)
                             continue
                         }
                         let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
                         updatedNodes.push(updatedVisNode)
                     }
+                    // draw new active + synicng nodes
                     this.addNewNodesIntoNetwork(newNodes)
+
+                    // update existing active + syncing nodes
                     G.data.update(updatedNodes)
+
+                    // delete removed nodes
                     await this.deleteRemovedNodes()
                     G.lastUpdatedTimestamp = Date.now()
                     if (this.shouldChangeNodesSize()) this.changeNodesSize()
@@ -284,10 +303,21 @@
                 let res = await axios.get(`${monitorServerUrl}/report`)
                 let newNodes = []
                 for (let nodeId in res.data.nodes.active) {
+                    // remove if active node exists in the syncing list
+                    if (G.nodes.syncing[nodeId]) {
+                        delete G.nodes.syncing[nodeId]
+                    }
                     let node = res.data.nodes.active[nodeId]
                     let visNode = this.getNewVisNode(nodeId, node)
                     newNodes.push(visNode)
                     G.nodes.active[nodeId] = node
+                }
+                for (let nodeId in res.data.nodes.syncing) {
+                    let node = res.data.nodes.syncing[nodeId]
+                    node.nodeId = nodeId
+                    let visNode = this.getNewVisNode(nodeId, node)
+                    newNodes.push(visNode)
+                    G.nodes.syncing[nodeId] = node
                 }
                 G.data = new vis.DataSet(newNodes)
                 this.updateNetworkStatus(res.data)
