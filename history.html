@@ -7,12 +7,14 @@
             rel="stylesheet"
             href="https://unpkg.com/vue-easytable/libs/theme-default/index.css"
     />
+    <link rel="stylesheet" href="history.css">
 </head>
 <body>
 <div id="app">
     <h2>Node History Table</h2>
     <p>Table is sorted by <strong>{{sortBy}}</strong> in <strong>{{sortDir}}</strong> order.</p>
     <p>Double click on the rows to open node detail page. See <a href="/history-log.html" target="_blank">history logs</a> from monitor server.</p>
+    <p class="filter-message">Filtered By: {{ filterBy ? filterBy : "None" }}</p>
     <ve-table :columns="columns" :table-data="tableData" :sort-option="sortOption" :event-custom-option="eventCustomOption"></ve-table>
 </div>
 </body>

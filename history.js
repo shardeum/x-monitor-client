@@ -4,6 +4,7 @@ new Vue({
         return {
             sortBy: 'nodeId',
             sortDir: 'asc',
+            filterBy: '',
             nodes: {
                 joined: {},
                 active: {},
@@ -88,7 +89,37 @@ new Vue({
                     key: 'g',
                     title: 'Status',
                     align: 'center',
-                    sortBy: ''
+                    sortBy: '',
+                    filter: {
+                        filterList: [
+                            {
+                                value: 0,
+                                label: "active",
+                                selected: false,
+                            },
+                            {
+                                value: 1,
+                                label: "crashed",
+                                selected: false,
+                            },
+                            {
+                                value: 2,
+                                label: "syncing",
+                                selected: false,
+                            }
+                        ],
+                        // filter confirm hook
+                        filterConfirm: (filterList) => {
+                            const status = filterList
+                                .filter((x) => x.selected)
+                                .map((x) => x.label);
+                            this.searchByNodeStatus(status);
+                        },
+                        // filter reset hook
+                        filterReset: (filterList) => {
+                            this.searchByNodeStatus([]);
+                        },
+                    }
                 }
             ],
             eventCustomOption: {
@@ -101,18 +132,28 @@ new Vue({
                     };
                 },
             },
-            tableData: []
+            tableData: [],
+            sourceData: []
         }
     },
     async mounted() {
         await this.getTableData()
-        setInterval(this.getTableData, 5000)
+        setInterval(this.getTableData, 10000)
     },
     methods: {
+        // search by date field
+        searchByNodeStatus(status) {
+            console.log('status', typeof status, status)
+            this.filterBy = status[0]
+            let sortObj = {}
+            sortObj[this.sortBy] = this.sortDir
+            this.sortChange(sortObj)
+        },
         async getTableData() {
+            console.log("getting table data")
             const resp = await axios.get(`/api/history`)
             const history = resp.data
-            this.tableData = []
+            this.sourceData = []
             for (let nodeId in history) {
                 const node = history[nodeId]
                 let row = {
@@ -125,14 +166,24 @@ new Vue({
                     removed: node.removed,
                     crashed: node.crashed ? 'crashed' : (node.active ? 'active' : 'syncing')
                 }
-                this.tableData.push(row)
+                this.sourceData.push(row)
             }
             let sortObj = {}
             sortObj[this.sortBy] = this.sortDir
             this.sortChange(sortObj)
         },
         sortChange(params) {
-            let data = this.tableData.slice(0)
+            let data = this.sourceData.slice(0)
+            console.log("this.filterBy", this.filterBy)
+            if(this.filterBy === 'crashed') {
+                data = this.sourceData.filter((x) => x.crashed === "crashed")
+            } else if (this.filterBy === 'active') {
+                data = this.sourceData.filter(x => x.crashed === "active")
+            } else if (this.filterBy === 'syncing') {
+                data = this.sourceData.filter(x => !x.active || x.crashed === "syncing")
+            } else {
+                data = [...this.sourceData]
+            }
             data.sort((a, b) => {
                 console.log('this.sortBy', this.sortBy)
                 console.log('this.sortDir', this.sortDir)
