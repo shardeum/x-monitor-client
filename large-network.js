@@ -1,6 +1,6 @@
 ;(function main() {
     const url = new URL(window.location.href)
-    // const monitorServerUrl = 'http://18.212.118.144:3000/api'
+    // const monitorServerUrl = 'http://3.90.245.96:3000/api'
     const monitorServerUrl = window.origin + '/api'
     console.log('Monitor server', monitorServerUrl)
     const G = {}
@@ -15,7 +15,7 @@
     G.nodes = {
         joining: {},
         syncing: {},
-        active: {},
+        active: {}
     }
     let n = 0
     let tracker = {}
@@ -35,9 +35,9 @@
                     tps: 0,
                     processed: 0,
                     rejected: 0,
-                    netLoad: 0,
+                    netLoad: 0
                 },
-                colorMode: 'state',
+                colorMode: 'state'
             }
         },
         async mounted() {
@@ -64,7 +64,7 @@
                 return {
                     x,
                     y,
-                    degree: angle * n,
+                    degree: angle * n
                 }
             },
             randomIntFromInterval(min, max) {
@@ -83,7 +83,7 @@
                 return {
                     x,
                     y,
-                    degree: angle,
+                    degree: angle
                 }
             },
             generateRandomColor() {
@@ -103,14 +103,14 @@
                     y: position.y,
                     physics: false,
                     title: this.getTitle(nodeId, node),
-                    color: this.getNodeColor(node),
+                    color: this.getNodeColor(node)
                 }
             },
             getUpdatedVisNode(nodeId, node) {
                 return {
                     id: nodeId,
                     title: this.getTitle(nodeId, node),
-                    color: this.getNodeColor(node),
+                    color: this.getNodeColor(node)
                 }
             },
             getNodeColor(node) {
@@ -178,7 +178,7 @@
                         const nodeId = node.nodeId
                         const activeNode = G.nodes.active[nodeId]
                         if (!activeNode) continue
-                        removedNodeIds.push({ id: nodeId })
+                        removedNodeIds.push({id: nodeId})
                         delete G.nodes.active[nodeId]
                     }
                     if (removedNodeIds.length === 0) return
@@ -200,7 +200,7 @@
                         const nodeId = node.nodeId
                         const activeNode = G.nodes.active[nodeId]
                         if (!activeNode) continue
-                        removedNodeIds.push({ id: nodeId })
+                        removedNodeIds.push({id: nodeId})
                         delete G.nodes.active[nodeId]
                     }
                     if (removedNodeIds.length === 0) return
@@ -227,18 +227,20 @@
                     console.log(`Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length} nodes updated.`)
                     this.updateNetworkStatus(changes)
                     let updatedNodes = []
+                    let updatedNodesMap = []
                     let newNodes = []
+                    let newNodesMap = []
                     let crashedNodesToRemove = []
                     for (let nodeId in changes.nodes.active) {
                         let node = changes.nodes.active[nodeId]
                         if (!G.nodes.active[nodeId]) {
                             console.log('New active node')
                             G.nodes.active[nodeId] = node
-                            if (!G.nodes.syncing[nodeId]) newNodes.push(node)
+                            if (!G.nodes.syncing[nodeId]) newNodesMap[nodeId] = node
                             continue
                         }
                         let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
-                        updatedNodes.push(updatedVisNode)
+                        updatedNodesMap[nodeId] = updatedVisNode
                         if (G.nodes.syncing[nodeId]) delete G.nodes.syncing[nodeId]
                     }
 
@@ -248,7 +250,7 @@
                         if (!G.nodes.syncing[nodeId]) {
                             console.log('New syncing node')
                             G.nodes.syncing[nodeId] = node
-                            newNodes.push(node)
+                            newNodesMap[nodeId] = node
 
                             // check if node is crashed before and stuck as red circle
                             const crashedNode = this.isNodeCrashedBefore(node)
@@ -259,12 +261,14 @@
                             continue
                         }
                         let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
-                        updatedNodes.push(updatedVisNode)
+                        updatedNodesMap[nodeId] = updatedVisNode
                     }
                     // draw new active + synicng nodes
+                    newNodes = Object.values(newNodesMap)
                     this.addNewNodesIntoNetwork(newNodes)
 
                     // update existing active + syncing nodes
+                    updatedNodes = Object.values(updatedNodesMap)
                     G.data.update(updatedNodes)
 
                     // delete removed nodes
@@ -291,12 +295,17 @@
             },
 
             getTitle(nodeId, node) {
-                return this.htmlTitle(`
+                try {
+                    return this.htmlTitle(`
             <p><strong>NodeId</strong>: ${nodeId}</p>
             <p><strong>IP Address</strong>: ${node.nodeIpInfo.externalIp}:${node.nodeIpInfo.externalPort}</p>
             <p><strong>NodeList Hash</strong>: ${node.nodelistHash}</p>
             <p><strong>CycleMaker Hash</strong>: ${node.cycleMarker}</p>
             `)
+                } catch (e) {
+                    console.log('Unable to get Node title', e)
+                    console.log(node)
+                }
             },
 
             changeNodesSize() {
@@ -304,12 +313,12 @@
                 const options = {
                     nodes: {
                         // size: 2,
-                        size: nodeSize,
+                        size: nodeSize
                     },
                     interaction: {
                         zoomSpeed: 0.1,
-                        zoomView: true,
-                    },
+                        zoomView: true
+                    }
                 }
                 G.network.setOptions(options)
                 G.network.redraw()
@@ -333,14 +342,24 @@
                 const total = list.reduce((p, c) => p + c, 0)
                 return total / list.length
             },
-            mode(list) {
-                const arr = [...list]
-                return arr
-                    .sort(
-                        (a, b) =>
-                            arr.filter((v) => v === a).length - arr.filter((v) => v === b).length
-                    )
-                    .pop()
+            // mode(list) {
+            //     const arr = [...list]
+            //     return arr
+            //         .sort(
+            //             (a, b) =>
+            //                 arr.filter((v) => v === a).length - arr.filter((v) => v === b).length
+            //         )
+            //         .pop()
+            // },
+            mode(arr) {
+                return arr.reduce(function (current, num) {
+                    const freq = (num in current.numMap) ? ++current.numMap[num] : (current.numMap[num] = 1)
+                    if (freq > current.modeFreq && freq > 1) {
+                        current.modeFreq = freq
+                        current.mode = num
+                    }
+                    return current
+                }, {mode: null, modeFreq: 0, numMap: {}}).mode
             },
             async start() {
                 let res = await axios.get(`${monitorServerUrl}/report`)
@@ -349,6 +368,7 @@
                 for (let nodeId in res.data.nodes.active) {
                     // remove if active node exists in the syncing list
                     if (G.nodes.syncing[nodeId]) {
+                        console.log('Found this active node in syncing list. Removing it from syncing list.')
                         delete G.nodes.syncing[nodeId]
                     }
                     let node = res.data.nodes.active[nodeId]
@@ -370,7 +390,7 @@
 
                 // provide the data in the vis format
                 let data = {
-                    nodes: G.data,
+                    nodes: G.data
                 }
                 const options = {
                     nodes: {
@@ -378,12 +398,12 @@
                         size: this.getNodeSize(Object.keys(G.nodes.active).length),
                         font: {
                             size: 12,
-                            face: 'Arial',
-                        },
+                            face: 'Arial'
+                        }
                     },
                     interaction: {
                         zoomSpeed: 0.1,
-                        zoomView: true,
+                        zoomView: true
                     }
                 }
 
@@ -399,7 +419,7 @@
                     )
                 })
                 setInterval(this.updateNodes, 10000)
-            },
-        },
+            }
+        }
     })
 })()
