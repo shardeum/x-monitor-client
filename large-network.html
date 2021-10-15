@@ -38,27 +38,41 @@
 <div id="app">
         <div class="p-2 w-full">
             <table class="w-full font-sans text-sm font-light text-center bg-gray-100 shadow">
-                <tr class="font-medium text-xs text-gray-800">
+                <tr class="font-medium text-xs text-gray-800 grid grid-cols-9">
                     <td>Counter</td>
                     <td>Joining</td>
                     <td>Syncing</td>
                     <td>Active</td>
                     <td>Desired</td>
-                    <td>Avg Tps</td>
+                    <td>
+                        <span v-if="shouldShowMaxTps">Max Tps</span>
+                        <span v-else>Avg Tps</span>
+                    </td>
                     <td>Processed</td>
                     <td>Rejected</td>
-                    <td>Load</td>
+                    <td>
+                        <span v-if="shouldShowMaxLoad">Max Load</span>
+                        <span v-else>Load</span>
+                    </td>
                 </tr>
-                <tr>
+                <tr class="grid grid-cols-9">
                     <td>{{ networkStatus.counter }}</td>
                     <td>{{ networkStatus.joining }}</td>
                     <td>{{ networkStatus.syncing }}</td>
                     <td>{{ networkStatus.active }}</td>
                     <td>{{ networkStatus.desired }}</td>
-                    <td>{{ networkStatus.tps }}</td>
+                    <td @mouseover="shouldShowMaxTps = true" @mouseleave="shouldShowMaxTps = false">
+                        <span v-if="shouldShowMaxTps">{{ networkStatus.maxTps }}</span>
+                        <span v-else>{{ networkStatus.tps }}</span>
+                    </td>
                     <td>{{ networkStatus.processed }}</td>
                     <td>{{ networkStatus.rejected }}</td>
-                    <td>{{ networkStatus.load ? networkStatus.load.toFixed(2) : 0.0 }}</td>
+                    <td @mouseover="shouldShowMaxLoad = true" @mouseleave="shouldShowMaxLoad = false">
+                        <span v-if="shouldShowMaxLoad">{{ networkStatus.maxLoad ? networkStatus.maxLoad.toFixed(2) :
+                                0.0
+                            }}</span>
+                        <span v-else>{{ networkStatus.load ? networkStatus.load.toFixed(2) : 0.0 }}</span>
+                    </td>
                 </tr>
             </table>
 

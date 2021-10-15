@@ -33,11 +33,16 @@
                     counter: 0,
                     desired: 0,
                     tps: 0,
+                    maxTps: 0,
                     processed: 0,
                     rejected: 0,
-                    netLoad: 0
+                    netLoad: 0,
+                    load: 0,
+                    maxLoad: 0
                 },
-                colorMode: 'state'
+                colorMode: 'state',
+                shouldShowMaxTps: false,
+                shouldShowMaxLoad: false
             }
         },
         async mounted() {
@@ -148,6 +153,7 @@
                 console.log('reportPercentage', reportPercentage)
                 if (reportPercentage < 0.3) return // don't update stats if less than 30% of network updates
                 this.networkStatus.tps = report.avgTps
+                this.networkStatus.maxTps = report.maxTps
                 this.networkStatus.processed = report.totalProcessed
                 this.networkStatus.rejected = report.totalRejected
                 this.networkStatus.active = Object.keys(G.nodes.active).length
@@ -170,6 +176,9 @@
                 this.networkStatus.counter = this.mode(counters)
                 this.networkStatus.cycleMarker = this.mode(cycleMarkers)
                 this.networkStatus.desired = this.mode(desired)
+                if (this.networkStatus.load > this.networkStatus.maxLoad) {
+                    this.networkStatus.maxLoad = this.networkStatus.load
+                }
             },
             deleteCrashedNodes(nodes) {
                 try {
@@ -221,6 +230,15 @@
                     }
                 })
             },
+            findCrashedSyncingNode(newNode) {
+                for (let nodeId in G.nodes.syncing) {
+                    const {externalIp, externalPort} = G.nodes.syncing[nodeId].nodeIpInfo
+                    if (newNode.nodeIpInfo.externalIp === externalIp && newNode.nodeIpInfo.externalPort === externalPort && newNode.nodeId !== nodeId) {
+                        console.log('Found crashed syncing node by ip:port')
+                        return G.nodes.syncing[nodeId]
+                    }
+                }
+            },
             async updateNodes() {
                 try {
                     let changes = await this.fetchChanges()
@@ -234,7 +252,7 @@
                     for (let nodeId in changes.nodes.active) {
                         let node = changes.nodes.active[nodeId]
                         if (!G.nodes.active[nodeId]) {
-                            console.log('New active node')
+                            // console.log('New active node', node)
                             G.nodes.active[nodeId] = node
                             if (!G.nodes.syncing[nodeId]) newNodesMap[nodeId] = node
                             continue
@@ -247,6 +265,12 @@
                     for (let nodeId in changes.nodes.syncing) {
                         let node = changes.nodes.syncing[nodeId]
                         node.nodeId = nodeId
+                        let crashedSyncingNode = this.findCrashedSyncingNode(node)
+                        if (crashedSyncingNode) {
+                            console.log('Removing crashed syncing node', crashedSyncingNode)
+                            delete G.nodes.syncing[crashedSyncingNode.nodeId]
+                            G.data.remove(crashedSyncingNode.nodeId)
+                        }
                         if (!G.nodes.syncing[nodeId]) {
                             console.log('New syncing node')
                             G.nodes.syncing[nodeId] = node
@@ -304,7 +328,7 @@
             `)
                 } catch (e) {
                     console.log('Unable to get Node title', e)
-                    console.log(node)
+                    console.log(nodeId, node)
                 }
             },
 
