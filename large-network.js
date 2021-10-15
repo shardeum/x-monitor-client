@@ -1,6 +1,6 @@
 ;(function main() {
     const url = new URL(window.location.href)
-    // const monitorServerUrl = 'http://3.90.245.96:3000/api'
+    // const monitorServerUrl = 'http://52.201.247.225:3000/api'
     const monitorServerUrl = window.origin + '/api'
     console.log('Monitor server', monitorServerUrl)
     const G = {}
@@ -152,7 +152,7 @@
                 this.networkStatus.rejected = report.totalRejected
                 this.networkStatus.active = Object.keys(G.nodes.active).length
                 this.networkStatus.syncing = Object.keys(G.nodes.syncing).length
-                this.networkStatus.joining = Object.keys(G.nodes.joining).length
+                this.networkStatus.joining = Object.keys(report.nodes.joining).length
 
                 let loads = []
                 let counters = []
