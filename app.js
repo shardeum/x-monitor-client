@@ -55,12 +55,13 @@ const NetworkMonitor = function (config) {
     G.crashedNodes = {}
     G.lostNodes = {}
     G.smallToolTipShown = false
+    G.maxNodeCount = config.maxNodeCount || 200
 
     // setting desired fps
     createjs.Ticker.interval = parseInt(1000 / config.fps)
 
     let testNodeCount = 0
-    const testNodeLimit = 200
+    const testNodeLimit = 1000
 
     let report = {
         nodes: {
@@ -153,8 +154,8 @@ const NetworkMonitor = function (config) {
                 nodelistHash: generateHash(64),
                 cycleMarker: generateHash(64),
                 cycleCounter: Math.random(),
-                txInjected: 10,
-                txApplied: Math.random() * 10,
+                txInjected: 0,
+                txApplied: Math.random() * 0,
                 txRejected: Math.random(),
                 txExpired: Math.random(),
                 desiredNodes: Math.random(),
@@ -164,7 +165,7 @@ const NetworkMonitor = function (config) {
                     externalPort: 3000
                 }
             }
-        }, 6000)
+        }, 100)
         // setTimeout(() => {
         //   delete report.nodes.syncing[nodeId]
         // }, 8000)
@@ -195,7 +196,7 @@ const NetworkMonitor = function (config) {
                 generateNodeForTesting()
                 testNodeCount += 1
                 if (testNodeCount > testNodeLimit) clearInterval(addNodeInterval)
-            }, 500)
+            }, 100)
             // let removeNodeInterval = setInterval(() => {
             // 	removeNodeForTesting()
             // }, 6000)
@@ -411,7 +412,7 @@ const NetworkMonitor = function (config) {
                         )
                     )
                 }
-                if (report.nodes.active[nodeId].timestamp < Date.now() - 15000) {
+                if (report.nodes.active[nodeId].timestamp < Date.now() - 2 * G.reportInterval) {
                     G.active[nodeId].crashed = true
                 } else {
                     G.active[nodeId].crashed = false
@@ -552,6 +553,8 @@ const NetworkMonitor = function (config) {
         updateMarkerCycle()
         updateNodelistCycle()
         updateScaleArrow()
+        if (Object.keys(G.active).length >= G.maxNodeCount) redirectToLargeNetworkPage() // this monitor has reached
+        // limit Redirect to large network page
 
         // if (injectedLoadCollector.length >= 2) injectedLoadCollector.shift()
         // injectedLoadCollector.push(injectedCount)
@@ -959,7 +962,7 @@ const NetworkMonitor = function (config) {
     const updateStateCircle = function () {
         for (const nodeId in G.active) {
             const node = G.active[nodeId]
-            if (!node.appState) {
+            if (!node.appState || !node.rectangel) {
                 continue
             }
             if (node.crashed /*|| node.isLost*/) {
@@ -978,7 +981,7 @@ const NetworkMonitor = function (config) {
     const updateMarkerCycle = function () {
         for (const nodeId in G.active) {
             const node = G.active[nodeId]
-            if (!node.cycleMarker) {
+            if (!node.cycleMarker || !node.markerCycle) {
                 continue
             }
             if (node.crashed /*|| node.isLost*/) {
@@ -997,7 +1000,7 @@ const NetworkMonitor = function (config) {
     const updateNodelistCycle = function () {
         for (const nodeId in G.active) {
             const node = G.active[nodeId]
-            if (!node.nodelistHash) {
+            if (!node.nodelistHash || !node.nodeListCycle) {
                 continue
             }
             if (node.crashed /*|| node.isLost*/) {
@@ -1078,9 +1081,9 @@ const NetworkMonitor = function (config) {
             node.degree = networkPosition.degree
 
             if (currentStatus === 'active') {
-                node.rectangel = drawStateCircle(node)
-                node.markerCycle = drawCycleMarkerBox(node)
-                node.nodeListCycle = drawNodeListBox(node)
+                // node.rectangel = drawStateCircle(node)
+                // node.markerCycle = drawCycleMarkerBox(node)
+                // node.nodeListCycle = drawNodeListBox(node)
             }
 
             // setTimeout(() => {
@@ -1688,7 +1691,8 @@ const NetworkMonitor = function (config) {
     if (Number.isNaN(C) || C < 150) C = 150
 
     const calculateNetworkPosition = function (nodeId) {
-        let spread = 12
+        // let spread = 12
+        let spread = 4
         let angle = 137.508
 
         let totalNodeCount = Object.keys(G.active).length + Object.keys(G.syncing).length
@@ -2274,6 +2278,10 @@ const NetworkMonitor = function (config) {
             hideSmallToolTip(node)
         }
         G.smallToolTipShown = false
+    }
+
+    const redirectToLargeNetworkPage = function() {
+        location.href = 'large-network.html'
     }
 
     function KeyPress(e) {

@@ -399,7 +399,7 @@
                 }, {mode: null, modeFreq: 0, numMap: {}}).mode
             },
             async getRandomArchiver() {
-               if (Object.keys(G.nodes.active).length === 0) return
+                if (Object.keys(G.nodes.active).length === 0) return
                 const randomConsensorNode = Object.values(G.nodes.active)[0]
                 let res = await axios.get(`http://${randomConsensorNode.nodeIpInfo.externalIp}:${randomConsensorNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
                 let cycle = res.data.newestCycle
@@ -408,45 +408,49 @@
                 }
             },
             async getActiveArchivers() {
-               if (!G.archiver) await this.getRandomArchiver()
+                if (!G.archiver) await this.getRandomArchiver()
                 const res = await axios.get(`http://${G.archiver.ip}:${G.archiver.port}/archiverlist`)
                 if (res.data.archivers && res.data.archivers.length > 0) {
-                   return res.data.archivers
+                    return res.data.archivers
                 }
             },
             async drawArchiverNetwork() {
-                const activeArchivers = await this.getActiveArchivers()
-                let newArchiverNodes = this.getNewArchiverVisNodes(activeArchivers)
-                G.archivers = activeArchivers
-                G.archiverData = new vis.DataSet(newArchiverNodes)
-                const archiverContainer = document.getElementById('myarchiver')
-                let archiverData = {
-                    nodes: G.archiverData
-                }
-                const options = {
-                    nodes: {
-                        shape: 'dot',
-                        size: 5,
-                        font: {
-                            size: 12,
-                            face: 'Arial'
-                        }
-                    },
-                    interaction: {
-                        zoomSpeed: 0.1,
-                        hover: false,
-                        zoomView: false
+                try {
+                    const activeArchivers = await this.getActiveArchivers()
+                    let newArchiverNodes = this.getNewArchiverVisNodes(activeArchivers)
+                    G.archivers = activeArchivers
+                    G.archiverData = new vis.DataSet(newArchiverNodes)
+                    const archiverContainer = document.getElementById('myarchiver')
+                    let archiverData = {
+                        nodes: G.archiverData
                     }
+                    const options = {
+                        nodes: {
+                            shape: 'dot',
+                            size: 5,
+                            font: {
+                                size: 12,
+                                face: 'Arial'
+                            }
+                        },
+                        interaction: {
+                            zoomSpeed: 0.1,
+                            hover: false,
+                            zoomView: false
+                        }
+                    }
+                    G.archiverNetwork = new vis.Network(archiverContainer, archiverData, options)
+                    G.archiverNetwork.on('click', (params) => {
+                        const publicKey = params.nodes[0]
+                        const archiver = G.archivers.find(a => a.publicKey === publicKey)
+                        if (!archiver) return
+                        window.open(
+                            `http://${archiver.ip}:${archiver.port}/nodeinfo`
+                        )
+                    })
+                } catch (e) {
+                    console.log('Error while trying to draw archiver network', e)
                 }
-                G.archiverNetwork = new vis.Network(archiverContainer, archiverData, options)
-                G.archiverNetwork.on('click', (params) => {
-                    const publicKey = params.nodes[0]
-                    const archiver = G.archivers.find(a => a.publicKey === publicKey)
-                    if (!archiver) return
-                    window.open(
-                        `http://${archiver.ip}:${archiver.port}/nodeinfo`
-                    )
-                })
             },
             async start() {
                 let res = await axios.get(`${monitorServerUrl}/report`)
