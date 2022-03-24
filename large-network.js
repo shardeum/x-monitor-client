@@ -168,6 +168,23 @@
                 this.networkStatus.desired = this.mode(desired)
 
             },
+            deleteCrashedNodes(nodes) {
+                try {
+                    let removedNodeIds = []
+                    for (let node of nodes) {
+                        const nodeId = node.nodeId
+                        const activeNode = G.nodes.active[nodeId]
+                        if (!activeNode) continue
+                        removedNodeIds.push({id: nodeId})
+                        delete G.nodes.active[nodeId]
+                    }
+                    if (removedNodeIds.length === 0) return
+                    console.log('removed crashed ids', removedNodeIds)
+                    G.data.remove(removedNodeIds)
+                } catch (e) {
+                    console.log('Error while trying to remove crashed nodes', e)
+                }
+            },
             async deleteRemovedNodes() {
                 try {
                     let res = await axios.get(`${monitorServerUrl}/removed`)
@@ -190,12 +207,21 @@
                     console.log('Error while trying to remove nodes', e)
                 }
             },
+            isNodeCrashedBefore(newNode) {
+                console.log('Checking crashed node', newNode)
+                return Object.values(G.nodes.active).find(node => {
+                    if (node.nodeIpInfo.externalIp === newNode.nodeIpInfo.externalIp && node.nodeIpInfo.externalPort === newNode.nodeIpInfo.externalPort) {
+                        return true
+                    }
+                })
+            },
             async updateNodes() {
                 try {
                     let changes = await this.fetchChanges()
                     this.updateNetworkStatus(changes)
                     let updatedNodes = []
                     let newNodes = []
+                    let crashedNodesToRemove = []
                     for (let nodeId in changes.nodes.active) {
                         let node = changes.nodes.active[nodeId]
                         if (!G.nodes.active[nodeId]) {
@@ -216,6 +242,13 @@
                             console.log('New syncing node')
                             G.nodes.syncing[nodeId] = node
                             newNodes.push(node)
+
+                            // check if node is crashed before and stuck as red circle
+                            const crashedNode = this.isNodeCrashedBefore(node)
+                            console.log('Found crashed node', crashedNode)
+                            if (crashedNode) {
+                                crashedNodesToRemove.push(crashedNode)
+                            }
                             continue
                         }
                         let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
@@ -229,6 +262,9 @@
 
                     // delete removed nodes
                     await this.deleteRemovedNodes()
+
+                    // delete crashed nodes
+                    if (crashedNodesToRemove.length > 0) this.deleteCrashedNodes(crashedNodesToRemove)
                     G.lastUpdatedTimestamp = Date.now()
                     if (this.shouldChangeNodesSize()) this.changeNodesSize()
                 } catch (e) {
@@ -243,8 +279,7 @@
             },
             shouldChangeNodesSize() {
                 const newNodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
-                if (newNodeSize !== G.currentNodeSize) return true
-                return false
+                return newNodeSize !== G.currentNodeSize;
             },
 
             getTitle(nodeId, node) {
