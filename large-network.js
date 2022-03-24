@@ -1,6 +1,6 @@
 ;(function main() {
     const url = new URL(window.location.href)
-    // const monitorServerUrl = 'http://52.201.247.225:3000/api'
+    // const monitorServerUrl = 'http://208.110.82.50:3000/api'
     const monitorServerUrl = window.origin + '/api'
     console.log('Monitor server', monitorServerUrl)
     const G = {}
@@ -15,7 +15,7 @@
     G.nodes = {
         joining: {},
         syncing: {},
-        active: {}
+        active: {},
     }
     let n = 0
     let tracker = {}
@@ -38,11 +38,11 @@
                     rejected: 0,
                     netLoad: 0,
                     load: 0,
-                    maxLoad: 0
+                    maxLoad: 0,
                 },
                 colorMode: 'state',
                 shouldShowMaxTps: false,
-                shouldShowMaxLoad: false
+                shouldShowMaxLoad: false,
             }
         },
         async mounted() {
@@ -69,7 +69,7 @@
                 return {
                     x,
                     y,
-                    degree: angle * n
+                    degree: angle * n,
                 }
             },
             randomIntFromInterval(min, max) {
@@ -88,7 +88,7 @@
                 return {
                     x,
                     y,
-                    degree: angle
+                    degree: angle,
                 }
             },
             generateRandomColor() {
@@ -108,7 +108,7 @@
                     y: position.y,
                     physics: false,
                     title: this.getTitle(nodeId, node),
-                    color: this.getNodeColor(node)
+                    color: this.getNodeColor(node),
                 }
             },
             getNewArchiverVisNodes(archivers) {
@@ -116,10 +116,10 @@
                     return {
                         id: archiver.publicKey,
                         x: 0,
-                        y: 0 - 130 + (index * 20),
+                        y: 0 - 130 + index * 20,
                         physics: false,
                         title: archiver.publicKey,
-                        color: "#abc2ec"
+                        color: '#abc2ec',
                     }
                 })
                 return visNodes
@@ -128,7 +128,7 @@
                 return {
                     id: nodeId,
                     title: this.getTitle(nodeId, node),
-                    color: this.getNodeColor(node)
+                    color: this.getNodeColor(node),
                 }
             },
             getNodeColor(node) {
@@ -162,7 +162,8 @@
             },
             updateNetworkStatus(report) {
                 if (Object.keys(report.nodes.active).length === 0) return // don't update stats if no nodes send the
-                let reportPercentage = Object.keys(report.nodes.active).length / Object.keys(G.nodes.active).length
+                let reportPercentage =
+                    Object.keys(report.nodes.active).length / Object.keys(G.nodes.active).length
                 console.log('reportPercentage', reportPercentage)
                 if (reportPercentage < 0.3) return // don't update stats if less than 30% of network updates
                 this.networkStatus.tps = report.avgTps
@@ -200,7 +201,7 @@
                         const nodeId = node.nodeId
                         const activeNode = G.nodes.active[nodeId]
                         if (!activeNode) continue
-                        removedNodeIds.push({id: nodeId})
+                        removedNodeIds.push({ id: nodeId })
                         delete G.nodes.active[nodeId]
                     }
                     if (removedNodeIds.length === 0) return
@@ -222,7 +223,7 @@
                         const nodeId = node.nodeId
                         const activeNode = G.nodes.active[nodeId]
                         if (!activeNode) continue
-                        removedNodeIds.push({id: nodeId})
+                        removedNodeIds.push({ id: nodeId })
                         delete G.nodes.active[nodeId]
                     }
                     if (removedNodeIds.length === 0) return
@@ -245,8 +246,12 @@
             },
             findCrashedSyncingNode(newNode) {
                 for (let nodeId in G.nodes.syncing) {
-                    const {externalIp, externalPort} = G.nodes.syncing[nodeId].nodeIpInfo
-                    if (newNode.nodeIpInfo.externalIp === externalIp && newNode.nodeIpInfo.externalPort === externalPort && newNode.nodeId !== nodeId) {
+                    const { externalIp, externalPort } = G.nodes.syncing[nodeId].nodeIpInfo
+                    if (
+                        newNode.nodeIpInfo.externalIp === externalIp &&
+                        newNode.nodeIpInfo.externalPort === externalPort &&
+                        newNode.nodeId !== nodeId
+                    ) {
                         console.log('Found crashed syncing node by ip:port')
                         return G.nodes.syncing[nodeId]
                     }
@@ -255,7 +260,11 @@
             async updateNodes() {
                 try {
                     let changes = await this.fetchChanges()
-                    console.log(`Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length} nodes updated.`)
+                    console.log(
+                        `Total of ${Object.keys(changes.nodes.active).length}/${
+                            Object.keys(G.nodes.active).length
+                        } nodes updated.`
+                    )
                     this.updateNetworkStatus(changes)
                     let updatedNodes = []
                     let updatedNodesMap = []
@@ -350,12 +359,12 @@
                 const options = {
                     nodes: {
                         // size: 2,
-                        size: nodeSize
+                        size: nodeSize,
                     },
                     interaction: {
                         zoomSpeed: 0.1,
-                        zoomView: true
-                    }
+                        zoomView: true,
+                    },
                 }
                 G.network.setOptions(options)
                 G.network.redraw()
@@ -389,19 +398,27 @@
             //         .pop()
             // },
             mode(arr) {
-                return arr.reduce(function (current, num) {
-                    const freq = (num in current.numMap) ? ++current.numMap[num] : (current.numMap[num] = 1)
-                    if (freq > current.modeFreq && freq > 1) {
-                        current.modeFreq = freq
-                        current.mode = num
-                    }
-                    return current
-                }, {mode: null, modeFreq: 0, numMap: {}}).mode
+                return arr.reduce(
+                    function (current, num) {
+                        const freq =
+                            num in current.numMap
+                                ? ++current.numMap[num]
+                                : (current.numMap[num] = 1)
+                        if (freq > current.modeFreq && freq > 1) {
+                            current.modeFreq = freq
+                            current.mode = num
+                        }
+                        return current
+                    },
+                    { mode: null, modeFreq: 0, numMap: {} }
+                ).mode
             },
             async getRandomArchiver() {
                 if (Object.keys(G.nodes.active).length === 0) return
                 const randomConsensorNode = Object.values(G.nodes.active)[0]
-                let res = await axios.get(`http://${randomConsensorNode.nodeIpInfo.externalIp}:${randomConsensorNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
+                let res = await axios.get(
+                    `http://${randomConsensorNode.nodeIpInfo.externalIp}:${randomConsensorNode.nodeIpInfo.externalPort}/sync-newest-cycle`
+                )
                 let cycle = res.data.newestCycle
                 if (cycle.refreshedArchivers && cycle.refreshedArchivers.length > 0) {
                     G.archiver = cycle.refreshedArchivers[0]
@@ -409,7 +426,9 @@
             },
             async getActiveArchivers() {
                 if (!G.archiver) await this.getRandomArchiver()
-                const res = await axios.get(`http://${G.archiver.ip}:${G.archiver.port}/archiverlist`)
+                const res = await axios.get(
+                    `http://${G.archiver.ip}:${G.archiver.port}/archiverlist`
+                )
                 if (res.data.archivers && res.data.archivers.length > 0) {
                     return res.data.archivers
                 }
@@ -422,7 +441,7 @@
                     G.archiverData = new vis.DataSet(newArchiverNodes)
                     const archiverContainer = document.getElementById('myarchiver')
                     let archiverData = {
-                        nodes: G.archiverData
+                        nodes: G.archiverData,
                     }
                     const options = {
                         nodes: {
@@ -430,23 +449,21 @@
                             size: 5,
                             font: {
                                 size: 12,
-                                face: 'Arial'
-                            }
+                                face: 'Arial',
+                            },
                         },
                         interaction: {
                             zoomSpeed: 0.1,
                             hover: false,
-                            zoomView: false
-                        }
+                            zoomView: false,
+                        },
                     }
                     G.archiverNetwork = new vis.Network(archiverContainer, archiverData, options)
                     G.archiverNetwork.on('click', (params) => {
                         const publicKey = params.nodes[0]
-                        const archiver = G.archivers.find(a => a.publicKey === publicKey)
+                        const archiver = G.archivers.find((a) => a.publicKey === publicKey)
                         if (!archiver) return
-                        window.open(
-                            `http://${archiver.ip}:${archiver.port}/nodeinfo`
-                        )
+                        window.open(`http://${archiver.ip}:${archiver.port}/nodeinfo`)
                     })
                 } catch (e) {
                     console.log('Error while trying to draw archiver network', e)
@@ -459,7 +476,9 @@
                 for (let nodeId in res.data.nodes.active) {
                     // remove if active node exists in the syncing list
                     if (G.nodes.syncing[nodeId]) {
-                        console.log('Found this active node in syncing list. Removing it from syncing list.')
+                        console.log(
+                            'Found this active node in syncing list. Removing it from syncing list.'
+                        )
                         delete G.nodes.syncing[nodeId]
                     }
                     let node = res.data.nodes.active[nodeId]
@@ -481,7 +500,7 @@
 
                 // provide the data in the vis format
                 let data = {
-                    nodes: G.data
+                    nodes: G.data,
                 }
                 const options = {
                     nodes: {
@@ -489,13 +508,13 @@
                         size: this.getNodeSize(Object.keys(G.nodes.active).length),
                         font: {
                             size: 12,
-                            face: 'Arial'
-                        }
+                            face: 'Arial',
+                        },
                     },
                     interaction: {
                         zoomSpeed: 0.1,
-                        zoomView: true
-                    }
+                        zoomView: true,
+                    },
                 }
 
                 // initialize your network!
@@ -511,7 +530,7 @@
                 })
                 await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, 10000)
-            }
-        }
+            },
+        },
     })
 })()

@@ -5,16 +5,7 @@ window.$ = function (selector) {
     return elements
 }
 
-const {
-    tween,
-    styler,
-    listen,
-    pointer,
-    timeline,
-    easing,
-    chain
-} = window.popmotion
-
+const { tween, styler, listen, pointer, timeline, easing, chain } = window.popmotion
 
 const NetworkMonitor = function (config) {
     const G = {} // semi-global namespace
@@ -25,10 +16,7 @@ const NetworkMonitor = function (config) {
     G.nodeSyncState = {}
     G.currentCycleCounter = 0
     G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
-    G.VH = Math.max(
-        document.documentElement.clientHeight,
-        window.innerHeight || 0
-    )
+    G.VH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
 
     G.R = config.networkCircleRadius || 200
     G.X = config.networkCircleX || G.VW / 2
@@ -45,7 +33,7 @@ const NetworkMonitor = function (config) {
         syncing: '#f9cb35',
         active: '#16c716',
         transaction: '#f55555cc',
-        tooltip: '#5f5f5fcc'
+        tooltip: '#5f5f5fcc',
     }
     G.txAnimationSpeed = 800
     G.stateCircleRadius = G.nodeRadius / 2.5
@@ -67,8 +55,8 @@ const NetworkMonitor = function (config) {
         nodes: {
             joining: {},
             syncing: {},
-            active: {}
-        }
+            active: {},
+        },
     }
 
     const resetState = () => {
@@ -97,23 +85,7 @@ const NetworkMonitor = function (config) {
     }
 
     const generateHash = function (num) {
-        const table = [
-            '1',
-            '2',
-            '3',
-            '4',
-            '5',
-            '6',
-            '7',
-            '8',
-            '9',
-            'a',
-            'b',
-            'c',
-            'd',
-            'e',
-            'f'
-        ]
+        const table = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
         let hash = ''
         for (let i = 0; i < num; i++) {
             const randomIndex = Math.floor(Math.random() * table.length)
@@ -162,8 +134,8 @@ const NetworkMonitor = function (config) {
                 reportInterval: 2,
                 nodeIpInfo: {
                     externalIp: '127.0.0.1',
-                    externalPort: 3000
-                }
+                    externalPort: 3000,
+                },
             }
         }, 100)
         // setTimeout(() => {
@@ -202,17 +174,13 @@ const NetworkMonitor = function (config) {
             // }, 6000)
         }
 
-
         // FOR TESTING ONLY
         // let nodeDead = false
         // setTimeout(() => {
         //   nodeDead = true
         // }, 10000)
 
-
-
         setTimeout(() => {
-            console.log('new time out')
             updateReport()
         }, G.reportInterval)
     }
@@ -239,9 +207,7 @@ const NetworkMonitor = function (config) {
         for (const publicKey in report.nodes.joining) {
             if (!G.joining[publicKey]) {
                 // Pass in a list of positions to avoid overlapping grey cicles
-                const existingPositions = Object.values(G.joining).map(
-                    node => node.realPosition
-                )
+                const existingPositions = Object.values(G.joining).map((node) => node.realPosition)
                 G.joining[publicKey] = createNewNode(
                     'joining',
                     publicKey,
@@ -262,7 +228,7 @@ const NetworkMonitor = function (config) {
                     // console.log(`Syncing node found on joining list...`)
                     G.syncing[nodeId] = Object.assign({}, G.joining[publicKey], {
                         status: 'syncing',
-                        nodeId: nodeId
+                        nodeId: nodeId,
                     })
                     delete G.joining[publicKey]
                     updateUI('joining', 'syncing', publicKey, nodeId)
@@ -307,34 +273,26 @@ const NetworkMonitor = function (config) {
                     // console.log(`Active node found on syncing list...`)
                     G.active[nodeId] = Object.assign({}, G.syncing[nodeId], {
                         status: 'active',
-                        nodeId: nodeId
+                        nodeId: nodeId,
                     })
                     delete G.syncing[nodeId]
                     try {
                         G.active[nodeId].appState =
                             report.nodes.active[nodeId].appState || '00ff00ff'
-                        G.active[nodeId].cycleMarker =
-                            report.nodes.active[nodeId].cycleMarker
-                        G.active[nodeId].cycleCounter =
-                            report.nodes.active[nodeId].cycleCounter
-                        G.active[nodeId].nodelistHash =
-                            report.nodes.active[nodeId].nodelistHash
-                        G.active[nodeId].txInjected =
-                            report.nodes.active[nodeId].txInjected
+                        G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
+                        G.active[nodeId].cycleCounter = report.nodes.active[nodeId].cycleCounter
+                        G.active[nodeId].nodelistHash = report.nodes.active[nodeId].nodelistHash
+                        G.active[nodeId].txInjected = report.nodes.active[nodeId].txInjected
                         G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
-                        G.active[nodeId].txRejected =
-                            report.nodes.active[nodeId].txRejected
+                        G.active[nodeId].txRejected = report.nodes.active[nodeId].txRejected
                         G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
-                        G.active[nodeId].desiredNodes =
-                            report.nodes.active[nodeId].desiredNodes
-                        G.active[nodeId].reportInterval =
-                            report.nodes.active[nodeId].reportInterval
+                        G.active[nodeId].desiredNodes = report.nodes.active[nodeId].desiredNodes
+                        G.active[nodeId].reportInterval = report.nodes.active[nodeId].reportInterval
                         G.active[nodeId].externalIp =
                             report.nodes.active[nodeId].nodeIpInfo.externalIp
                         G.active[nodeId].externalPort =
                             report.nodes.active[nodeId].nodeIpInfo.externalPort
-                        G.active[nodeId].shardusVersion =
-                            report.nodes.active[nodeId].shardusVersion
+                        G.active[nodeId].shardusVersion = report.nodes.active[nodeId].shardusVersion
 
                         if (!newCycleCounter) {
                             newCycleCounter = report.nodes.active[nodeId].shardusVersion
@@ -355,28 +313,20 @@ const NetworkMonitor = function (config) {
                     try {
                         G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
                         G.active[nodeId].appState = report.nodes.active[nodeId].appState
-                        G.active[nodeId].cycleMarker =
-                            report.nodes.active[nodeId].cycleMarker
-                        G.active[nodeId].cycleCounter =
-                            report.nodes.active[nodeId].cycleCounter
-                        G.active[nodeId].nodelistHash =
-                            report.nodes.active[nodeId].nodelistHash
-                        G.active[nodeId].txInjected =
-                            report.nodes.active[nodeId].txInjected
+                        G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
+                        G.active[nodeId].cycleCounter = report.nodes.active[nodeId].cycleCounter
+                        G.active[nodeId].nodelistHash = report.nodes.active[nodeId].nodelistHash
+                        G.active[nodeId].txInjected = report.nodes.active[nodeId].txInjected
                         G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
-                        G.active[nodeId].txRejected =
-                            report.nodes.active[nodeId].txRejected
+                        G.active[nodeId].txRejected = report.nodes.active[nodeId].txRejected
                         G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
-                        G.active[nodeId].desiredNodes =
-                            report.nodes.active[nodeId].desiredNodes
-                        G.active[nodeId].reportInterval =
-                            report.nodes.active[nodeId].reportInterval
+                        G.active[nodeId].desiredNodes = report.nodes.active[nodeId].desiredNodes
+                        G.active[nodeId].reportInterval = report.nodes.active[nodeId].reportInterval
                         G.active[nodeId].externalIp =
                             report.nodes.active[nodeId].nodeIpInfo.externalIp
                         G.active[nodeId].externalPort =
                             report.nodes.active[nodeId].nodeIpInfo.externalPort
-                        G.active[nodeId].shardusVersion =
-                            report.nodes.active[nodeId].shardusVersion
+                        G.active[nodeId].shardusVersion = report.nodes.active[nodeId].shardusVersion
                         G.active[nodeId].lastScalingTypeWinner =
                             report.nodes.active[nodeId].lastScalingTypeWinner
                         G.active[nodeId].lastScalingTypeRequested =
@@ -396,20 +346,21 @@ const NetworkMonitor = function (config) {
             } else if (G.active[nodeId] && report.nodes.active[nodeId].appState) {
                 if (G.environment === 'production') {
                     load.push(
-                        report.nodes.active[nodeId].currentLoad.networkLoad.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        })
+                        report.nodes.active[nodeId].currentLoad.networkLoad.toLocaleString(
+                            undefined,
+                            {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            }
+                        )
                     )
-                    nodeLoad.push(
-                        report.nodes.active[nodeId].currentLoad.nodeLoad
-                    )
+                    nodeLoad.push(report.nodes.active[nodeId].currentLoad.nodeLoad)
                     txQueueLen.push(report.nodes.active[nodeId].queueLength)
                     txQueueTime.push(
-                        report.nodes.active[nodeId].txTimeInQueue.toLocaleString(
-                            undefined,
-                            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                        )
+                        report.nodes.active[nodeId].txTimeInQueue.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        })
                     )
                 }
                 if (report.nodes.active[nodeId].timestamp < Date.now() - 2 * G.reportInterval) {
@@ -422,31 +373,25 @@ const NetworkMonitor = function (config) {
                 G.active[nodeId].timestamp = report.nodes.active[nodeId].timestamp
                 G.active[nodeId].appState = report.nodes.active[nodeId].appState
                 G.active[nodeId].cycleMarker = report.nodes.active[nodeId].cycleMarker
-                G.active[nodeId].cycleCounter =
-                    report.nodes.active[nodeId].cycleCounter
-                G.active[nodeId].nodelistHash =
-                    report.nodes.active[nodeId].nodelistHash
+                G.active[nodeId].cycleCounter = report.nodes.active[nodeId].cycleCounter
+                G.active[nodeId].nodelistHash = report.nodes.active[nodeId].nodelistHash
                 G.active[nodeId].txInjected = report.nodes.active[nodeId].txInjected
                 G.active[nodeId].txApplied = report.nodes.active[nodeId].txApplied
                 G.active[nodeId].txRejected = report.nodes.active[nodeId].txRejected
                 G.active[nodeId].txExpired = report.nodes.active[nodeId].txExpired
-                G.active[nodeId].desiredNodes =
-                    report.nodes.active[nodeId].desiredNodes
-                G.active[nodeId].reportInterval =
-                    report.nodes.active[nodeId].reportInterval
-                G.active[nodeId].externalIp =
-                    report.nodes.active[nodeId].nodeIpInfo.externalIp
-                G.active[nodeId].externalPort =
-                    report.nodes.active[nodeId].nodeIpInfo.externalPort
-                G.active[nodeId].shardusVersion =
-                    report.nodes.active[nodeId].shardusVersion
+                G.active[nodeId].desiredNodes = report.nodes.active[nodeId].desiredNodes
+                G.active[nodeId].reportInterval = report.nodes.active[nodeId].reportInterval
+                G.active[nodeId].externalIp = report.nodes.active[nodeId].nodeIpInfo.externalIp
+                G.active[nodeId].externalPort = report.nodes.active[nodeId].nodeIpInfo.externalPort
+                G.active[nodeId].shardusVersion = report.nodes.active[nodeId].shardusVersion
                 G.active[nodeId].lastScalingTypeWinner =
                     report.nodes.active[nodeId].lastScalingTypeWinner
                 G.active[nodeId].lastScalingTypeRequested =
                     report.nodes.active[nodeId].lastScalingTypeRequested
+                G.active[nodeId].isDataSynced = report.nodes.active[nodeId].isDataSynced
                 if (report.nodes.active[nodeId].reportInterval !== G.reportInterval) {
                     G.reportInterval = report.nodes.active[nodeId].reportInterval
-                    console.log("Global report interval is set to", G.reportInterval)
+                    console.log('Global report interval is set to', G.reportInterval)
                 }
                 if (!newCycleCounter) {
                     newCycleCounter = report.nodes.active[nodeId].cycleCounter
@@ -474,10 +419,7 @@ const NetworkMonitor = function (config) {
 
         for (const nodeId in G.active) {
             if (nodeId !== null) {
-                const isRemovedFromNetwork = checkRemoveStatus(
-                    nodeId,
-                    report.nodes
-                )
+                const isRemovedFromNetwork = checkRemoveStatus(nodeId, report.nodes)
                 const isNodeCrashed = G.active[nodeId].crashed === true
                 const isNodeIntact = G.active[nodeId].crashed === false
                 const isNodeLost = G.active[nodeId].isLost === true
@@ -518,8 +460,12 @@ const NetworkMonitor = function (config) {
         $('#total-tx-rejected').innerHTML = report.totalRejected
         $('#total-tx-expired').innerHTML = report.totalExpired
         $('#current-load').innerHTML = calculateAverage(load)
-        $('#current-internal-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.internal))
-        $('#current-external-node-load').innerHTML = calculateAverage(nodeLoad.map(l => l.external))
+        $('#current-internal-node-load').innerHTML = calculateAverage(
+            nodeLoad.map((l) => l.internal)
+        )
+        $('#current-external-node-load').innerHTML = calculateAverage(
+            nodeLoad.map((l) => l.external)
+        )
         $('#tx-queue-length').innerHTML = calculateAverage(txQueueLen)
         $('#tx-queue-time').innerHTML = calculateAverage(txQueueTime)
 
@@ -530,21 +476,21 @@ const NetworkMonitor = function (config) {
                 rejected: report.totalRejected,
                 expired: report.totalExpired,
                 applied: report.avgApplied,
-                load
+                load,
             }
             const txQueueLenMsg = {
                 injected: report.totalInjected,
                 rejected: report.totalRejected,
                 expired: report.totalExpired,
                 applied: report.avgApplied,
-                txQueueLen
+                txQueueLen,
             }
             const txQueueTimeMsg = {
                 injected: report.totalInjected,
                 rejected: report.totalRejected,
                 expired: report.totalExpired,
                 applied: report.avgApplied,
-                txQueueTime
+                txQueueTime,
             }
         }
         updateTables()
@@ -560,7 +506,9 @@ const NetworkMonitor = function (config) {
         // injectedLoadCollector.push(injectedCount)
         // injectedLoadCollector.timestamp = Date.now()
         // loadDuringLast2Report = injectedLoadCollector.reduce((prev, cur) => prev + cur, 0)
-        setTimeout(() => { updateReport() }, G.reportInterval)
+        setTimeout(() => {
+            updateReport()
+        }, G.reportInterval)
     }
 
     const injectTransactions = function () {
@@ -619,12 +567,7 @@ const NetworkMonitor = function (config) {
         }
     }
 
-    const updateUI_old = function (
-        previousStatus,
-        currentStatus,
-        publicKey,
-        nodeId
-    ) {
+    const updateUI_old = function (previousStatus, currentStatus, publicKey, nodeId) {
         return
     }
 
@@ -662,33 +605,21 @@ const NetworkMonitor = function (config) {
         node.circle.on('mouseover', () => {
             const position = {
                 x: node.currentPosition.x - 150 / 2,
-                y: node.currentPosition.y - 150 - 100
+                y: node.currentPosition.y - 150 - 100,
             }
-            const nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(
+            const nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(59, 63)}`
+            const cycleMarkerShort = `${node.cycleMarker.slice(0, 4)}...${node.cycleMarker.slice(
                 59,
                 63
             )}`
-            const cycleMarkerShort = `${node.cycleMarker.slice(
-                0,
-                4
-            )}...${node.cycleMarker.slice(59, 63)}`
-            const appStateShort = `${node.appState.slice(
-                0,
-                4
-            )}...${node.appState.slice(59, 63)}`
-            const nodeListShort = `${node.nodelistHash.slice(
-                0,
-                4
-            )}...${node.nodelistHash.slice(59, 63)}`
+            const appStateShort = `${node.appState.slice(0, 4)}...${node.appState.slice(59, 63)}`
+            const nodeListShort = `${node.nodelistHash.slice(0, 4)}...${node.nodelistHash.slice(
+                59,
+                63
+            )}`
             let toolTipHeight = 255
             if (node.crashed) toolTipHeight += 23
-            node.tooltipRect = drawRectangle(
-                position,
-                150,
-                toolTipHeight,
-                5,
-                G.colors.tooltip
-            )
+            node.tooltipRect = drawRectangle(position, 150, toolTipHeight, 5, G.colors.tooltip)
             node.textList = []
             const marginBottom = 22
             const marginLeft = 15
@@ -698,7 +629,7 @@ const NetworkMonitor = function (config) {
                     `nodeId: ${nodeIdShort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom
+                        y: position.y + marginBottom,
                     },
                     13,
                     '#ffffff'
@@ -709,7 +640,7 @@ const NetworkMonitor = function (config) {
                     `marker: ${cycleMarkerShort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 2
+                        y: position.y + marginBottom * 2,
                     },
                     13,
                     '#ffffff'
@@ -720,7 +651,7 @@ const NetworkMonitor = function (config) {
                     `state: ${appStateShort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 3
+                        y: position.y + marginBottom * 3,
                     },
                     13,
                     '#ffffff'
@@ -731,7 +662,7 @@ const NetworkMonitor = function (config) {
                     `nodeList: ${nodeListShort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 4
+                        y: position.y + marginBottom * 4,
                     },
                     13,
                     '#ffffff'
@@ -742,7 +673,7 @@ const NetworkMonitor = function (config) {
                     `ExtIp: ${node.externalIp}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 5
+                        y: position.y + marginBottom * 5,
                     },
                     13,
                     '#ffffff'
@@ -753,7 +684,7 @@ const NetworkMonitor = function (config) {
                     `ExtPort: ${node.externalPort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 6
+                        y: position.y + marginBottom * 6,
                     },
                     13,
                     '#ffffff'
@@ -764,7 +695,7 @@ const NetworkMonitor = function (config) {
                     `TxInjected: ${node.txInjected.toFixed(1)} tx/s`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 7
+                        y: position.y + marginBottom * 7,
                     },
                     13,
                     '#ffffff'
@@ -775,7 +706,7 @@ const NetworkMonitor = function (config) {
                     `TxApplied: ${node.txApplied.toFixed(1)} tx/s`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 8
+                        y: position.y + marginBottom * 8,
                     },
                     13,
                     '#ffffff'
@@ -786,7 +717,7 @@ const NetworkMonitor = function (config) {
                     `TxRejected: ${node.txRejected.toFixed(1)} tx/s`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 9
+                        y: position.y + marginBottom * 9,
                     },
                     13,
                     '#ffffff'
@@ -797,7 +728,7 @@ const NetworkMonitor = function (config) {
                     `TxExpired: ${node.txExpired.toFixed(1)} tx/s`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 10
+                        y: position.y + marginBottom * 10,
                     },
                     13,
                     '#ffffff'
@@ -808,7 +739,7 @@ const NetworkMonitor = function (config) {
                     `Version: ${node.shardusVersion}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 11
+                        y: position.y + marginBottom * 11,
                     },
                     13,
                     '#ffffff'
@@ -821,7 +752,7 @@ const NetworkMonitor = function (config) {
                         `LastHeartB: ${(timeDiff / 60000).toFixed(1)} min`,
                         {
                             x: position.x + marginLeft,
-                            y: position.y + marginBottom * 11
+                            y: position.y + marginBottom * 11,
                         },
                         14,
                         '#ffffff'
@@ -848,19 +779,13 @@ const NetworkMonitor = function (config) {
         node.circle.on('mouseover', () => {
             const position = {
                 x: node.currentPosition.x - 150 / 2,
-                y: node.currentPosition.y - 75 - 80
+                y: node.currentPosition.y - 75 - 80,
             }
             let nodeIdShort
             if (node.status === 'joining') {
-                nodeIdShort = `${node.publicKey.slice(0, 4)}...${node.publicKey.slice(
-                    59,
-                    63
-                )}`
+                nodeIdShort = `${node.publicKey.slice(0, 4)}...${node.publicKey.slice(59, 63)}`
             } else if (node.status === 'syncing') {
-                nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(
-                    59,
-                    63
-                )}`
+                nodeIdShort = `${node.nodeId.slice(0, 4)}...${node.nodeId.slice(59, 63)}`
             }
             node.tooltipRect = drawRectangle(position, 150, 120, 5, G.colors.tooltip)
             node.textList = []
@@ -873,7 +798,7 @@ const NetworkMonitor = function (config) {
                         `publicKey: ${nodeIdShort}`,
                         {
                             x: position.x + marginLeft,
-                            y: position.y + marginBottom
+                            y: position.y + marginBottom,
                         },
                         13,
                         '#ffffff'
@@ -885,7 +810,7 @@ const NetworkMonitor = function (config) {
                         `nodeId: ${nodeIdShort}`,
                         {
                             x: position.x + marginLeft,
-                            y: position.y + marginBottom
+                            y: position.y + marginBottom,
                         },
                         13,
                         '#ffffff'
@@ -897,7 +822,7 @@ const NetworkMonitor = function (config) {
                     `ExtIp: ${node.nodeIpInfo.externalIp}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 2
+                        y: position.y + marginBottom * 2,
                     },
                     13,
                     '#ffffff'
@@ -908,7 +833,7 @@ const NetworkMonitor = function (config) {
                     `ExtPort: ${node.nodeIpInfo.externalPort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 3
+                        y: position.y + marginBottom * 3,
                     },
                     13,
                     '#ffffff'
@@ -919,7 +844,7 @@ const NetworkMonitor = function (config) {
                     `IntIp: ${node.nodeIpInfo.internalIp}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 4
+                        y: position.y + marginBottom * 4,
                     },
                     13,
                     '#ffffff'
@@ -930,7 +855,7 @@ const NetworkMonitor = function (config) {
                     `IntPort: ${node.nodeIpInfo.internalPort}`,
                     {
                         x: position.x + marginLeft,
-                        y: position.y + marginBottom * 5
+                        y: position.y + marginBottom * 5,
                     },
                     13,
                     '#ffffff'
@@ -954,8 +879,16 @@ const NetworkMonitor = function (config) {
     const updateScaleArrow = function () {
         for (const nodeId in G.active) {
             const node = G.active[nodeId]
-            node.lastScalingTypeWinnerArrow = drawScaleArrow(node, node.lastScalingTypeWinner, 'winner')
-            node.lastScalingTypeRequestedArrow = drawScaleArrow(node, node.lastScalingTypeRequested, 'requested')
+            node.lastScalingTypeWinnerArrow = drawScaleArrow(
+                node,
+                node.lastScalingTypeWinner,
+                'winner'
+            )
+            node.lastScalingTypeRequestedArrow = drawScaleArrow(
+                node,
+                node.lastScalingTypeRequested,
+                'requested'
+            )
         }
     }
 
@@ -1017,13 +950,8 @@ const NetworkMonitor = function (config) {
     }
 
     const relocateIntoNetwork = function (previousStatus, node) {
-        console.log('relocating')
         if (previousStatus === 'joining') {
-
-            const networkPosition = calculateNetworkPosition(
-                parseInt(node.nodeId.substr(0, 4), 16)
-            )
-            console.log(networkPosition)
+            const networkPosition = calculateNetworkPosition(parseInt(node.nodeId.substr(0, 4), 16))
             node.despos = networkPosition.degree // set the desired position of the node
             const x = networkPosition.x
             const y = networkPosition.y
@@ -1040,11 +968,11 @@ const NetworkMonitor = function (config) {
 
             node.initialPosition = {
                 x: initialX,
-                y: initialY
+                y: initialY,
             }
             node.currentPosition = {
                 x: x,
-                y: y
+                y: y,
             }
             node.degree = networkPosition.degree
             // setTimeout(() => {
@@ -1056,9 +984,7 @@ const NetworkMonitor = function (config) {
     const positionNewNodeIntoNetwork = function (currentStatus, node) {
         if (currentStatus === 'syncing' || currentStatus === 'active') {
             node.circle.set('fill', G.colors[currentStatus])
-            const networkPosition = calculateNetworkPosition(
-                parseInt(node.nodeId.substr(0, 4), 16)
-            )
+            const networkPosition = calculateNetworkPosition(parseInt(node.nodeId.substr(0, 4), 16))
             node.despos = networkPosition.degree // set the desired position of the node
             const x = networkPosition.x
             const y = networkPosition.y
@@ -1072,18 +998,18 @@ const NetworkMonitor = function (config) {
             transformCircle(node.circle, x, y, G.colors[currentStatus], 1000)
             node.initialPosition = {
                 x: initialX,
-                y: initialY
+                y: initialY,
             }
             node.currentPosition = {
                 x: x,
-                y: y
+                y: y,
             }
             node.degree = networkPosition.degree
 
             if (currentStatus === 'active') {
-                // node.rectangel = drawStateCircle(node)
-                // node.markerCycle = drawCycleMarkerBox(node)
-                // node.nodeListCycle = drawNodeListBox(node)
+                node.rectangel = drawStateCircle(node)
+                node.markerCycle = drawCycleMarkerBox(node)
+                node.nodeListCycle = drawNodeListBox(node)
             }
 
             // setTimeout(() => {
@@ -1174,24 +1100,17 @@ const NetworkMonitor = function (config) {
         }
     }
 
-    const createNewNode = function (
-        type,
-        id,
-        existingPositions = [],
-        nodeIpInfo = null
-    ) {
+    const createNewNode = function (type, id, existingPositions = [], nodeIpInfo = null) {
         function isTooClose(position, existingPositions) {
             if (existingPositions.length < 1) return false
             for (const existingPosition of existingPositions) {
-                if (
-                    distanceBtnTwoPoints(position, existingPosition) <
-                    1 * G.nodeRadius
-                ) {
+                if (distanceBtnTwoPoints(position, existingPosition) < 1 * G.nodeRadius) {
                     return true
                 }
             }
             return false
         }
+
         let position = getJoiningNodePosition(id)
         // Make sure this position doesn't overlap an existing one
         while (isTooClose(position, existingPositions)) {
@@ -1206,7 +1125,7 @@ const NetworkMonitor = function (config) {
             circle = drawCircle(
                 {
                     x: 0,
-                    y: 0
+                    y: 0,
                 },
                 G.nodeRadius,
                 G.colors.joining,
@@ -1218,7 +1137,7 @@ const NetworkMonitor = function (config) {
                 circle: circle,
                 status: type,
                 currentPosition: circle,
-                realPosition: position
+                realPosition: position,
             }
             growAndShrink(circle, position)
             if (type === 'joining') node.publicKey = id
@@ -1230,7 +1149,7 @@ const NetworkMonitor = function (config) {
                 circle: circle,
                 status: type,
                 currentPosition: circle,
-                realPosition: position
+                realPosition: position,
             }
             if (type === 'joining') node.publicKey = id
             if (nodeIpInfo) node.nodeIpInfo = nodeIpInfo
@@ -1240,7 +1159,7 @@ const NetworkMonitor = function (config) {
 
     const createNewTx = function () {
         return {
-            timestamp: Date.now()
+            timestamp: Date.now(),
         }
     }
 
@@ -1250,7 +1169,7 @@ const NetworkMonitor = function (config) {
         const circle = drawCircle(
             {
                 x: x,
-                y: y
+                y: y,
             },
             5,
             G.colors.transaction,
@@ -1260,7 +1179,7 @@ const NetworkMonitor = function (config) {
         const tx = {
             circle: circle,
             currentPosition,
-            data: inputTx
+            data: inputTx,
         }
         return tx
     }
@@ -1271,7 +1190,7 @@ const NetworkMonitor = function (config) {
         const circle = drawCircle(
             {
                 x: x,
-                y: y
+                y: y,
             },
             5,
             G.colors.transaction,
@@ -1279,12 +1198,12 @@ const NetworkMonitor = function (config) {
         )
         const currentPosition = {
             x,
-            y
+            y,
         }
         const tx = {
             circle: circle,
             currentPosition,
-            data: null
+            data: null,
         }
         tx.circle.currentPosition = currentPosition
         tx.circle.visible = false
@@ -1292,26 +1211,16 @@ const NetworkMonitor = function (config) {
     }
 
     const getStateColor = function (node) {
-        let nodeId = node.nodeId
-        let appState = node.appState
-        if (appState === '00ff00ff') {
-            if (G.nodeSyncState[nodeId] === 0) return '#00ff00ff'
-            // green
-            else if (G.nodeSyncState[nodeId] === 1) return '#f8cf37'
-            // yellow
-            else if (G.nodeSyncState[nodeId] === 2) return '#fc6600' // red
-            return `#ffffff00`
+        if (node.isDataSynced != null) {
+            if (node.isDataSynced) return '#00ff00ff'
+            else return '#f8cf37'
         } else {
-            return appState
+            return G.colors.active
         }
     }
 
     const cloneTxCircle = function (injectedTx) {
-        const circle = drawCircle(
-            injectedTx.currentPosition,
-            5,
-            G.colors.transaction
-        )
+        const circle = drawCircle(injectedTx.currentPosition, 5, G.colors.transaction)
         // let cloneTx = Object.assign({}, injectedTx)
         // cloneTx.circle = circle
         const cloneTx = {}
@@ -1328,7 +1237,7 @@ const NetworkMonitor = function (config) {
         const stateCircle = drawCircle(
             {
                 x: node.currentPosition.x,
-                y: node.currentPosition.y + radius
+                y: node.currentPosition.y + radius,
             },
             radius,
             getStateColor(node),
@@ -1350,7 +1259,7 @@ const NetworkMonitor = function (config) {
         const cycleMarkerCircle = drawCircle(
             {
                 x: node.currentPosition.x + radius,
-                y: node.currentPosition.y - radius
+                y: node.currentPosition.y - radius,
             },
             radius,
             `#${node.cycleMarker.slice(0, 6)}`,
@@ -1372,7 +1281,7 @@ const NetworkMonitor = function (config) {
         const nodeListCircle = drawCircle(
             {
                 x: node.currentPosition.x - radius,
-                y: node.currentPosition.y - radius
+                y: node.currentPosition.y - radius,
             },
             radius,
             `#${node.nodelistHash.slice(0, 6)}`,
@@ -1401,7 +1310,7 @@ const NetworkMonitor = function (config) {
     const drawTriangle = function (position, radius, angle, fill, alpha) {
         var triangle = new createjs.Shape()
         var myFill = triangle.graphics.beginFill(fill).command
-        triangle.graphics.beginFill(fill).drawPolyStar(position.x, position.y, radius, 3, 0, angle);
+        triangle.graphics.beginFill(fill).drawPolyStar(position.x, position.y, radius, 3, 0, angle)
         if (alpha) triangle.alpha = alpha
         triangle.myFill = myFill
         triangle.name = generateHash(4)
@@ -1455,7 +1364,7 @@ const NetworkMonitor = function (config) {
         const Triangle = drawTriangle(
             {
                 x: node.currentPosition.x + xOffset,
-                y: node.currentPosition.y - 4 * radius
+                y: node.currentPosition.y - 4 * radius,
             },
             size,
             angle,
@@ -1485,11 +1394,11 @@ const NetworkMonitor = function (config) {
             }, duration / 2)
         }
         createjs.Tween.get(circle, {
-            loop: false
+            loop: false,
         }).to(
             {
                 x: travelX,
-                y: travelY
+                y: travelY,
             },
             duration,
             createjs.Ease.linear
@@ -1502,7 +1411,7 @@ const NetworkMonitor = function (config) {
     function tick() {
         let frameInterval = 100
         if (!lastTickTimestamp || Date.now() - lastTickTimestamp > frameInterval) {
-            stage.update();
+            stage.update()
             lastTickTimestamp = Date.now()
         }
     }
@@ -1519,12 +1428,12 @@ const NetworkMonitor = function (config) {
 
     function animateFadeIn(circle, duration, wait) {
         createjs.Tween.get(circle, {
-            loop: false
+            loop: false,
         })
             .wait(wait)
             .to(
                 {
-                    alpha: 1.0
+                    alpha: 1.0,
                 },
                 duration,
                 createjs.Ease.linear
@@ -1544,12 +1453,12 @@ const NetworkMonitor = function (config) {
         duration = duration < 400 ? 400 : duration
 
         createjs.Tween.get(rec, {
-            loop: false
+            loop: false,
         })
             .to(
                 {
                     scale: 1.4,
-                    alpha: 0.5
+                    alpha: 0.5,
                 },
                 duration,
                 createjs.Ease.linear
@@ -1557,7 +1466,7 @@ const NetworkMonitor = function (config) {
             .to(
                 {
                     scale: 1.0,
-                    alpha: 1.0
+                    alpha: 1.0,
                 },
                 duration,
                 createjs.Ease.linear
@@ -1584,23 +1493,23 @@ const NetworkMonitor = function (config) {
         if (substract) {
             return {
                 x: xDiff - xFactor * Math.sqrt(x * x),
-                y: yDiff - yFactor * Math.sqrt(y * y)
+                y: yDiff - yFactor * Math.sqrt(y * y),
             }
         }
         return {
             x: xDiff,
-            y: yDiff
+            y: yDiff,
         }
 
         if (substract) {
             return {
                 x: node2.currentPosition.x - xFactor * Math.sqrt(x * x),
-                y: node2.currentPosition.y - yFactor * Math.sqrt(y * y)
+                y: node2.currentPosition.y - yFactor * Math.sqrt(y * y),
             }
         }
         return {
             x: xDiff,
-            y: yDiff
+            y: yDiff,
         }
     }
     const distanceBtnTwoPoints = function (p1, p2) {
@@ -1618,7 +1527,7 @@ const NetworkMonitor = function (config) {
         const randomNodes = []
         let n
         if (excludedNode) {
-            nodeList = nodeList.filter(n => n.nodeId !== excludedNode.nodeId)
+            nodeList = nodeList.filter((n) => n.nodeId !== excludedNode.nodeId)
         }
         if (nodeList.length === 0) return []
         if (nodeList.length < count) n = nodeList.length
@@ -1626,7 +1535,7 @@ const NetworkMonitor = function (config) {
         for (let i = 0; i < n; i += 1) {
             const item = nodeList[Math.floor(Math.random() * nodeList.length)]
             randomNodes.push(item)
-            nodeList = nodeList.filter(n => n.nodeId !== excludedNode.nodeId)
+            nodeList = nodeList.filter((n) => n.nodeId !== excludedNode.nodeId)
         }
         return randomNodes
     }
@@ -1696,7 +1605,7 @@ const NetworkMonitor = function (config) {
         let angle = 137.508
 
         let totalNodeCount = Object.keys(G.active).length + Object.keys(G.syncing).length
-        let phi = angle * Math.PI / 180
+        let phi = (angle * Math.PI) / 180
         let idRatio = parseInt((nodeId / G.maxId) * totalNodeCount)
         if (tracker[idRatio]) {
             idRatio = maxN + 1
@@ -1713,7 +1622,7 @@ const NetworkMonitor = function (config) {
         return {
             x,
             y,
-            degree: angle * n
+            degree: angle * n,
         }
     }
 
@@ -1721,7 +1630,7 @@ const NetworkMonitor = function (config) {
         const syncingNodes = Object.values(G.syncing)
         const activeNodes = Object.values(G.active)
         const nodes = syncingNodes.concat(activeNodes)
-        const nodeList = nodes.filter(node => node.degree !== undefined)
+        const nodeList = nodes.filter((node) => node.degree !== undefined)
         for (let i = 0; i < nodeList.length; i++) {
             nodeList[i].newpos = nodeList[i].despos
         }
@@ -1888,21 +1797,21 @@ const NetworkMonitor = function (config) {
 
         const networkCenter = {
             x: X,
-            y: Y
+            y: Y,
         }
         drawCircle(networkCenter, G.R, '#ffffff')
         $('#app').innerHTML = networkHTML
 
         var image = new createjs.Bitmap('logo.png')
         image.set({
-            x: G.VW / 2 - G.R * 1.08
+            x: G.VW / 2 - G.R * 1.08,
         })
         image.set({
-            y: G.VH / 2 - G.R * 1.08
+            y: G.VH / 2 - G.R * 1.08,
         })
         const scale = (G.R * 1.94) / 720
         image.set({
-            scale: scale
+            scale: scale,
         })
         stage.addChild(image)
         createjs.Ticker.addEventListener('tick', handleTick)
@@ -1914,10 +1823,7 @@ const NetworkMonitor = function (config) {
 
     const mode = function (arr) {
         return arr
-            .sort(
-                (a, b) =>
-                    arr.filter(v => v === a).length - arr.filter(v => v === b).length
-            )
+            .sort((a, b) => arr.filter((v) => v === a).length - arr.filter((v) => v === b).length)
             .pop()
     }
 
@@ -1939,7 +1845,7 @@ const NetworkMonitor = function (config) {
                 } else {
                     syncedObj[index].push({
                         nodeId,
-                        hash
+                        hash,
                     })
                 }
             }
@@ -1948,10 +1854,10 @@ const NetworkMonitor = function (config) {
                 syncedPenaltyObj[nodeId] = 0
             }
             for (let index in syncedObj) {
-                let hashArr = syncedObj[index].map(obj => obj.hash)
+                let hashArr = syncedObj[index].map((obj) => obj.hash)
                 let mostCommonHash = mode(hashArr)
                 // console.log(`Most common hash in partition ${index}: ${mostCommonHash}`)
-                syncedObj[index].forEach(obj => {
+                syncedObj[index].forEach((obj) => {
                     // TO TEST
                     // if (Math.random() * 30 > 28) {
                     //   obj.hash = '#wrong'
@@ -2002,15 +1908,9 @@ const NetworkMonitor = function (config) {
                     hash = hash.split('x').join('')
                     const position = {
                         x: startX + gap * nodeCount + width * nodeCount,
-                        y: startY + height * index + gap * index
+                        y: startY + height * index + gap * index,
                     }
-                    let rec = drawRectangle(
-                        position,
-                        width,
-                        height,
-                        0,
-                        `#${hash.substr(0, 6)}cc`
-                    )
+                    let rec = drawRectangle(position, width, height, 0, `#${hash.substr(0, 6)}cc`)
                     recList.push(rec)
                 }
             }
@@ -2024,7 +1924,7 @@ const NetworkMonitor = function (config) {
         try {
             let recList = G.partitionGraphic[cycleCounter]
             if (recList) {
-                recList.forEach(rec => {
+                recList.forEach((rec) => {
                     rec.graphics.clear()
                 })
                 //stage.update()
@@ -2064,9 +1964,7 @@ const NetworkMonitor = function (config) {
       <button>${cycleCounter}</button>
     `
         container.insertAdjacentHTML('beforeend', html)
-        let button = document.querySelector(
-            '#cycle-counter-container button:last-child'
-        )
+        let button = document.querySelector('#cycle-counter-container button:last-child')
         button.addEventListener('mouseenter', function (e) {
             let cycleCounter = e.target.innerHTML
             var rect = e.target.getBoundingClientRect()
@@ -2090,7 +1988,9 @@ const NetworkMonitor = function (config) {
             const partitionReport = activeNodes[nodeId].partitionReport
             cycleCounter = activeNodes[nodeId].cycleCounter
             if (partitionReport && partitionReport.hasOwnProperty('res')) {
-                // console.log(`partition report for cycle ${cycleCounter}, port ${activeNodes[nodeId].nodeIpInfo.externalPort}`)
+                console.log(
+                    `partition report for cycle ${cycleCounter}, port ${activeNodes[nodeId].nodeIpInfo.externalPort}`
+                )
                 if (!G.partitionMatrix[cycleCounter]) {
                     G.partitionMatrix[cycleCounter] = {}
                     G.partitionMatrix[cycleCounter][nodeId] = partitionReport
@@ -2145,7 +2045,7 @@ const NetworkMonitor = function (config) {
         const y = randomRadius * Math.cos(randomAngle)
         return {
             x: x + G.X,
-            y: y + G.Y
+            y: y + G.Y,
         }
     }
 
@@ -2180,12 +2080,10 @@ const NetworkMonitor = function (config) {
                         randomPositions[i],
                         nearestNodes[i].currentPosition
                     ),
-                    position: randomPositions[i]
+                    position: randomPositions[i],
                 })
             }
-            const sorted = distanceFromNearestNode.sort(
-                (d1, d2) => d2.distance - d1.distance
-            )
+            const sorted = distanceFromNearestNode.sort((d1, d2) => d2.distance - d1.distance)
             selectedDistance = sorted[0].distance
             selectedPosition = sorted[0].position
         }
@@ -2202,7 +2100,7 @@ const NetworkMonitor = function (config) {
         const y = radius * Math.cos((angle * Math.PI) / 180)
         return {
             x: x + G.X,
-            y: y + G.Y
+            y: y + G.Y,
         }
     }
 
@@ -2220,19 +2118,13 @@ const NetworkMonitor = function (config) {
     init()
 
     const drawSmallToolTip = function (node) {
-        console.log("Drawing small tooltip", node)
+        console.log('Drawing small tooltip', node)
         const position = {
             x: node.currentPosition.x - 150 / 2,
-            y: node.currentPosition.y - 60
+            y: node.currentPosition.y - 60,
         }
         let toolTipHeight = 30
-        node.smallToolTipRect = drawRectangle(
-            position,
-            150,
-            toolTipHeight,
-            5,
-            G.colors.tooltip
-        )
+        node.smallToolTipRect = drawRectangle(position, 150, toolTipHeight, 5, G.colors.tooltip)
         node.smallTextList = []
         const marginBottom = 22
         const marginLeft = 15
@@ -2242,7 +2134,7 @@ const NetworkMonitor = function (config) {
                 `${node.externalIp}:${node.externalPort}`,
                 {
                     x: position.x + marginLeft,
-                    y: position.y + marginBottom
+                    y: position.y + marginBottom,
                 },
                 13,
                 '#ffffff'
@@ -2263,7 +2155,7 @@ const NetworkMonitor = function (config) {
     }
 
     const showNodesInfo = function () {
-        console.log("Showing node info")
+        console.log('Showing node info')
         for (let nodeId in G.active) {
             let node = G.active[nodeId]
             drawSmallToolTip(node)
@@ -2272,7 +2164,7 @@ const NetworkMonitor = function (config) {
     }
 
     const hideNodesInfo = function () {
-        console.log("Hiding node info")
+        console.log('Hiding node info')
         for (let nodeId in G.active) {
             let node = G.active[nodeId]
             hideSmallToolTip(node)
@@ -2280,7 +2172,7 @@ const NetworkMonitor = function (config) {
         G.smallToolTipShown = false
     }
 
-    const redirectToLargeNetworkPage = function() {
+    const redirectToLargeNetworkPage = function () {
         location.href = 'large-network.html'
     }
 
@@ -2292,7 +2184,7 @@ const NetworkMonitor = function (config) {
         }
     }
 
-    document.onkeydown = KeyPress;
+    document.onkeydown = KeyPress
 }
 
 function calculateAverage(load) {
@@ -2305,10 +2197,7 @@ function calculateAverage(load) {
 function mode(list) {
     const arr = [...list]
     return arr
-        .sort(
-            (a, b) =>
-                arr.filter(v => v === a).length - arr.filter(v => v === b).length
-        )
+        .sort((a, b) => arr.filter((v) => v === a).length - arr.filter((v) => v === b).length)
         .pop()
 }
 

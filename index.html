@@ -20,7 +20,7 @@
         const url = new URL(window.location.href)
         const server = url.searchParams.get('server') || window.location.href
         const fps = url.searchParams.get('fps') || 20
-        // const monitorServerUrl = "http://localhost:3000/api"
+        // const monitorServerUrl = "http://208.110.82.50:3000/api"
         const monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
         console.log('monitorServerUrl', monitorServerUrl)
         console.log('window.location', window.location)
@@ -33,6 +33,7 @@
             environment: 'production'
             // environment: 'test',
         })
+        console.log("testing")
     </script>
     <script src="https://unpkg.com/tippy.js@3/dist/tippy.all.min.js"></script>
 </body>
