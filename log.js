@@ -12,7 +12,12 @@ new Vue({
   mounted: function () {
     console.log('mounted')
     const urlParams = new URLSearchParams(window.location.search)
-    this.ip = urlParams.get('ip')
+    let ip = urlParams.get('ip')
+      if (ip === 'localhost' || ip === '127.0.0.1') {
+          ip = window.location.href.split('//')[1].split(":")[0]
+      }
+      console.log('ip', ip)
+      this.ip = ip
     this.port = urlParams.get('port')
   },
   methods: {

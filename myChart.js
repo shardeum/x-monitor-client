@@ -217,7 +217,12 @@ new Vue({
             }
         },
         async getCycleDuration(activeNode) {
-           const response = await axios.get(`http://${activeNode.nodeIpInfo.externalIp}:${activeNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
+            let ip = activeNode.nodeIpInfo.externalIp
+            if (ip === 'localhost' || ip === '127.0.0.1') {
+                ip = window.location.href.split('//')[1].split(":")[0]
+            }
+            console.log('ip', ip)
+           const response = await axios.get(`http://${ip}:${activeNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
             const cycleRecord = response.data.newestCycle
             if (cycleRecord && cycleRecord.duration) this.cycleDuration = cycleRecord.duration
         },
