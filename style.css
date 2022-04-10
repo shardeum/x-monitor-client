@@ -2,11 +2,9 @@ body {
   background: #f5f3f3;
   background: #28262f;
   overflow: hidden;
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       rgba(0, 0, 0, 0.3) 0%,
-      rgba(0, 0, 0, 0.85) 100%
-    ),
+      rgba(0, 0, 0, 0.85) 100%),
     url('milky-way2.png') no-repeat;
   background-repeat: no-repeat;
   background-size: cover;
@@ -24,7 +22,9 @@ canvas {
   margin: 0 auto;
 }
 
-#reset-report, #chart-button, #history-button {
+#reset-report,
+#chart-button,
+#history-button {
   height: 40px;
   border: none;
   border-radius: 5px;
@@ -38,16 +38,17 @@ canvas {
 }
 
 #chart-button {
-    background: #1ca7dc;
-    left: 120px;
-    width: 100px;
+  background: #1ca7dc;
+  /* left: 120px; */
+  width: 100px;
 }
 
 #history-button {
   background: #53b17e;
   left: 10px;
   top: 60px;
-  width: 100px;;
+  width: 100px;
+  ;
 }
 
 #cycle-counter-container {
@@ -83,11 +84,11 @@ tr {
   height: 40px;
 }
 
-thead > tr > td {
+thead>tr>td {
   padding: 0 5px;
 }
 
-thead > tr {
+thead>tr {
   background: #8c8c8c;
   color: #fff;
 }
@@ -99,6 +100,7 @@ thead > tr {
 #load-table {
   top: 300px;
 }
+
 #cycle-info-table {
   top: 100px;
 }

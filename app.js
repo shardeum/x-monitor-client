@@ -162,7 +162,6 @@ const NetworkMonitor = function (config) {
 
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
-        $('#reset-report').addEventListener('click', flushReport)
         if (G.environment === 'test') {
             const addNodeInterval = setInterval(() => {
                 generateNodeForTesting()
@@ -1601,7 +1600,7 @@ const NetworkMonitor = function (config) {
 
     const calculateNetworkPosition = function (nodeId) {
         // let spread = 12
-        let spread = 4
+        let spread = 9
         let angle = 137.508
 
         let totalNodeCount = Object.keys(G.active).length + Object.keys(G.syncing).length
@@ -1715,9 +1714,7 @@ const NetworkMonitor = function (config) {
 
     const drawNetworkCycle = async function (R, X, Y) {
         const networkHTML = `
-        <button id="reset-report">Reset Report</button>
         <a href="chart.html" target="_blank"><button id="chart-button">Charts</button></a>
-        <a href="history.html" target="_blank"><button id="history-button">History</button></a>
         <div id="cycle-counter-container"></div>
         <table id="node-info-table">
             <thead>
@@ -2028,11 +2025,6 @@ const NetworkMonitor = function (config) {
         } catch (e) {
             return false
         }
-    }
-
-    const flushReport = async function () {
-        const response = await axios.get(`${G.monitorServerUrl}/flush`)
-        document.location.reload()
     }
 
     const getRandomPosition = function () {
