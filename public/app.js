@@ -9,6 +9,7 @@ const { tween, styler, listen, pointer, timeline, easing, chain } = window.popmo
 
 const NetworkMonitor = function (config) {
     const G = {} // semi-global namespace
+    loadToken(G)
     G.nodes = []
     G.partitionMatrix = {}
     G.partitionGraphic = {}
@@ -190,7 +191,7 @@ const NetworkMonitor = function (config) {
             try {
                 report = await getReport()
             } catch (e) {
-                console.warn('Error while getting report from monitor server')
+                console.warn('Error while getting report from monitor server', e)
                 resetState()
                 return
             }
@@ -1714,7 +1715,7 @@ const NetworkMonitor = function (config) {
 
     const drawNetworkCycle = async function (R, X, Y) {
         const networkHTML = `
-        <a href="chart.html" target="_blank"><button id="chart-button">Charts</button></a>
+        <a href="/chart" target="_blank"><button id="chart-button">Charts</button></a>
         <div id="cycle-counter-container"></div>
         <table id="node-info-table">
             <thead>
@@ -1977,7 +1978,8 @@ const NetworkMonitor = function (config) {
     }
 
     const getReport = async function () {
-        const response = await axios.get(`${G.monitorServerUrl}/report`)
+        const response = await requestWithToken(`${G.monitorServerUrl}/report`)
+        console.log(response.data)
         let activeNodes = response.data.nodes.active
         let cycleCounter
         let shouldDrawButton = false

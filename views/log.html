@@ -31,7 +31,8 @@
                 <a :href="`http://${ip}:${port}/debug`" target="_blank">/debug (download zipped logs)</a>
             </div>
             <div class="col-md-12">
-                <a :href="`http://${ip}:${port}/accounts`" target="_blank">/account (get json of all account data - slow)</a>
+                <a :href="`http://${ip}:${port}/accounts`" target="_blank">/account (get json of all account data -
+                    slow)</a>
             </div>
             <div class="col-md-12">
                 <a :href="`http://${ip}:${port}/perf`" target="_blank">/perf</a>
@@ -89,14 +90,17 @@
                 <a :href="`http://${ip}:${port}/debug-patcher-fail-tx`" target="_blank">/debug-patcher-fail-tx</a>
             </div>
             <div class="col-md-12">
-                <a :href="`http://${ip}:${port}/debug-patcher-ignore-hash-updates`" target="_blank">/debug-patcher-ignore-hash-updates</a>
+                <a :href="`http://${ip}:${port}/debug-patcher-ignore-hash-updates`"
+                    target="_blank">/debug-patcher-ignore-hash-updates</a>
             </div>
             <div class="col-md-12">
                 <a :href="`http://${ip}:${port}/debug-patcher-dumpTree`" target="_blank">/debug-patcher-dumpTree</a>
             </div>
         </div>
     </section>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="auth.js"></script>
     <script src="log.js"></script>
 </body>
 

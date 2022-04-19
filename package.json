@@ -2,7 +2,7 @@
   "name": "@shardus/monitor-client",
   "version": "2.1.6",
   "description": "",
-  "main": "app.js",
+  "main": "entry.js",
   "scripts": {
     "release": "np --no-tests --no-yarn",
     "test": "echo \"Error: no test specified\" && exit 1"

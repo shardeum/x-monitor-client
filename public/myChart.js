@@ -222,12 +222,12 @@ new Vue({
                 ip = window.location.href.split('//')[1].split(":")[0]
             }
             console.log('ip', ip)
-           const response = await axios.get(`http://${ip}:${activeNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
+           const response = await requestWithToken(`http://${ip}:${activeNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
             const cycleRecord = response.data.newestCycle
             if (cycleRecord && cycleRecord.duration) this.cycleDuration = cycleRecord.duration
         },
         async getReport() {
-            const response = await axios.get(`/api/report`)
+            const response = await requestWithToken(`/api/report`)
             try {
                 if (Object.keys(response.data.nodes.active).length > 0) {
                     if (!this.cycleDuration) {

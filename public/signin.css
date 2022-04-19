@@ -1,0 +1,21 @@
+body {
+    background: #f5f3f3;
+    background: #28262f;
+    overflow: hidden;
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.3) 0%,
+            rgba(0, 0, 0, 0.85) 100%),
+        url('milky-way2.png') no-repeat;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+#signin-box {
+    border: 1px solid #919191;
+    padding: 20px;
+    margin: 0 auto;
+    width: 500px;
+    background: #f1f1f1;
+    border-radius: 5px;
+}

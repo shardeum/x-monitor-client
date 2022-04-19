@@ -1,9 +1,10 @@
-;(function main() {
+; (function main() {
     const url = new URL(window.location.href)
     // const monitorServerUrl = 'http://208.110.82.50:3000/api'
     const monitorServerUrl = window.origin + '/api'
     console.log('Monitor server', monitorServerUrl)
     const G = {}
+    loadToken(G)
     G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
     G.VH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
     G.R = 100
@@ -147,7 +148,7 @@
                 this.changeNodeColor()
             },
             async fetchChanges(timestamp) {
-                let res = await axios.get(
+                let res = await requestWithToken(
                     `${monitorServerUrl}/report?timestamp=${G.lastUpdatedTimestamp}`
                 )
                 return res.data
@@ -213,7 +214,7 @@
             },
             async deleteRemovedNodes() {
                 try {
-                    let res = await axios.get(`${monitorServerUrl}/removed`)
+                    let res = await requestWithToken(`${monitorServerUrl}/removed`)
                     const removed = res.data.removed
                     if (removed.length === 0) {
                         return
@@ -261,8 +262,7 @@
                 try {
                     let changes = await this.fetchChanges()
                     console.log(
-                        `Total of ${Object.keys(changes.nodes.active).length}/${
-                            Object.keys(G.nodes.active).length
+                        `Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length
                         } nodes updated.`
                     )
                     this.updateNetworkStatus(changes)
@@ -416,7 +416,7 @@
             async getRandomArchiver() {
                 if (Object.keys(G.nodes.active).length === 0) return
                 const randomConsensorNode = Object.values(G.nodes.active)[0]
-                let res = await axios.get(
+                let res = await requestWithToken(
                     `http://${randomConsensorNode.nodeIpInfo.externalIp}:${randomConsensorNode.nodeIpInfo.externalPort}/sync-newest-cycle`
                 )
                 let cycle = res.data.newestCycle
@@ -426,7 +426,7 @@
             },
             async getActiveArchivers() {
                 if (!G.archiver) await this.getRandomArchiver()
-                const res = await axios.get(
+                const res = await requestWithToken(
                     `http://${G.archiver.ip}:${G.archiver.port}/archiverlist`
                 )
                 if (res.data.archivers && res.data.archivers.length > 0) {
@@ -470,7 +470,7 @@
                 }
             },
             async start() {
-                let res = await axios.get(`${monitorServerUrl}/report`)
+                let res = await requestWithToken(`${monitorServerUrl}/report`)
                 let newNodesMap = {}
                 let newNodes = []
                 for (let nodeId in res.data.nodes.active) {
