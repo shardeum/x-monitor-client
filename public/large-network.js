@@ -1,6 +1,5 @@
 ; (function main() {
     const url = new URL(window.location.href)
-    // const monitorServerUrl = 'http://208.110.82.50:3000/api'
     const monitorServerUrl = window.origin + '/api'
     console.log('Monitor server', monitorServerUrl)
     const G = {}

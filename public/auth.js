@@ -3,6 +3,7 @@ function redirectToSignIn() {
 }
 
 async function requestWithToken(url) {
+    console.log('requesting with token', url)
     let token = loadToken()
     const options = {
         headers: {

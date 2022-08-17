@@ -34,6 +34,7 @@ function initSyncChart() {
             }
         },
         mounted: function () {
+            console.log('Sync page loaded!')
             let data = [this.trace]
             this.layout = {
                 title: 'Node Sync Timeline',
@@ -65,8 +66,8 @@ function initSyncChart() {
                 }
             },
             async getReport() {
-                const response = await axios.get(`/api/sync-report`)
-                const heartbeatResponse = await axios.get(`/api/report`)
+                const response = await requestWithToken(`${monitorServerUrl}/sync-report`)
+                const heartbeatResponse = await requestWithToken(`${monitorServerUrl}/report`)
                 const report = response.data
                 if (Object.keys(report).length === 0) return
                 if (Object.keys(report).length <= this.nodeCount) return false
