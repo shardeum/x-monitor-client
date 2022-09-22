@@ -22,7 +22,7 @@ canvas {
   margin: 0 auto;
 }
 
-#reset-report,
+#reset-button,
 #chart-button,
 #history-button {
   height: 40px;
@@ -43,10 +43,10 @@ canvas {
   width: 100px;
 }
 
-#history-button {
+#reset-button {
   background: #53b17e;
-  left: 10px;
-  top: 60px;
+  left: 120px;
+  top: 10px;
   width: 100px;
   ;
 }

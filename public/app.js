@@ -163,6 +163,7 @@ const NetworkMonitor = function (config) {
 
     const init = async function () {
         drawNetworkCycle(G.R, G.X, G.Y)
+
         if (G.environment === 'test') {
             const addNodeInterval = setInterval(() => {
                 generateNodeForTesting()
@@ -1715,7 +1716,9 @@ const NetworkMonitor = function (config) {
 
     const drawNetworkCycle = async function (R, X, Y) {
         const networkHTML = `
-        <a href="/chart" target="_blank"><button id="chart-button">Charts</button></a>
+        <a href="/chart" target="_blank"><button id="chart-button">Tests</button></a>
+        <a href=""><button id="reset-button">Reset</button></a>
+
         <div id="cycle-counter-container"></div>
         <table id="node-info-table">
             <thead>
@@ -1817,6 +1820,17 @@ const NetworkMonitor = function (config) {
         function handleTick(event) {
             //stage.update()
         }
+        document.querySelector('#reset-button').addEventListener('click', (e) => {
+            e.preventDefault()
+            flushMonitorServer()
+        })
+    }
+
+    const flushMonitorServer = async function () {
+        console.log('Flushing...')
+        await requestWithToken(`${G.monitorServerUrl}/flush`)
+        refreshPage()
+        // resetState()
     }
 
     const mode = function (arr) {
@@ -2168,6 +2182,10 @@ const NetworkMonitor = function (config) {
 
     const redirectToLargeNetworkPage = function () {
         location.href = 'large-network.html'
+    }
+
+    const refreshPage = function () {
+        location.href = '/'
     }
 
     function KeyPress(e) {
