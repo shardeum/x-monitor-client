@@ -13,6 +13,10 @@
     <div id="app"></div>
 
     <canvas id="demoCanvas" width="1500" height="800"></canvas>
+    <div class="link-container">
+        <a target="_blank" href="/history-log?max_history=2880">Node History</a>
+        <a target="_blank" href="/sync">Sync Timeline</a>
+    </div>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="./popmotion.min.js"></script>
     <script src="auth.js"></script>
@@ -21,7 +25,7 @@
         const url = new URL(window.location.href)
         const server = url.searchParams.get('server') || window.location.href
         const fps = url.searchParams.get('fps') || 20
-        // const monitorServerUrl = "http://13.48.84.73:3000/api"
+        // const monitorServerUrl = "http://13.48.45.51:3000/api"
         const monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
         console.log('monitorServerUrl', monitorServerUrl)
         console.log('window.location', window.location)

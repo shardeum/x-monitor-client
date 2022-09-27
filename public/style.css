@@ -134,3 +134,13 @@ thead>tr {
   top: calc(50vh - 150px);
   z-index: -100;
 }
+
+.link-container {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+.link-container a {
+    color: white;
+    margin: 0 10px;
+}
