@@ -1,3 +1,4 @@
+var request = axios.default
 new Vue({
     el: '#app',
     data: {
@@ -17,7 +18,7 @@ new Vue({
             })
         },
         async signIn(payload) {
-            const res = await axios.post('/api/signin', payload)
+            const res = await request.post('/api/signin', payload)
             if (res.data && res.data.token) {
                 console.log('SingIn Successful', res.data.token)
                 localStorage.setItem('token', res.data.token)

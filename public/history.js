@@ -151,7 +151,7 @@ new Vue({
         },
         async getTableData() {
             console.log("getting table data")
-            const resp = await axios.get(`/api/history`)
+            const resp = await request.get(`/api/history`)
             const history = resp.data
             this.sourceData = []
             for (let nodeId in history) {

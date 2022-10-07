@@ -1,3 +1,5 @@
+var request = axios.default
+
 function redirectToSignIn() {
     location.href = 'signin'
 }
@@ -10,7 +12,7 @@ async function requestWithToken(url) {
             'Authorization': `${token}`
         }
     }
-    const res = await axios.get(url, options)
+    const res = await request.get(url, options)
     return res
 }
 
@@ -25,7 +27,7 @@ async function checkAuthRequirement() {
     console.log('Checking auth requirement...')
     let token = localStorage.getItem('token')
 
-    let res = await axios.get('/api/status')
+    let res = await request.get('/api/status')
     let env = res.data.env
 
     if (env === 'production' && !token) {
@@ -36,7 +38,7 @@ async function checkAuthRequirement() {
 
     if (env === 'production' && token != null) {
         try {
-            let response = await axios.get('/api/report', {
+            let response = await request.get('/api/report', {
                 headers: {
                     'Authorization': `${token}`
                 }

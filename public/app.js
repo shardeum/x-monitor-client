@@ -1716,7 +1716,7 @@ const NetworkMonitor = function (config) {
 
     const drawNetworkCycle = async function (R, X, Y) {
         const networkHTML = `
-        <a href="/chart" target="_blank"><button id="chart-button">Tests</button></a>
+        <a href="/chart" target="_blank"><button id="chart-button">Charts</button></a>
         <a href=""><button id="reset-button">Reset</button></a>
 
         <div id="cycle-counter-container"></div>
