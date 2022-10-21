@@ -459,6 +459,7 @@ const NetworkMonitor = function (config) {
             $('#node-info-desired').innerHTML = modeDesiredNodes
         }
         $('#total-tx-rejected').innerHTML = report.totalRejected
+        $('#current-rejectedtps').innerHTML = report.rejectedTps
         $('#total-tx-expired').innerHTML = report.totalExpired
         $('#current-load').innerHTML = calculateAverage(load)
         $('#current-internal-node-load').innerHTML = calculateAverage(
@@ -1762,6 +1763,7 @@ const NetworkMonitor = function (config) {
                   <td>Max Tps</td>
                   <td>Avg Tps</td>
                   <td>Rejected Txs</td>
+                  <td>Rejected Tps</td>
                   <td>Expired Txs</td>
               </tr>
           </thead>
@@ -1770,6 +1772,7 @@ const NetworkMonitor = function (config) {
                   <td id="current-maxtps">-</td>
                   <td id="current-avgtps">-</td>
                   <td id="total-tx-rejected">-</td>
+                  <td id="current-rejectedtps">-</td>
                   <td id="total-tx-expired">-</td>
               </tr>
           </tbody>
