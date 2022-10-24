@@ -52,7 +52,7 @@
         <div id="app">
             <div class="p-2 w-full">
                 <table class="w-full font-sans text-sm font-light text-center bg-gray-100 shadow">
-                    <tr class="font-medium text-xs text-gray-800 grid grid-cols-9">
+                    <tr class="font-medium text-xs text-gray-800 grid grid-cols-10">
                         <td>Counter</td>
                         <td>Joining</td>
                         <td>Syncing</td>
@@ -64,12 +64,13 @@
                         </td>
                         <td>Processed</td>
                         <td>Rejected</td>
+                        <td>Rejected TPS</td>
                         <td>
                             <span v-if="shouldShowMaxLoad">Max Load</span>
                             <span v-else>Load</span>
                         </td>
                     </tr>
-                    <tr class="grid grid-cols-9">
+                    <tr class="grid grid-cols-10">
                         <td>{{ networkStatus.counter }}</td>
                         <td>{{ networkStatus.joining }}</td>
                         <td>{{ networkStatus.syncing }}</td>
@@ -84,6 +85,7 @@
                         </td>
                         <td>{{ networkStatus.processed }}</td>
                         <td>{{ networkStatus.rejected }}</td>
+                        <td>{{ networkStatus.rejectedTps }}</td>
                         <td
                             @mouseover="shouldShowMaxLoad = true"
                             @mouseleave="shouldShowMaxLoad = false"

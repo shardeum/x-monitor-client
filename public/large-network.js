@@ -1,5 +1,4 @@
-; (function main() {
-    const url = new URL(window.location.href)
+;(function main() {
     const monitorServerUrl = window.origin + '/api'
     console.log('Monitor server', monitorServerUrl)
     const G = {}
@@ -36,6 +35,7 @@
                     maxTps: 0,
                     processed: 0,
                     rejected: 0,
+                    rejectedTps: 0,
                     netLoad: 0,
                     load: 0,
                     maxLoad: 0,
@@ -146,7 +146,7 @@
                 this.colorMode = event.target.value
                 this.changeNodeColor()
             },
-            async fetchChanges(timestamp) {
+            async fetchChanges() {
                 let res = await requestWithToken(
                     `${monitorServerUrl}/report?timestamp=${G.lastUpdatedTimestamp}`
                 )
@@ -170,6 +170,7 @@
                 this.networkStatus.maxTps = report.maxTps
                 this.networkStatus.processed = report.totalProcessed
                 this.networkStatus.rejected = report.totalRejected
+                this.networkStatus.rejectedTps = report.rejectedTps
                 this.networkStatus.active = Object.keys(G.nodes.active).length
                 this.networkStatus.syncing = Object.keys(G.nodes.syncing).length
                 this.networkStatus.joining = Object.keys(report.nodes.joining).length
@@ -261,7 +262,8 @@
                 try {
                     let changes = await this.fetchChanges()
                     console.log(
-                        `Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length
+                        `Total of ${Object.keys(changes.nodes.active).length}/${
+                            Object.keys(G.nodes.active).length
                         } nodes updated.`
                     )
                     this.updateNetworkStatus(changes)
@@ -273,7 +275,6 @@
                     for (let nodeId in changes.nodes.active) {
                         let node = changes.nodes.active[nodeId]
                         if (!G.nodes.active[nodeId]) {
-                            // console.log('New active node', node)
                             G.nodes.active[nodeId] = node
                             if (!G.nodes.syncing[nodeId]) newNodesMap[nodeId] = node
                             continue
@@ -357,7 +358,6 @@
                 const nodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
                 const options = {
                     nodes: {
-                        // size: 2,
                         size: nodeSize,
                     },
                     interaction: {
@@ -387,15 +387,6 @@
                 const total = list.reduce((p, c) => p + c, 0)
                 return total / list.length
             },
-            // mode(list) {
-            //     const arr = [...list]
-            //     return arr
-            //         .sort(
-            //             (a, b) =>
-            //                 arr.filter((v) => v === a).length - arr.filter((v) => v === b).length
-            //         )
-            //         .pop()
-            // },
             mode(arr) {
                 return arr.reduce(
                     function (current, num) {
