@@ -274,9 +274,9 @@
                     let crashedNodesToRemove = []
                     for (let nodeId in changes.nodes.active) {
                         let node = changes.nodes.active[nodeId]
-                        if (!G.nodes.active[nodeId]) {
-                            G.nodes.active[nodeId] = node
-                            if (!G.nodes.syncing[nodeId]) newNodesMap[nodeId] = node
+                        G.nodes.active[nodeId] = node
+                        if (!G.nodes.active[nodeId] && !G.nodes.syncing[nodeId]) {
+                            newNodesMap[nodeId] = node
                             continue
                         }
                         let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
@@ -459,6 +459,60 @@
                     console.log('Error while trying to draw archiver network', e)
                 }
             },
+            drawCanvasNode({ ctx, x, y, width, height, style, indicator }) {
+                const drawCircle = () => {
+                    ctx.fillStyle = style.color
+                    ctx.strokeStyle = style.borderColor
+                    ctx.lineWidth = style.borderWidth
+
+                    ctx.beginPath()
+                    ctx.arc(x, y, width / 2, 0, 2 * Math.PI)
+                    ctx.stroke()
+                    ctx.fill()
+                }
+
+                const drawIndicator = (indicator) => {
+                    if (indicator == null) return;
+
+                    ctx.fillStyle = indicator === 'up' ?  '#f1c40f' : '#3498db'
+                    ctx.strokeStyle = indicator === 'up' ?  '#f1c40f' : '#3498db'
+                    ctx.lineWidth = style.borderWidth
+
+                    // Determines if triangle is positioned higher or lower than node
+                    const multiplier = indicator === 'up' ? -1 : 1;
+
+                    // Margin between the node and the triangle
+                    const margin = 5
+
+                    // Draw a triangle
+                    ctx.beginPath()
+                    ctx.moveTo(x, y + multiplier * (height + margin))
+                    ctx.lineTo(x - width / 3, y + multiplier * ( height / 2 + margin))
+                    ctx.lineTo(x + width / 3, y + multiplier *  (height / 2 + margin))
+
+                    ctx.stroke()
+                    ctx.fill()
+                }
+
+                drawCircle()
+                drawIndicator(indicator)
+            },
+
+            // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
+            visContextRenderer({ ctx, id, x, y, style }) {
+                const width = 20
+                const height = width
+                const currentNode = G.nodes.active[id]
+                const indicator =
+                    currentNode != null ? currentNode.lastScalingTypeRequested : undefined
+
+                return {
+                    drawNode: () =>
+                        this.drawCanvasNode({ ctx, x, y, width, height, style, indicator }),
+                    nodeDimensions: { width, height },
+                }
+            },
+
             async start() {
                 let res = await requestWithToken(`${monitorServerUrl}/report`)
                 let newNodesMap = {}
@@ -494,7 +548,10 @@
                 }
                 const options = {
                     nodes: {
-                        shape: 'dot',
+                        shape: 'custom',
+                        ctxRenderer: (params) => {
+                            return this.visContextRenderer(params)
+                        },
                         size: this.getNodeSize(Object.keys(G.nodes.active).length),
                         font: {
                             size: 12,
