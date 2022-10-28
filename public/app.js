@@ -1293,14 +1293,14 @@ const NetworkMonitor = function (config) {
     const drawCircle = function (position, radius, fill, stroke, id, alpha) {
         var circle = new createjs.Shape()
         var myFill = circle.graphics.beginFill(fill).command
-        // circle.graphics.beginFill(fill).drawCircle(position.x, position.y, radius);
         circle.graphics.drawCircle(position.x, position.y, radius)
+
         if (alpha) circle.alpha = alpha
         circle.myFill = myFill
         circle.name = generateHash(4)
         stage.addChild(circle)
         circle.currentPosition = position
-        //stage.update()
+
         return circle
     }
 
@@ -1907,7 +1907,6 @@ const NetworkMonitor = function (config) {
                 recList.forEach((rec) => {
                     rec.graphics.clear()
                 })
-                //stage.update()
                 delete G.partitionGraphic[cycleCounter]
             }
         } catch (e) {
@@ -1936,7 +1935,6 @@ const NetworkMonitor = function (config) {
     }
 
     const drawCycleCounterButton = function (cycleCounter) {
-        // console.log(`Drawing cycle counter for`, cycleCounter)
         if (!cycleCounter) return
         let container = document.querySelector('#cycle-counter-container')
         console.log(container)
@@ -2034,36 +2032,6 @@ const NetworkMonitor = function (config) {
             )
         })
         return sortedNodes[0]
-    }
-
-    const getJoiningPosition = function () {
-        let selectedDistance = 0
-        let selectedPosition
-        const minimumDistance = 2.5 * G.nodeRadius
-        if (Object.keys(G.joining).length === 0) return getRandomPosition()
-
-        while (selectedDistance < minimumDistance) {
-            const randomPositions = []
-            const nearestNodes = []
-            const distanceFromNearestNode = []
-            for (let i = 0; i < 3; i += 1) randomPositions.push(getRandomPosition())
-            for (let i = 0; i < 3; i += 1) {
-                nearestNodes.push(getNearestNodeFromPoint(randomPositions[i]))
-            }
-            for (let i = 0; i < 3; i += 1) {
-                distanceFromNearestNode.push({
-                    distance: distanceBtnTwoPoints(
-                        randomPositions[i],
-                        nearestNodes[i].currentPosition
-                    ),
-                    position: randomPositions[i],
-                })
-            }
-            const sorted = distanceFromNearestNode.sort((d1, d2) => d2.distance - d1.distance)
-            selectedDistance = sorted[0].distance
-            selectedPosition = sorted[0].position
-        }
-        return selectedPosition
     }
 
     const getJoiningNodePosition = function (publicKey) {
