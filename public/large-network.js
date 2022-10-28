@@ -8,7 +8,7 @@
     G.R = 100
     G.X = 0
     G.Y = 0
-    G.nodeRadius = 200
+    G.MAX_EDGES_FOR_NODE = 4
     G.maxId = parseInt('ffff', 16)
     G.lastUpdatedTimestamp = 0
     G.nodes = {
@@ -111,6 +111,17 @@
                     color: this.getNodeColor(node),
                 }
             },
+            getNewVisEdge(node1, node2) {
+                const hashLength = 4;
+                return {
+                    id: `${node1.id.substring(0, hashLength)}->${node2.id.substring(
+                        0,
+                        hashLength
+                    )}`,
+                    from: node1.id,
+                    to: node2.id,
+                }
+            },
             getNewArchiverVisNodes(archivers) {
                 let visNodes = archivers.map((archiver, index) => {
                     return {
@@ -158,7 +169,7 @@
                     const visNode = this.getNewVisNode(node.nodeId, node)
                     newVisNodes.push(visNode)
                 }
-                G.data.add(newVisNodes)
+                G.visNodes.add(newVisNodes)
             },
             updateNetworkStatus(report) {
                 if (Object.keys(report.nodes.active).length === 0) return // don't update stats if no nodes send the
@@ -207,7 +218,7 @@
                     }
                     if (removedNodeIds.length === 0) return
                     console.log('removed crashed ids', removedNodeIds)
-                    G.data.remove(removedNodeIds)
+                    G.visNodes.remove(removedNodeIds)
                 } catch (e) {
                     console.log('Error while trying to remove crashed nodes', e)
                 }
@@ -229,7 +240,7 @@
                     }
                     if (removedNodeIds.length === 0) return
                     console.log('removed ids', removedNodeIds)
-                    G.data.remove(removedNodeIds)
+                    G.visNodes.remove(removedNodeIds)
                 } catch (e) {
                     console.log('Error while trying to remove nodes', e)
                 }
@@ -291,7 +302,7 @@
                         if (crashedSyncingNode) {
                             console.log('Removing crashed syncing node', crashedSyncingNode)
                             delete G.nodes.syncing[crashedSyncingNode.nodeId]
-                            G.data.remove(crashedSyncingNode.nodeId)
+                            G.visNodes.remove(crashedSyncingNode.nodeId)
                         }
                         if (!G.nodes.syncing[nodeId]) {
                             console.log('New syncing node')
@@ -315,7 +326,7 @@
 
                     // update existing active + syncing nodes
                     updatedNodes = Object.values(updatedNodesMap)
-                    G.data.update(updatedNodes)
+                    G.visNodes.update(updatedNodes)
 
                     // delete removed nodes
                     await this.deleteRemovedNodes()
@@ -377,7 +388,7 @@
                         let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
                         updatedNodes.push(updatedVisNode)
                     }
-                    G.data.update(updatedNodes)
+                    G.visNodes.update(updatedNodes)
                 } catch (e) {
                     console.log('Error while trying to update nodes.', e)
                 }
@@ -459,6 +470,7 @@
                     console.log('Error while trying to draw archiver network', e)
                 }
             },
+
             drawCanvasNode({ ctx, x, y, width, height, style, indicator }) {
                 const drawCircle = () => {
                     ctx.fillStyle = style.color
@@ -472,14 +484,14 @@
                 }
 
                 const drawIndicator = (indicator) => {
-                    if (indicator == null) return;
+                    if (indicator == null) return
 
-                    ctx.fillStyle = indicator === 'up' ?  '#f1c40f' : '#3498db'
-                    ctx.strokeStyle = indicator === 'up' ?  '#f1c40f' : '#3498db'
+                    ctx.fillStyle = indicator === 'up' ? '#f1c40f' : '#3498db'
+                    ctx.strokeStyle = indicator === 'up' ? '#f1c40f' : '#3498db'
                     ctx.lineWidth = style.borderWidth
 
                     // Determines if triangle is positioned higher or lower than node
-                    const multiplier = indicator === 'up' ? -1 : 1;
+                    const multiplier = indicator === 'up' ? -1 : 1
 
                     // Margin between the node and the triangle
                     const margin = 5
@@ -487,8 +499,8 @@
                     // Draw a triangle
                     ctx.beginPath()
                     ctx.moveTo(x, y + multiplier * (height + margin))
-                    ctx.lineTo(x - width / 3, y + multiplier * ( height / 2 + margin))
-                    ctx.lineTo(x + width / 3, y + multiplier *  (height / 2 + margin))
+                    ctx.lineTo(x - width / 3, y + multiplier * (height / 2 + margin))
+                    ctx.lineTo(x + width / 3, y + multiplier * (height / 2 + margin))
 
                     ctx.stroke()
                     ctx.fill()
@@ -496,6 +508,31 @@
 
                 drawCircle()
                 drawIndicator(indicator)
+            },
+
+            animateInjectedTxns({ ctx, x, y, width, height }) {
+                // Makes the transactions start closer or farther
+                const startingMultiplier = 2
+
+                const drawTx = () => {
+                    console.log('clearning')
+                    // ctx.clearRect(startingX, startingY, 30, 30)
+                    ctx.fillStyle = 'red'
+                    ctx.strokeStyle = 'red'
+
+                    const startingX = x * startingMultiplier
+                    const startingY = y * startingMultiplier
+                    ctx.beginPath()
+                    ctx.arc(startingX, startingY, width / 4, 0, 2 * Math.PI)
+                    ctx.stroke()
+                    ctx.fill()
+                }
+
+                // const animateTx = () => {
+
+                // }
+
+                drawTx()
             },
 
             // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
@@ -507,8 +544,10 @@
                     currentNode != null ? currentNode.lastScalingTypeRequested : undefined
 
                 return {
-                    drawNode: () =>
-                        this.drawCanvasNode({ ctx, x, y, width, height, style, indicator }),
+                    drawNode: () => {
+                        this.drawCanvasNode({ ctx, x, y, width, height, style, indicator })
+                        this.animateInjectedTxns({ ctx, x, y, width, height })
+                    },
                     nodeDimensions: { width, height },
                 }
             },
@@ -516,7 +555,6 @@
             async start() {
                 let res = await requestWithToken(`${monitorServerUrl}/report`)
                 let newNodesMap = {}
-                let newNodes = []
                 for (let nodeId in res.data.nodes.active) {
                     // remove if active node exists in the syncing list
                     if (G.nodes.syncing[nodeId]) {
@@ -535,8 +573,39 @@
                     newNodesMap[nodeId] = this.getNewVisNode(nodeId, node)
                     G.nodes.syncing[nodeId] = node
                 }
-                newNodes = Object.values(newNodesMap)
-                G.data = new vis.DataSet(newNodes)
+
+                const newNodes = Object.values(newNodesMap)
+                const newEdges = []
+
+                newNodes.forEach((node) => {
+                    // TODO: Do we want to make this use random nodes? Possible but more difficult
+                    for (
+                        let nextNodeIndex = 1;
+                        nextNodeIndex <= G.MAX_EDGES_FOR_NODE;
+                        nextNodeIndex++
+                    ) {
+                        const safeNextNodeIndex = nextNodeIndex % newNodes.length;
+                        const destinationNode = newNodes[safeNextNodeIndex]
+
+                        if (node.id === destinationNode.id) {
+                            continue
+                        }
+
+                        const edge = this.getNewVisEdge(node, destinationNode)
+
+                        const edgeAdded = newEdges.some(({ id }) => id === edge.id)
+                        if (edgeAdded) {
+                            continue
+                        }
+
+                        newEdges.push(edge);
+                    }
+                })
+
+                G.visNodes = new vis.DataSet(newNodes)
+                G.visEdges = new vis.DataSet(newEdges)
+                console.log('newEdges', newEdges[0]);
+
                 this.updateNetworkStatus(res.data)
 
                 // create a network
@@ -544,7 +613,8 @@
 
                 // provide the data in the vis format
                 let data = {
-                    nodes: G.data,
+                    nodes: G.visNodes,
+                    edges: G.visEdges,
                 }
                 const options = {
                     nodes: {
@@ -574,6 +644,12 @@
                     window.open(
                         `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`
                     )
+                })
+
+                G.network.on('afterDrawing', (ctx) => {
+                    G.network.animateTraffic([
+                        {edge: newEdges[0].id, trafficSize: 3}
+                    ]);
                 })
                 await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, 10000)
