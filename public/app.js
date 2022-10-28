@@ -232,7 +232,7 @@ const NetworkMonitor = function (config) {
                         nodeId: nodeId,
                     })
                     delete G.joining[publicKey]
-                    updateUI('joining', 'syncing', publicKey, nodeId)
+                    updateUI('joining', 'syncing', nodeId)
                     G.syncing[nodeId].tooltipInstance = null
                     G.syncing[nodeId].circle.removeAllEventListeners('mouseover')
                     G.syncing[nodeId].circle.removeAllEventListeners('mouseout')
@@ -301,7 +301,7 @@ const NetworkMonitor = function (config) {
                     } catch (e) {
                         console.log(e)
                     }
-                    updateUI('syncing', 'active', null, nodeId)
+                    updateUI('syncing', 'active', nodeId)
                     G.active[nodeId].tooltipInstance = null
                     G.active[nodeId].circle.removeAllEventListeners('mouseover')
                     G.active[nodeId].circle.removeAllEventListeners('mouseout')
@@ -557,7 +557,7 @@ const NetworkMonitor = function (config) {
         return injected
     }
 
-    const updateUI = function (previousStatus, currentStatus, publicKey, nodeId) {
+    const updateUI = function (previousStatus, currentStatus, nodeId) {
         if (previousStatus === 'joining' && currentStatus === 'syncing') {
             relocateIntoNetwork(previousStatus, G.syncing[nodeId])
         } else if (previousStatus === 'syncing' && currentStatus === 'active') {
@@ -567,10 +567,6 @@ const NetworkMonitor = function (config) {
             node.nodeListCycle = drawNodeListBox(node)
             node.circle.myFill.style = G.colors.active
         }
-    }
-
-    const updateUI_old = function (previousStatus, currentStatus, publicKey, nodeId) {
-        return
     }
 
     const updateTables = function () {
