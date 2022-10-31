@@ -7,10 +7,11 @@
  *
  * @param {*} edgesTrafficList
  */
-vis.Network.prototype.animateTraffic = function (
+vis.Network.prototype.animateTraffic = function ({
     edgesTrafficList,
+    animationDuration = 1500,
     trafficStyle = {},
-) {
+}) {
     const network = this // The current Network instance
     const trafficCanvas = getNetworkTrafficCanvas(network)
 
@@ -23,7 +24,7 @@ vis.Network.prototype.animateTraffic = function (
     ctx.translate(t.x, t.y)
     ctx.scale(s, s)
 
-    animate(ctx, network, edgesTrafficList, trafficStyle, 1500)
+    animate(ctx, network, edgesTrafficList, trafficStyle, animationDuration)
 }
 
 /**
@@ -79,12 +80,12 @@ const parseEdgeTraffic = (edgeTraffic, network) => {
 
     return {
         edge: edge,
-        trafficSize: edgeTraffic.trafficSize || 1,
+        trafficSize: edgeTraffic.trafficSize || 3,
         isBackward: edge && edgeTraffic.isBackward,
     }
 }
 
-const animate = (ctx, network, edgesTrafficList, trafficStyle, duration = 1000) => {
+const animate = (ctx, network, edgesTrafficList, trafficStyle, duration) => {
     let start
     const stopAt = 0.95 // Stop when the animation has been running for this much of the duration
     const reportedErrors = {}; // Helps to avoid reporting the same error in multiple setTimeout events

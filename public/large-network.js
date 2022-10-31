@@ -9,6 +9,7 @@
     G.X = 0
     G.Y = 0
     G.MAX_EDGES_FOR_NODE = 4
+    G.REFRESH_TIME = 10000
     G.maxId = parseInt('ffff', 16)
     G.lastUpdatedTimestamp = 0
     G.nodes = {
@@ -112,16 +113,21 @@
                 }
             },
             getNewVisEdge(node1, node2) {
-                const hashLength = 4
                 return {
-                    id: `${node1.id.substring(0, hashLength)}->${node2.id.substring(
-                        0,
-                        hashLength
-                    )}`,
+                    id: this.getVisEdgeId(node1.id, node2.id),
                     from: node1.id,
                     to: node2.id,
                     hidden: true,
                 }
+            },
+            getTruncatedNodeId(nodeId) {
+                const hashLength = 10
+
+                return nodeId.substring(0, hashLength)
+            },
+            getVisEdgeId(node1Id, node2Id) {
+                // Store just part of the hashes to make these more readable
+                return `${this.getTruncatedNodeId(node1Id)}->${this.getTruncatedNodeId(node2Id)}`
             },
             getNewArchiverVisNodes(archivers) {
                 let visNodes = archivers.map((archiver, index) => {
@@ -329,6 +335,8 @@
                     updatedNodes = Object.values(updatedNodesMap)
                     G.visNodes.update(updatedNodes)
 
+                    this.animateTraffic()
+
                     // delete removed nodes
                     await this.deleteRemovedNodes()
 
@@ -472,7 +480,7 @@
                 }
             },
 
-            drawCanvasNode({ ctx, x, y, width, height, style, isEoa,  indicator }) {
+            drawCanvasNode({ ctx, x, y, width, height, style, isEoa, indicator }) {
                 const drawInternalNode = () => {
                     ctx.fillStyle = style.color
                     ctx.strokeStyle = style.borderColor
@@ -508,34 +516,63 @@
                 }
 
                 if (!isEoa) {
-                    drawInternalNode();
+                    drawInternalNode()
                 }
 
                 drawIndicator(indicator)
             },
 
-            animateInjectedTxns({ ctx, x, y, width, height }) {
-                // Makes the transactions start closer or farther
-                const startingMultiplier = 2
+            async animateTraffic() {
+                const animationDuration = 1000;
 
-                const drawTx = () => {
-                    // ctx.clearRect(startingX, startingY, 30, 30)
-                    ctx.fillStyle = 'red'
-                    ctx.strokeStyle = 'red'
+                const animateEdgesWithTraffic = () => {
+                    // All edges leading into nodes that have traffic
+                    const edgesWithTraffic = Object.values(G.nodes.active)
+                        .filter(({ txInjected }) => txInjected > 0)
+                        .map(({ nodeId }) => this.getVisEdgeId(`eoa-${nodeId}`, nodeId))
+                        .map((edgeId) => ({ edge: edgeId }))
 
-                    const startingX = x * startingMultiplier
-                    const startingY = y * startingMultiplier
-                    ctx.beginPath()
-                    ctx.arc(startingX, startingY, width / 4, 0, 2 * Math.PI)
-                    ctx.stroke()
-                    ctx.fill()
+                    G.network.animateTraffic({
+                        edgesTrafficList: edgesWithTraffic,
+                        animationDuration: animationDuration,
+                        trafficStyle: {
+                            strokeStyle: '#f837d8',
+                            fillStyle: '#a1208b',
+                        },
+                    })
                 }
 
-                // const animateTx = () => {
+                const animateEdgesWithGossip = () => {
+                    const edgesWithGossip = Object.values(G.nodes.active)
+                        .filter(({ txInjected }) => txInjected > 0)
+                        .map(({nodeId}) => this.edgesForNode(nodeId))
+                        .flat()
+                        .map((edge) => ({edge: edge.id}))
 
-                // }
+                    G.network.animateTraffic({
+                        edgesTrafficList: edgesWithGossip,
+                        animationDuration: animationDuration,
+                        trafficStyle: {
+                            strokeStyle: '#f8b437',
+                            fillStyle: '#f88737',
+                        },
+                    })
+                }
 
-                drawTx()
+                animateEdgesWithTraffic()
+
+                await new Promise((r) => setTimeout(r, animationDuration))
+
+                animateEdgesWithGossip()
+
+            },
+
+            edgesForNode(nodeId) {
+                const edges = G.visEdges.get({
+                    filter: (item) => item.from === nodeId,
+                })
+
+                return edges;
             },
 
             // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
@@ -580,12 +617,11 @@
                 const newNodes = Object.values(newNodesMap)
                 const newEdges = []
 
-                newNodes.forEach((node) => {
-                    // We are currently just drawing edges from nodes to the next MAX_EDGES_FOR_NODE nodes
-                    // A possible alternative is to draw to MAX_EDGES_FOR_NODE random nodes, but that is
-                    // more complex
+                newNodes.forEach((node, index) => {
+                    // This is not how things work IRL. For the simulation, each node is only connected to the next MAX_EDGES_FOR_NODE nodes.
+                    // We cap to MAX_EDGES_FOR_NODE because connecting every node will create numNodes! edges which may be too large
                     for (
-                        let nextNodeIndex = 1;
+                        let nextNodeIndex = index + 1;
                         nextNodeIndex <= G.MAX_EDGES_FOR_NODE;
                         nextNodeIndex++
                     ) {
@@ -624,8 +660,6 @@
                     newNodes.push(eoaNode)
                     newEdges.push(edge)
                 })
-
-                console.log('newNodes', newNodes);
 
                 G.visNodes = new vis.DataSet(newNodes)
                 G.visEdges = new vis.DataSet(newEdges)
@@ -670,14 +704,8 @@
                     )
                 })
 
-                // G.network.on('afterDrawing', (ctx) => {
-                //     G.network.animateTraffic([{ edge: newEdges[0].id, trafficSize: 3 }], {
-                //         strokeStyle: '#f8b437',
-                //         fillStyle: '#f88737',
-                //     })
-                // })
                 await this.drawArchiverNetwork()
-                setInterval(this.updateNodes, 10000)
+                setInterval(this.updateNodes, G.REFRESH_TIME)
             },
         },
     })
