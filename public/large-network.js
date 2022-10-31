@@ -472,8 +472,8 @@
                 }
             },
 
-            drawCanvasNode({ ctx, x, y, width, height, style, indicator }) {
-                const drawCircle = () => {
+            drawCanvasNode({ ctx, x, y, width, height, style, isEoa,  indicator }) {
+                const drawInternalNode = () => {
                     ctx.fillStyle = style.color
                     ctx.strokeStyle = style.borderColor
                     ctx.lineWidth = style.borderWidth
@@ -507,7 +507,10 @@
                     ctx.fill()
                 }
 
-                drawCircle()
+                if (!isEoa) {
+                    drawInternalNode();
+                }
+
                 drawIndicator(indicator)
             },
 
@@ -542,11 +545,11 @@
                 const currentNode = G.nodes.active[id]
                 const indicator =
                     currentNode != null ? currentNode.lastScalingTypeRequested : undefined
+                const isEoa = id.startsWith('eoa-')
 
                 return {
                     drawNode: () => {
-                        this.drawCanvasNode({ ctx, x, y, width, height, style, indicator })
-                        this.animateInjectedTxns({ ctx, x, y, width, height })
+                        this.drawCanvasNode({ ctx, x, y, width, height, style, isEoa, indicator })
                     },
                     nodeDimensions: { width, height },
                 }
@@ -578,7 +581,9 @@
                 const newEdges = []
 
                 newNodes.forEach((node) => {
-                    // TODO: Do we want to make this use random nodes? Possible but more difficult
+                    // We are currently just drawing edges from nodes to the next MAX_EDGES_FOR_NODE nodes
+                    // A possible alternative is to draw to MAX_EDGES_FOR_NODE random nodes, but that is
+                    // more complex
                     for (
                         let nextNodeIndex = 1;
                         nextNodeIndex <= G.MAX_EDGES_FOR_NODE;
@@ -602,9 +607,28 @@
                     }
                 })
 
+                // Create EOA nodes that send transactions to the network. Each node has 1 EOA
+                newNodes.forEach((node) => {
+                    // Distance from its node
+                    const distance = 2
+                    const eoaNode = {
+                        ...node,
+                        id: `eoa-${node.id}`,
+                        x: node.x * distance,
+                        y: node.y * distance,
+                        isEoa: true,
+                    }
+
+                    const edge = this.getNewVisEdge(eoaNode, node)
+
+                    newNodes.push(eoaNode)
+                    newEdges.push(edge)
+                })
+
+                console.log('newNodes', newNodes);
+
                 G.visNodes = new vis.DataSet(newNodes)
                 G.visEdges = new vis.DataSet(newEdges)
-                console.log('newEdges', newEdges[0])
 
                 this.updateNetworkStatus(res.data)
 
@@ -646,12 +670,12 @@
                     )
                 })
 
-                G.network.on('afterDrawing', (ctx) => {
-                    G.network.animateTraffic([{ edge: newEdges[0].id, trafficSize: 3 }], {
-                        strokeStyle: '#f8b437',
-                        fillStyle: '#f88737',
-                    })
-                })
+                // G.network.on('afterDrawing', (ctx) => {
+                //     G.network.animateTraffic([{ edge: newEdges[0].id, trafficSize: 3 }], {
+                //         strokeStyle: '#f8b437',
+                //         fillStyle: '#f88737',
+                //     })
+                // })
                 await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, 10000)
             },
