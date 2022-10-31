@@ -112,7 +112,7 @@
                 }
             },
             getNewVisEdge(node1, node2) {
-                const hashLength = 4;
+                const hashLength = 4
                 return {
                     id: `${node1.id.substring(0, hashLength)}->${node2.id.substring(
                         0,
@@ -120,6 +120,7 @@
                     )}`,
                     from: node1.id,
                     to: node2.id,
+                    hidden: true,
                 }
             },
             getNewArchiverVisNodes(archivers) {
@@ -515,7 +516,6 @@
                 const startingMultiplier = 2
 
                 const drawTx = () => {
-                    console.log('clearning')
                     // ctx.clearRect(startingX, startingY, 30, 30)
                     ctx.fillStyle = 'red'
                     ctx.strokeStyle = 'red'
@@ -584,7 +584,7 @@
                         nextNodeIndex <= G.MAX_EDGES_FOR_NODE;
                         nextNodeIndex++
                     ) {
-                        const safeNextNodeIndex = nextNodeIndex % newNodes.length;
+                        const safeNextNodeIndex = nextNodeIndex % newNodes.length
                         const destinationNode = newNodes[safeNextNodeIndex]
 
                         if (node.id === destinationNode.id) {
@@ -598,13 +598,13 @@
                             continue
                         }
 
-                        newEdges.push(edge);
+                        newEdges.push(edge)
                     }
                 })
 
                 G.visNodes = new vis.DataSet(newNodes)
                 G.visEdges = new vis.DataSet(newEdges)
-                console.log('newEdges', newEdges[0]);
+                console.log('newEdges', newEdges[0])
 
                 this.updateNetworkStatus(res.data)
 
@@ -647,9 +647,10 @@
                 })
 
                 G.network.on('afterDrawing', (ctx) => {
-                    G.network.animateTraffic([
-                        {edge: newEdges[0].id, trafficSize: 3}
-                    ]);
+                    G.network.animateTraffic([{ edge: newEdges[0].id, trafficSize: 3 }], {
+                        strokeStyle: '#f8b437',
+                        fillStyle: '#f88737',
+                    })
                 })
                 await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, 10000)
