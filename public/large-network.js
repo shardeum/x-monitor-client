@@ -526,11 +526,6 @@
                 const animationDuration = 1000
                 const activeNodes = Object.values(G.nodes.active)
 
-                console.log(
-                    'txInjected',
-                    activeNodes.map(({ txInjected }) => txInjected)
-                )
-
                 const animateEdgesWithTraffic = async () => {
                     // All edges leading into nodes that have traffic
                     const edgesWithTraffic = activeNodes
