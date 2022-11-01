@@ -44,6 +44,7 @@
                 colorMode: 'state',
                 shouldShowMaxTps: false,
                 shouldShowMaxLoad: false,
+                animateTransactions: true,
             }
         },
         async mounted() {
@@ -335,7 +336,9 @@
                     updatedNodes = Object.values(updatedNodesMap)
                     G.visNodes.update(updatedNodes)
 
-                    this.animateTraffic()
+                    if (this.animateTransactions) {
+                        this.animateTraffic()
+                    }
 
                     // delete removed nodes
                     await this.deleteRemovedNodes()
