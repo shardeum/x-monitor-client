@@ -81,15 +81,26 @@ const parseEdgeTraffic = (edgeTraffic, network) => {
     return {
         edge: edge,
         trafficSize: edgeTraffic.trafficSize || 3,
-        isBackward: edge && edgeTraffic.isBackward,
+        numTraffic: edgeTraffic.numTraffic || 5,
     }
 }
 
 const animate = (ctx, network, edgesTrafficList, trafficStyle, duration) => {
     let start
     const stopAt = 0.95 // Stop when the animation has been running for this much of the duration
-    const reportedErrors = {}; // Helps to avoid reporting the same error in multiple setTimeout events
+    const reportedErrors = {} // Helps to avoid reporting the same error in multiple setTimeout events
 
+    const drawTrafficOnEdge = (p, trafficSize) => {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, parseInt(trafficSize) || 1, 0, Math.PI * 2, false)
+        ctx.lineWidth = 1
+        ctx.strokeWidth = 4
+        ctx.strokeStyle = trafficStyle.strokeStyle ?? 'rgba(57,138,255,0.1)'
+        ctx.fillStyle = trafficStyle.fillStyle ?? '#1262e3'
+        ctx.fill()
+        ctx.stroke()
+        ctx.closePath()
+    }
 
     const animateFrame = (timestamp) => {
         if (start === undefined) {
@@ -98,12 +109,14 @@ const animate = (ctx, network, edgesTrafficList, trafficStyle, duration) => {
 
         clearAnimationCanvas(ctx)
 
-        const offset = (timestamp - start) / duration;
+        const offset = (timestamp - start) / duration
         if (offset > stopAt) {
             return
         }
 
-        const parsedEdgeTrafficList = edgesTrafficList.map((edgeTraffic) =>  parseEdgeTraffic(edgeTraffic, network))
+        const parsedEdgeTrafficList = edgesTrafficList.map((edgeTraffic) =>
+            parseEdgeTraffic(edgeTraffic, network)
+        )
 
         for (const edgeTraffic of parsedEdgeTrafficList) {
             if (!edgeTraffic.edge) {
@@ -114,23 +127,23 @@ const animate = (ctx, network, edgesTrafficList, trafficStyle, duration) => {
                 continue
             }
 
-            var p = edgeTraffic.edge.edgeType.getPoint(
-                edgeTraffic.isBackward ? stopAt - offset : offset
-            )
+            const numTraffic = edgeTraffic.numTraffic
 
-            ctx.beginPath()
-            ctx.arc(p.x, p.y, parseInt(edgeTraffic.trafficSize) || 1, 0, Math.PI * 2, false)
-            ctx.lineWidth = 1
-            ctx.strokeWidth = 4
-            ctx.strokeStyle = trafficStyle.strokeStyle ?? 'rgba(57,138,255,0.1)'
-            ctx.fillStyle = trafficStyle.fillStyle ?? '#1262e3'
-            ctx.fill()
-            ctx.stroke()
-            ctx.closePath()
+            // Cascade the traffic so it looks like a stream
+            for (let trafficIndex = 0; trafficIndex < numTraffic; trafficIndex++) {
+                const location = Math.min(
+                    Math.max(offset - trafficIndex / (numTraffic + 1), 0) * numTraffic,
+                    stopAt
+                )
+                if (location === 0 || location === stopAt) continue
+
+                var p = edgeTraffic.edge.edgeType.getPoint(location)
+                drawTrafficOnEdge(p, edgeTraffic.trafficSize)
+            }
         }
 
-        requestAnimationFrame(animateFrame);
+        requestAnimationFrame(animateFrame)
     }
 
-    requestAnimationFrame(animateFrame);
+    requestAnimationFrame(animateFrame)
 }
