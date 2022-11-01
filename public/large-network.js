@@ -523,14 +523,22 @@
             },
 
             async animateTraffic() {
-                const animationDuration = 1000;
+                const animationDuration = 1000
+                const activeNodes = Object.values(G.nodes.active)
 
-                const animateEdgesWithTraffic = () => {
+                console.log(
+                    'txInjected',
+                    activeNodes.map(({ txInjected }) => txInjected)
+                )
+
+                const animateEdgesWithTraffic = async () => {
                     // All edges leading into nodes that have traffic
-                    const edgesWithTraffic = Object.values(G.nodes.active)
+                    const edgesWithTraffic = activeNodes
                         .filter(({ txInjected }) => txInjected > 0)
-                        .map(({ nodeId }) => this.getVisEdgeId(`eoa-${nodeId}`, nodeId))
-                        .map((edgeId) => ({ edge: edgeId }))
+                        .map(({ nodeId, txInjected }) => ({
+                            edge: this.getVisEdgeId(`eoa-${nodeId}`, nodeId),
+                            numTraffic: txInjected,
+                        }))
 
                     G.network.animateTraffic({
                         edgesTrafficList: edgesWithTraffic,
@@ -540,14 +548,16 @@
                             fillStyle: '#a1208b',
                         },
                     })
+
+                    return new Promise((r) => setTimeout(r, animationDuration))
                 }
 
                 const animateEdgesWithGossip = () => {
-                    const edgesWithGossip = Object.values(G.nodes.active)
+                    const edgesWithGossip = activeNodes
                         .filter(({ txInjected }) => txInjected > 0)
-                        .map(({nodeId}) => this.edgesForNode(nodeId))
+                        .map(({ nodeId }) => this.edgesForNode(nodeId))
                         .flat()
-                        .map((edge) => ({edge: edge.id}))
+                        .map((edge) => ({ edge: edge.id, numTraffic: 1 }))
 
                     G.network.animateTraffic({
                         edgesTrafficList: edgesWithGossip,
@@ -559,12 +569,9 @@
                     })
                 }
 
-                animateEdgesWithTraffic()
-
-                await new Promise((r) => setTimeout(r, animationDuration))
+                await animateEdgesWithTraffic()
 
                 animateEdgesWithGossip()
-
             },
 
             edgesForNode(nodeId) {
@@ -572,7 +579,7 @@
                     filter: (item) => item.from === nodeId,
                 })
 
-                return edges;
+                return edges
             },
 
             // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
