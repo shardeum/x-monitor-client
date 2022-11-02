@@ -8,7 +8,7 @@
     G.R = 100
     G.X = 0
     G.Y = 0
-    G.MAX_EDGES_FOR_NODE = 4
+    G.MAX_EDGES_FOR_NODE = 10
     G.REFRESH_TIME = 10000
     G.maxId = parseInt('ffff', 16)
     G.lastUpdatedTimestamp = 0
@@ -529,6 +529,7 @@
             animateTraffic() {
                 const activeNodes = Object.values(G.nodes.active)
                 const gossipDelay = 0.8 // Delay before gossip animation starts
+                const animationDuration = G.REFRESH_TIME * 0.8 // Need some buffer
 
                 // All edges leading into nodes that have traffic
                 const edgesWithTraffic = activeNodes
@@ -553,12 +554,12 @@
                             strokeStyle: '#f8b437',
                             fillStyle: '#f88737',
                         },
-                        delay: gossipDelay * G.REFRESH_TIME,
+                        delay: gossipDelay * animationDuration,
                     }))
 
                 G.network.animateTraffic({
                     edgesTrafficList: [...edgesWithTraffic, ...edgesWithGossip],
-                    animationDuration: G.REFRESH_TIME,
+                    animationDuration: animationDuration,
                 })
             },
 
@@ -572,7 +573,7 @@
 
             // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
             visContextRenderer({ ctx, id, x, y, style }) {
-                const width = 12
+                const width = 6
                 const height = width
                 const currentNode = G.nodes.active[id]
                 const indicator =

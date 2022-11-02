@@ -76,7 +76,7 @@ const parseEdgeTraffic = (edgeTraffic, network) => {
 
     return {
         edge: edge,
-        trafficSize: edgeTraffic.trafficSize || 3,
+        trafficSize: edgeTraffic.trafficSize || 2,
         numTraffic: edgeTraffic.numTraffic || 5,
         trafficStyle: edgeTraffic.trafficStyle || {},
         delay: edgeTraffic.delay || 0,
