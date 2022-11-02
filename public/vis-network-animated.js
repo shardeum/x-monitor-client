@@ -7,11 +7,7 @@
  *
  * @param {*} edgesTrafficList
  */
-vis.Network.prototype.animateTraffic = function ({
-    edgesTrafficList,
-    animationDuration = 1500,
-    trafficStyle = {},
-}) {
+vis.Network.prototype.animateTraffic = function ({ edgesTrafficList, animationDuration = 1500 }) {
     const network = this // The current Network instance
     const trafficCanvas = getNetworkTrafficCanvas(network)
 
@@ -24,7 +20,7 @@ vis.Network.prototype.animateTraffic = function ({
     ctx.translate(t.x, t.y)
     ctx.scale(s, s)
 
-    animate(ctx, network, edgesTrafficList, trafficStyle, animationDuration)
+    animate(ctx, network, edgesTrafficList, animationDuration)
 }
 
 /**
@@ -82,15 +78,17 @@ const parseEdgeTraffic = (edgeTraffic, network) => {
         edge: edge,
         trafficSize: edgeTraffic.trafficSize || 3,
         numTraffic: edgeTraffic.numTraffic || 5,
+        trafficStyle: edgeTraffic.trafficStyle || {},
+        delay: edgeTraffic.delay || 0,
     }
 }
 
-const animate = (ctx, network, edgesTrafficList, trafficStyle, duration) => {
+const animate = (ctx, network, edgesTrafficList, duration) => {
     let start
-    const stopAt = 0.95 // Stop when the animation has been running for this much of the duration
+    const stopAt = 1 // Stop when the animation has been running for this much of the duration
     const reportedErrors = {} // Helps to avoid reporting the same error in multiple setTimeout events
 
-    const drawTrafficOnEdge = (p, trafficSize) => {
+    const drawTrafficOnEdge = (p, { trafficSize, trafficStyle }) => {
         ctx.beginPath()
         ctx.arc(p.x, p.y, parseInt(trafficSize) || 1, 0, Math.PI * 2, false)
         ctx.lineWidth = 1
@@ -120,25 +118,42 @@ const animate = (ctx, network, edgesTrafficList, trafficStyle, duration) => {
 
         for (const edgeTraffic of parsedEdgeTrafficList) {
             if (!edgeTraffic.edge) {
-                if (!reportedErrors[edgesTrafficList[i]]) {
-                    console.error('No edge path defined: ', edgesTrafficList[i])
-                    reportedErrors[edgesTrafficList[i]] = true
+                if (!reportedErrors[edgeTraffic]) {
+                    console.error('No edge path defined: ', edgeTraffic)
+                    reportedErrors[edgeTraffic] = true
                 }
                 continue
             }
 
+            // We delay the animations on some edges
+            let delayedOffset
+            if (edgeTraffic.delay > 0) {
+                if (timestamp - start < edgeTraffic.delay) {
+                    continue
+                }
+
+                delayedOffset =
+                    (timestamp - start - edgeTraffic.delay) / (duration - edgeTraffic.delay)
+            }
+
+            const animationOffset = delayedOffset === undefined ? offset : delayedOffset
             const numTraffic = edgeTraffic.numTraffic
 
-            // Cascade the traffic so it looks like a stream
+            // Draw multiple dots so it looks like a stream
             for (let trafficIndex = 0; trafficIndex < numTraffic; trafficIndex++) {
+                const numVisible = 3 // This is the number of traffic visible at a time
                 const location = Math.min(
-                    Math.max(offset - trafficIndex / (numTraffic + 1), 0) * numTraffic,
+                    Math.max(
+                        (animationOffset * (numTraffic + numVisible - 1)) / numVisible -
+                            trafficIndex / numVisible,
+                        0
+                    ),
                     stopAt
                 )
                 if (location === 0 || location === stopAt) continue
 
                 var p = edgeTraffic.edge.edgeType.getPoint(location)
-                drawTrafficOnEdge(p, edgeTraffic.trafficSize)
+                drawTrafficOnEdge(p, edgeTraffic)
             }
         }
 

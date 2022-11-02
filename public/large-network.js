@@ -526,51 +526,40 @@
                 drawIndicator(indicator)
             },
 
-            async animateTraffic() {
-                const animationDuration = 1000
+            animateTraffic() {
                 const activeNodes = Object.values(G.nodes.active)
+                const gossipDelay = 0.8 // Delay before gossip animation starts
 
-                const animateEdgesWithTraffic = async () => {
-                    // All edges leading into nodes that have traffic
-                    const edgesWithTraffic = activeNodes
-                        .filter(({ txInjected }) => txInjected > 0)
-                        .map(({ nodeId, txInjected }) => ({
-                            edge: this.getVisEdgeId(`eoa-${nodeId}`, nodeId),
-                            numTraffic: txInjected,
-                        }))
-
-                    G.network.animateTraffic({
-                        edgesTrafficList: edgesWithTraffic,
-                        animationDuration: animationDuration,
+                // All edges leading into nodes that have traffic
+                const edgesWithTraffic = activeNodes
+                    .filter(({ txInjected }) => txInjected > 0)
+                    .map(({ nodeId, txInjected }) => ({
+                        edge: this.getVisEdgeId(`eoa-${nodeId}`, nodeId),
+                        numTraffic: txInjected,
                         trafficStyle: {
                             strokeStyle: '#f837d8',
                             fillStyle: '#a1208b',
                         },
-                    })
+                    }))
 
-                    return new Promise((r) => setTimeout(r, animationDuration))
-                }
-
-                const animateEdgesWithGossip = () => {
-                    const edgesWithGossip = activeNodes
-                        .filter(({ txInjected }) => txInjected > 0)
-                        .map(({ nodeId }) => this.edgesForNode(nodeId))
-                        .flat()
-                        .map((edge) => ({ edge: edge.id, numTraffic: 1 }))
-
-                    G.network.animateTraffic({
-                        edgesTrafficList: edgesWithGossip,
-                        animationDuration: animationDuration,
+                const edgesWithGossip = activeNodes
+                    .filter(({ txInjected }) => txInjected > 0)
+                    .map(({ nodeId }) => this.edgesForNode(nodeId))
+                    .flat()
+                    .map((edge) => ({
+                        edge: edge.id,
+                        numTraffic: 1,
                         trafficStyle: {
                             strokeStyle: '#f8b437',
                             fillStyle: '#f88737',
                         },
-                    })
-                }
+                        delay: gossipDelay * G.REFRESH_TIME,
+                    }))
 
-                await animateEdgesWithTraffic()
-
-                animateEdgesWithGossip()
+                G.network.animateTraffic({
+                    edgesTrafficList: [...edgesWithTraffic, ...edgesWithGossip],
+                    animationDuration: G.REFRESH_TIME,
+                })
             },
 
             edgesForNode(nodeId) {
@@ -583,7 +572,7 @@
 
             // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
             visContextRenderer({ ctx, id, x, y, style }) {
-                const width = 20
+                const width = 12
                 const height = width
                 const currentNode = G.nodes.active[id]
                 const indicator =
