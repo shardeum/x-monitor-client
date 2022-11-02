@@ -118,6 +118,7 @@
                     id: this.getVisEdgeId(node1.id, node2.id),
                     from: node1.id,
                     to: node2.id,
+                    physics: false,
                     hidden: true,
                 }
             },
