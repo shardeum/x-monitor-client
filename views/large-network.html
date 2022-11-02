@@ -7,7 +7,6 @@
             src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
             type="text/javascript"
         ></script>
-        <script src="vis-network-animated.js" type="text/javascript"></script>
         <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
 
         <style>
@@ -141,10 +140,6 @@
                 <div
                     class="col-span-9 px-3 mb-6 md:mb-0 align-middle flex flex-row items-end justify-end space-x-6"
                 >
-                    <div>
-                        <input type="checkbox" id="checkbox" v-model="animateTransactions" />
-                        <label class="text-sm" for="checkbox">Animate transactions</label>
-                    </div>
                     <a href="/chart" target="_blank" class="text-sm text-blue-400">Charts</a>
                     <a href="/sync" target="_blank" class="text-sm text-blue-400">Sync History</a>
                     <a href="/history" target="_blank" class="text-sm text-blue-400"

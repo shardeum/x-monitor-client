@@ -232,7 +232,7 @@ const NetworkMonitor = function (config) {
                         nodeId: nodeId,
                     })
                     delete G.joining[publicKey]
-                    updateUI('joining', 'syncing', nodeId)
+                    updateUI('joining', 'syncing', publicKey, nodeId)
                     G.syncing[nodeId].tooltipInstance = null
                     G.syncing[nodeId].circle.removeAllEventListeners('mouseover')
                     G.syncing[nodeId].circle.removeAllEventListeners('mouseout')
@@ -301,7 +301,7 @@ const NetworkMonitor = function (config) {
                     } catch (e) {
                         console.log(e)
                     }
-                    updateUI('syncing', 'active', nodeId)
+                    updateUI('syncing', 'active', null, nodeId)
                     G.active[nodeId].tooltipInstance = null
                     G.active[nodeId].circle.removeAllEventListeners('mouseover')
                     G.active[nodeId].circle.removeAllEventListeners('mouseout')
@@ -527,7 +527,7 @@ const NetworkMonitor = function (config) {
             const injectInterval = setInterval(() => {
                 const newTx = createNewTx()
                 let injectedTx = createNewTxCircle(newTx, node)
-
+                const travelDistance = distanceBtnTwoNodes(injectedTx, node, false)
                 transformCircle(
                     injectedTx.circle,
                     node.currentPosition.x,
@@ -535,18 +535,19 @@ const NetworkMonitor = function (config) {
                     null,
                     G.txAnimationSpeed
                 )
-
                 setTimeout(() => {
                     injectedTx.currentPosition = node.currentPosition
                     const randomNodes = getRandomActiveNodes(G.nodeToForward, node)
                     for (let i = 0; i < randomNodes.length; i += 1) {
                         const clonedTx = G.generatedTxArray[nodeId][i]
+                        // clonedTx.circle.currentPosition = node.currentPosition
+                        // clonedTx.currentPosition = node.currentPosition
                         clonedTx.data = injectedTx.data
                         forwardInjectedTx(clonedTx, randomNodes[i], node)
                     }
-
                     injectedTx.circle.graphics.clear()
                     stage.removeChild(injectedTx.circle)
+                    //stage.update()
                     injectedTx = null
                 }, G.txAnimationSpeed)
                 animatedInjection += 1
@@ -556,7 +557,7 @@ const NetworkMonitor = function (config) {
         return injected
     }
 
-    const updateUI = function (previousStatus, currentStatus, nodeId) {
+    const updateUI = function (previousStatus, currentStatus, publicKey, nodeId) {
         if (previousStatus === 'joining' && currentStatus === 'syncing') {
             relocateIntoNetwork(previousStatus, G.syncing[nodeId])
         } else if (previousStatus === 'syncing' && currentStatus === 'active') {
@@ -566,6 +567,10 @@ const NetworkMonitor = function (config) {
             node.nodeListCycle = drawNodeListBox(node)
             node.circle.myFill.style = G.colors.active
         }
+    }
+
+    const updateUI_old = function (previousStatus, currentStatus, publicKey, nodeId) {
+        return
     }
 
     const updateTables = function () {
@@ -1293,14 +1298,14 @@ const NetworkMonitor = function (config) {
     const drawCircle = function (position, radius, fill, stroke, id, alpha) {
         var circle = new createjs.Shape()
         var myFill = circle.graphics.beginFill(fill).command
+        // circle.graphics.beginFill(fill).drawCircle(position.x, position.y, radius);
         circle.graphics.drawCircle(position.x, position.y, radius)
-
         if (alpha) circle.alpha = alpha
         circle.myFill = myFill
         circle.name = generateHash(4)
         stage.addChild(circle)
         circle.currentPosition = position
-
+        //stage.update()
         return circle
     }
 
@@ -1400,7 +1405,17 @@ const NetworkMonitor = function (config) {
             duration,
             createjs.Ease.linear
         )
+        //createjs.Ticker.framerate = 30
         createjs.Ticker.addEventListener('tick', stage)
+        // createjs.Ticker.addEventListener("tick", tick);
+    }
+
+    function tick() {
+        let frameInterval = 100
+        if (!lastTickTimestamp || Date.now() - lastTickTimestamp > frameInterval) {
+            stage.update()
+            lastTickTimestamp = Date.now()
+        }
     }
 
     function changeCircleColor(circle, fill, duration) {
@@ -1409,6 +1424,8 @@ const NetworkMonitor = function (config) {
                 circle.myFill.style = fill
             }, duration / 2)
         }
+        //createjs.Ticker.framerate = 30
+        //createjs.Ticker.addEventListener('tick', stage)
     }
 
     function animateFadeIn(circle, duration, wait) {
@@ -1423,6 +1440,8 @@ const NetworkMonitor = function (config) {
                 duration,
                 createjs.Ease.linear
             )
+        //createjs.Ticker.framerate = 30
+        //createjs.Ticker.addEventListener('tick', stage)
     }
 
     function growAndShrink(rec, position) {
@@ -1454,6 +1473,9 @@ const NetworkMonitor = function (config) {
                 duration,
                 createjs.Ease.linear
             )
+
+        //createjs.Ticker.framerate = 30
+        //createjs.Ticker.addEventListener('tick', stage)
     }
 
     const distanceBtnTwoNodes = function (node1, node2, substract) {
@@ -1474,6 +1496,17 @@ const NetworkMonitor = function (config) {
             return {
                 x: xDiff - xFactor * Math.sqrt(x * x),
                 y: yDiff - yFactor * Math.sqrt(y * y),
+            }
+        }
+        return {
+            x: xDiff,
+            y: yDiff,
+        }
+
+        if (substract) {
+            return {
+                x: node2.currentPosition.x - xFactor * Math.sqrt(x * x),
+                y: node2.currentPosition.y - yFactor * Math.sqrt(y * y),
             }
         }
         return {
@@ -1514,10 +1547,12 @@ const NetworkMonitor = function (config) {
 
     const hideClonedTxs = function () {
         if (clonedTxCircles.length === 0) {
+            // console.log(`No cloned txs to hide`)
             if (hideCloneTxsTimeout) clearTimeout(hideCloneTxsTimeout)
             hideCloneTxsTimeout = null
             return
         }
+        // console.log(`Hiding ${clonedTxCircles.length} cloned txs...`)
         for (let circle of clonedTxCircles) {
             circle.visible = false
         }
@@ -1907,6 +1942,7 @@ const NetworkMonitor = function (config) {
                 recList.forEach((rec) => {
                     rec.graphics.clear()
                 })
+                //stage.update()
                 delete G.partitionGraphic[cycleCounter]
             }
         } catch (e) {
@@ -1935,6 +1971,7 @@ const NetworkMonitor = function (config) {
     }
 
     const drawCycleCounterButton = function (cycleCounter) {
+        // console.log(`Drawing cycle counter for`, cycleCounter)
         if (!cycleCounter) return
         let container = document.querySelector('#cycle-counter-container')
         console.log(container)
@@ -2032,6 +2069,36 @@ const NetworkMonitor = function (config) {
             )
         })
         return sortedNodes[0]
+    }
+
+    const getJoiningPosition = function () {
+        let selectedDistance = 0
+        let selectedPosition
+        const minimumDistance = 2.5 * G.nodeRadius
+        if (Object.keys(G.joining).length === 0) return getRandomPosition()
+
+        while (selectedDistance < minimumDistance) {
+            const randomPositions = []
+            const nearestNodes = []
+            const distanceFromNearestNode = []
+            for (let i = 0; i < 3; i += 1) randomPositions.push(getRandomPosition())
+            for (let i = 0; i < 3; i += 1) {
+                nearestNodes.push(getNearestNodeFromPoint(randomPositions[i]))
+            }
+            for (let i = 0; i < 3; i += 1) {
+                distanceFromNearestNode.push({
+                    distance: distanceBtnTwoPoints(
+                        randomPositions[i],
+                        nearestNodes[i].currentPosition
+                    ),
+                    position: randomPositions[i],
+                })
+            }
+            const sorted = distanceFromNearestNode.sort((d1, d2) => d2.distance - d1.distance)
+            selectedDistance = sorted[0].distance
+            selectedPosition = sorted[0].position
+        }
+        return selectedPosition
     }
 
     const getJoiningNodePosition = function (publicKey) {
