@@ -337,10 +337,6 @@
                     updatedNodes = Object.values(updatedNodesMap)
                     G.visNodes.update(updatedNodes)
 
-                    if (this.animateTransactions) {
-                        this.animateTraffic()
-                    }
-
                     // delete removed nodes
                     await this.deleteRemovedNodes()
 
@@ -527,40 +523,61 @@
             },
 
             animateTraffic() {
-                const activeNodes = Object.values(G.nodes.active)
-                const gossipDelay = 0.8 // Delay before gossip animation starts
-                const animationDuration = G.REFRESH_TIME * 0.8 // Need some buffer
+                const memoizedEdges = {}
 
-                // All edges leading into nodes that have traffic
-                const edgesWithTraffic = activeNodes
-                    .filter(({ txInjected }) => txInjected > 0)
-                    .map(({ nodeId, txInjected }) => ({
-                        edge: this.getVisEdgeId(`eoa-${nodeId}`, nodeId),
-                        numTraffic: txInjected,
-                        trafficStyle: {
-                            strokeStyle: '#f837d8',
-                            fillStyle: '#a1208b',
-                        },
-                    }))
+                const animateInterval = () => {
+                    const activeNodes = Object.values(G.nodes.active)
+                    const gossipDelay = 0.8 // Delay before gossip animation starts
+                    const animationDuration = G.REFRESH_TIME * 0.8 // Need some buffer
 
-                const edgesWithGossip = activeNodes
-                    .filter(({ txInjected }) => txInjected > 0)
-                    .map(({ nodeId }) => this.edgesForNode(nodeId))
-                    .flat()
-                    .map((edge) => ({
-                        edge: edge.id,
-                        numTraffic: 1,
-                        trafficStyle: {
-                            strokeStyle: '#f8b437',
-                            fillStyle: '#f88737',
-                        },
-                        delay: gossipDelay * animationDuration,
-                    }))
+                    // All edges leading into nodes that have traffic
+                    const edgesWithTraffic = activeNodes
+                        .filter(({ txInjected }) => txInjected > 0)
+                        .map(({ nodeId, txInjected }) => ({
+                            edge: this.getVisEdgeId(`eoa-${nodeId}`, nodeId),
+                            numTraffic: txInjected / 2,
+                            trafficStyle: {
+                                strokeStyle: '#f837d8',
+                                fillStyle: '#a1208b',
+                            },
+                        }))
 
-                G.network.animateTraffic({
-                    edgesTrafficList: [...edgesWithTraffic, ...edgesWithGossip],
-                    animationDuration: animationDuration,
-                })
+                    const edgesWithGossip = activeNodes
+                        .filter(({ txInjected }) => txInjected > 0)
+                        .map(({ nodeId }) => {
+                            // Using performance tools, edgesForNode is relatively expensive
+                            if (memoizedEdges[nodeId]) {
+                                return memoizedEdges[nodeId]
+                            }
+                            return this.edgesForNode(nodeId)
+                        })
+                        .flat()
+                        .map((edge) => ({
+                            edge: edge.id,
+                            numTraffic: 1,
+                            trafficStyle: {
+                                strokeStyle: '#f8b437',
+                                fillStyle: '#f88737',
+                            },
+                            delay: gossipDelay * animationDuration,
+                        }))
+
+                    if (this.animateTransactions) {
+                        G.network.animateTraffic({
+                            edgesTrafficList: [...edgesWithTraffic, ...edgesWithGossip],
+                            animationDuration: animationDuration,
+                        })
+                    }
+                }
+
+                // Animate twice on two canvases so animations aren't janky
+                animateInterval()
+                setInterval(animateInterval, G.REFRESH_TIME)
+
+                setTimeout(() => {
+                    animateInterval()
+                    setInterval(animateInterval, G.REFRESH_TIME)
+                }, G.REFRESH_TIME * 0.5)
             },
 
             edgesForNode(nodeId) {
@@ -702,6 +719,7 @@
 
                 await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, G.REFRESH_TIME)
+                this.animateTraffic()
             },
         },
     })

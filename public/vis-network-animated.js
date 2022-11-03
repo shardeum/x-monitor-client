@@ -28,8 +28,11 @@ vis.Network.prototype.animateTraffic = function ({ edgesTrafficList, animationDu
  * @param {*} network
  * @returns
  */
+let currentCanvas = 0
 const getNetworkTrafficCanvas = (network) => {
-    let trafficCanvas = network.body.container.getElementsByClassName('networkTrafficCanvas')[0]
+    let trafficCanvas =
+        network.body.container.getElementsByClassName('networkTrafficCanvas')[currentCanvas]
+    currentCanvas = currentCanvas + (1 % 2)
 
     if (trafficCanvas === undefined) {
         var frame = network.canvas.frame
@@ -141,7 +144,7 @@ const animate = (ctx, network, edgesTrafficList, duration) => {
 
             // Draw multiple dots so it looks like a stream
             for (let trafficIndex = 0; trafficIndex < numTraffic; trafficIndex++) {
-                const numVisible = 3 // This is the number of traffic visible at a time
+                const numVisible = 2 // This is the number of traffic visible at a time
                 const location = Math.min(
                     Math.max(
                         (animationOffset * (numTraffic + numVisible - 1)) / numVisible -
