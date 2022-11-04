@@ -8,7 +8,7 @@
     G.R = 100
     G.X = 0
     G.Y = 0
-    G.MAX_EDGES_FOR_NODE = 10
+    G.MAX_EDGES_FOR_NODE = 1
     G.REFRESH_TIME = 10000
     G.maxId = parseInt('ffff', 16)
     G.lastUpdatedTimestamp = 0
@@ -528,7 +528,7 @@
                 const animateInterval = () => {
                     const activeNodes = Object.values(G.nodes.active)
                     const gossipDelay = 0.8 // Delay before gossip animation starts
-                    const animationDuration = G.REFRESH_TIME * 0.8 // Need some buffer
+                    const animationDuration = G.REFRESH_TIME
 
                     // All edges leading into nodes that have traffic
                     const edgesWithTraffic = activeNodes
@@ -570,7 +570,7 @@
                     }
                 }
 
-                // Animate twice on two canvases so animations aren't janky
+                // Animate twice on two canvases so that when one is ending, the next is starting
                 animateInterval()
                 setInterval(animateInterval, G.REFRESH_TIME)
 
@@ -630,16 +630,15 @@
                 const newNodes = Object.values(newNodesMap)
                 const newEdges = []
 
-                newNodes.forEach((node, index) => {
-                    // This is not how things work IRL. For the simulation, each node is only connected to the next MAX_EDGES_FOR_NODE nodes.
-                    // We cap to MAX_EDGES_FOR_NODE because connecting every node will create numNodes! edges which may be too large
-                    for (
-                        let nextNodeIndex = index + 1;
-                        nextNodeIndex <= G.MAX_EDGES_FOR_NODE;
-                        nextNodeIndex++
-                    ) {
-                        const safeNextNodeIndex = nextNodeIndex % newNodes.length
-                        const destinationNode = newNodes[safeNextNodeIndex]
+                newNodes.forEach((node, nodeIndex) => {
+                    for (let i = 0; i < G.MAX_EDGES_FOR_NODE; i++) {
+                        // Arbitrary amount to cap amount of gossip
+                        if (nodeIndex > 50) {
+                            continue
+                        }
+
+                        const destinationNodeIndex = Math.floor(Math.random() * newNodes.length)
+                        const destinationNode = newNodes[destinationNodeIndex]
 
                         if (node.id === destinationNode.id) {
                             continue
@@ -702,6 +701,9 @@
                     interaction: {
                         zoomSpeed: 0.1,
                         zoomView: true,
+                    },
+                    physics: {
+                        enabled: false,
                     },
                 }
 
