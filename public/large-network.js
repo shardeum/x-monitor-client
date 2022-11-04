@@ -250,6 +250,12 @@
                     if (removedNodeIds.length === 0) return
                     console.log('removed ids', removedNodeIds)
                     G.visNodes.remove(removedNodeIds)
+
+                    // Clean up EOAs and edges as well
+                    G.visNodes.remove(removedNodeIds.map((id) => `eoa-${id}`))
+                    G.visEdges.remove(
+                        removedNodeIds.map((id) => this.getVisEdgeId(`eoa-${id}`, id))
+                    )
                 } catch (e) {
                     console.log('Error while trying to remove nodes', e)
                 }
