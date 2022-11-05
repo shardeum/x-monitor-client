@@ -78,6 +78,7 @@ const parseEdgeTraffic = (edgeTraffic, network) => {
         : network.body.edges[edgeTraffic.edge.id] || network.body.edges[edgeTraffic.edge]
 
     return {
+        delayArray:edgeTraffic.delayArray,
         edge: edge,
         trafficSize: edgeTraffic.trafficSize || 2,
         numTraffic: edgeTraffic.numTraffic || 5,
@@ -114,6 +115,7 @@ const animate = (ctx, network, edgesTrafficList, duration) => {
         if (offset > stopAt) {
             return
         }
+        const offsetInMS = (timestamp - start)
 
         const parsedEdgeTrafficList = edgesTrafficList.map((edgeTraffic) =>
             parseEdgeTraffic(edgeTraffic, network)
@@ -128,31 +130,23 @@ const animate = (ctx, network, edgesTrafficList, duration) => {
                 continue
             }
 
-            // We delay the animations on some edges
-            let delayedOffset
-            if (edgeTraffic.delay > 0) {
-                if (timestamp - start < edgeTraffic.delay) {
-                    continue
-                }
-
-                delayedOffset =
-                    (timestamp - start - edgeTraffic.delay) / (duration - edgeTraffic.delay)
-            }
-
-            const animationOffset = delayedOffset === undefined ? offset : delayedOffset
             const numTraffic = edgeTraffic.numTraffic
 
             // Draw multiple dots so it looks like a stream
             for (let trafficIndex = 0; trafficIndex < numTraffic; trafficIndex++) {
-                const numVisible = 2 // This is the number of traffic visible at a time
-                const location = Math.min(
-                    Math.max(
-                        (animationOffset * (numTraffic + numVisible - 1)) / numVisible -
-                            trafficIndex / numVisible,
-                        0
-                    ),
-                    stopAt
-                )
+
+                //let delay = edgeTraffic.delay * ((trafficIndex+1) / numTraffic)
+                let delay = edgeTraffic.delayArray[trafficIndex]
+
+                let location
+                if(offsetInMS < delay){
+                    location = 0
+                } else if(offsetInMS > delay + 500){
+                    location = stopAt
+                } else {
+                    location = (offsetInMS - delay) / 500
+                }
+
                 if (location === 0 || location === stopAt) continue
 
                 var p = edgeTraffic.edge.edgeType.getPoint(location)
