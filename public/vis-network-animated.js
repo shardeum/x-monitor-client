@@ -32,7 +32,7 @@ let currentCanvas = 0
 const getNetworkTrafficCanvas = (network) => {
     let trafficCanvas =
         network.body.container.getElementsByClassName('networkTrafficCanvas')[currentCanvas]
-    currentCanvas = currentCanvas + (1 % 2)
+    currentCanvas = (currentCanvas + 1) % 2
 
     if (trafficCanvas === undefined) {
         var frame = network.canvas.frame
@@ -78,7 +78,7 @@ const parseEdgeTraffic = (edgeTraffic, network) => {
         : network.body.edges[edgeTraffic.edge.id] || network.body.edges[edgeTraffic.edge]
 
     return {
-        delayArray:edgeTraffic.delayArray,
+        delayArray: edgeTraffic.delayArray,
         edge: edge,
         trafficSize: edgeTraffic.trafficSize || 2,
         numTraffic: edgeTraffic.numTraffic || 5,
@@ -115,7 +115,7 @@ const animate = (ctx, network, edgesTrafficList, duration) => {
         if (offset > stopAt) {
             return
         }
-        const offsetInMS = (timestamp - start)
+        const offsetInMS = timestamp - start
 
         const parsedEdgeTrafficList = edgesTrafficList.map((edgeTraffic) =>
             parseEdgeTraffic(edgeTraffic, network)
@@ -134,14 +134,13 @@ const animate = (ctx, network, edgesTrafficList, duration) => {
 
             // Draw multiple dots so it looks like a stream
             for (let trafficIndex = 0; trafficIndex < numTraffic; trafficIndex++) {
-
                 //let delay = edgeTraffic.delay * ((trafficIndex+1) / numTraffic)
                 let delay = edgeTraffic.delayArray[trafficIndex]
 
                 let location
-                if(offsetInMS < delay){
+                if (offsetInMS < delay) {
                     location = 0
-                } else if(offsetInMS > delay + 500){
+                } else if (offsetInMS > delay + 500) {
                     location = stopAt
                 } else {
                     location = (offsetInMS - delay) / 500

@@ -533,14 +533,16 @@
 
                 const animateInterval = () => {
                     const activeNodes = Object.values(G.nodes.active)
-                    const gossipDelay = 0.8 // Delay before gossip animation starts
                     const animationDuration = G.REFRESH_TIME + 1000
 
                     // All edges leading into nodes that have traffic
                     const edgesWithTraffic = activeNodes
                         .filter(({ txInjected }) => txInjected > 0)
                         .map(({ nodeId, txInjected }) => ({
-                            delayArray: Array.from({length: txInjected / 2}, () => Math.random() * 5000),
+                            delayArray: Array.from(
+                                { length: txInjected / 2 },
+                                () => Math.random() * 5000
+                            ),
                             delay: Math.random() * 4500,
                             edge: this.getVisEdgeId(`eoa-${nodeId}`, nodeId),
                             numTraffic: txInjected / 2,
@@ -554,10 +556,10 @@
                         .filter(({ txInjected }) => txInjected > 0)
                         .map(({ nodeId }) => {
                             // Using performance tools, edgesForNode is relatively expensive
-                            if (memoizedEdges[nodeId]) {
-                                return memoizedEdges[nodeId]
+                            if (memoizedEdges[nodeId] === undefined) {
+                                memoizedEdges[nodeId] = this.edgesForNode(nodeId)
                             }
-                            return this.edgesForNode(nodeId)
+                            return memoizedEdges[nodeId]
                         })
                         .flat()
                         .map((edge) => ({
@@ -567,9 +569,8 @@
                                 strokeStyle: '#f8b437',
                                 fillStyle: '#f88737',
                             },
-                            //delay: gossipDelay * animationDuration,
                             delay: Math.random() * 4500,
-                            delayArray: [Math.random() * 5000]//Array.from({length: txInjected / 2}, () => Math.random() * 4500),
+                            delayArray: [Math.random() * 5000],
                         }))
 
                     if (this.animateTransactions) {
