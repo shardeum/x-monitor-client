@@ -471,38 +471,12 @@ const NetworkMonitor = function (config) {
         $('#tx-queue-length').innerHTML = calculateAverage(txQueueLen)
         $('#tx-queue-time').innerHTML = calculateAverage(txQueueTime)
 
-        if (load.length > 0) {
-            const LoadMsg = {
-                // time: new Date().toLocaleTimeString('en-US'),
-                injected: report.totalInjected,
-                rejected: report.totalRejected,
-                expired: report.totalExpired,
-                applied: report.avgApplied,
-                load,
-            }
-            const txQueueLenMsg = {
-                injected: report.totalInjected,
-                rejected: report.totalRejected,
-                expired: report.totalExpired,
-                applied: report.avgApplied,
-                txQueueLen,
-            }
-            const txQueueTimeMsg = {
-                injected: report.totalInjected,
-                rejected: report.totalRejected,
-                expired: report.totalExpired,
-                applied: report.avgApplied,
-                txQueueTime,
-            }
-        }
         updateTables()
         let injectedCount = injectTransactions()
         updateStateCircle()
         updateMarkerCycle()
         updateNodelistCycle()
         updateScaleArrow()
-        if (Object.keys(G.active).length >= G.maxNodeCount) redirectToLargeNetworkPage() // this monitor has reached
-        // limit Redirect to large network page
 
         // if (injectedLoadCollector.length >= 2) injectedLoadCollector.shift()
         // injectedLoadCollector.push(injectedCount)
@@ -2114,10 +2088,6 @@ const NetworkMonitor = function (config) {
             hideSmallToolTip(node)
         }
         G.smallToolTipShown = false
-    }
-
-    const redirectToLargeNetworkPage = function () {
-        location.href = 'large-network.html'
     }
 
     const refreshPage = function () {
