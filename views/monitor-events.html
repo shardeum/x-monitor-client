@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./monitor-events.css" />
+        <script src="axios.min.js"></script>
+        <script src="auth.js"></script>
+        <script src="monitor-events.js"></script>
+
+        <title>Monitor Events</title>
+    </head>
+    <body>
+        <h1>Monitor Events</h1>
+        <p>View and search monitor event logs that have been sent to nodes</p>
+
+        <input id="search" placeholder="Search by node ID" oninput="filterByNodesId(event)" />
+
+        <ul id="event-list"></ul>
+    </body>
+</html>
