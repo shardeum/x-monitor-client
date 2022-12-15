@@ -52,6 +52,16 @@ const getTruncatedNodeId = (nodeId) => nodeId.substring(0, 10)
  */
 const nodeIdToHTMLId = (nodeId) => `node-${nodeId}`
 
+const generateHash = function (num) {
+    const table = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+    let hash = ''
+    for (let i = 0; i < num; i++) {
+        const randomIndex = Math.floor(Math.random() * table.length)
+        hash += table[randomIndex]
+    }
+    return hash
+}
+
 /**
  * Gets an existing event category element or creates a new one
  * @param {string} eventCategory
@@ -211,7 +221,7 @@ const createOrGetEventMessagesList = (eventNameEl) => {
  * @param {number} eventMessageCount
  */
 const createOrGetEventMessageElement = (eventMessagesList, eventMessage, eventMessageCount) => {
-    const eventMessageHTMLId = eventMessage
+    const eventMessageHTMLId = 'message' + generateHash(10)
     const eventMessageExists = eventMessagesList.querySelector(`#${eventMessageHTMLId}`) !== null
     const eventMessageEl =
         eventMessagesList.querySelector(`#${eventMessageHTMLId}`) ?? document.createElement('div')
