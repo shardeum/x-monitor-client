@@ -420,7 +420,7 @@ const NetworkMonitor = function (config) {
 
         for (const nodeId in G.active) {
             if (nodeId !== null) {
-                const isRemovedFromNetwork = checkRemoveStatus(nodeId, report.nodes)
+                const isRemovedFromNetwork = isNodeOffline(nodeId, report.nodes)
                 const isNodeCrashed = G.active[nodeId].crashed === true
                 const isNodeIntact = G.active[nodeId].crashed === false
                 const isNodeLost = G.active[nodeId].isLost === true
@@ -444,6 +444,24 @@ const NetworkMonitor = function (config) {
                 }
             }
         }
+
+        // delete offline syncing nodes
+        for (const nodeId in G.syncing) {
+            if (nodeId !== null) {
+                const isRemovedFromNetwork = isNodeOffline(nodeId, report.nodes)
+                if (isRemovedFromNetwork) removeNodeFromNetwork(nodeId)
+            }
+        }
+
+        // delete offline joining nodes
+        for (const publicKey in G.joining) {
+            if (publicKey !== null) {
+                console.log('checking remove status', publicKey, report.nodes.joining)
+                const isOffline = isNodeOffline(publicKey, report.nodes)
+                if (isOffline) removeNodeFromNetwork(publicKey)
+            }
+        }
+
         // averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
         // if (!Number.isNaN(averageTpsApplied))
         //   avgTps = report.totalProcessed - lastTotalProcessed
@@ -990,9 +1008,11 @@ const NetworkMonitor = function (config) {
     }
 
     const removeNodeFromNetwork = function (nodeId) {
-        const node = G.active[nodeId]
+        const node = G.active[nodeId] || G.syncing[nodeId] || G.joining[nodeId]
+        console.log('removing offline node from network', node)
         const x = G.X + 3.5 * (node.currentPosition.x - G.X)
         const y = G.Y + 3.5 * (node.currentPosition.y - G.Y)
+        if (!node.initialPosition) node.initialPosition = { ...node.currentPosition }
         const initialX = node.initialPosition.x
         const initialY = node.initialPosition.y
         let travelX
@@ -1028,7 +1048,9 @@ const NetworkMonitor = function (config) {
             clearArrow(node.lastScalingTypeRequestedArrow)
             //stage.update()
         }, 1000)
-        delete G.active[nodeId]
+        if (node.status === 'active') delete G.active[nodeId]
+        if (node.status === 'syncing') delete G.syncing[nodeId]
+        if (node.status === 'joining') delete G.joining[nodeId]
     }
     const setNodeAsCrashed = function (nodeId) {
         if (G.crashedNodes[nodeId]) return
@@ -1971,14 +1993,14 @@ const NetworkMonitor = function (config) {
         return response.data
     }
 
-    const checkRemoveStatus = function (nodeId, nodes) {
+    const isNodeOffline = function (nodeId, nodes) {
         try {
-            const activeNodeIds = Object.keys(nodes.active)
-            if (activeNodeIds.indexOf(nodeId) < 0) {
-                console.log(`${nodeId} is removed from the network`)
-                return true
-            } else return false
+            if (nodes.active[nodeId] || nodes.syncing[nodeId] || nodes.joining[nodeId]) {
+                return false
+            }
+            return true
         } catch (e) {
+            console.log('error', e)
             return false
         }
     }
