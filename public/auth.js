@@ -1,7 +1,14 @@
 var request = axios.default
+const url = new URL(window.location.href)
+
+const server = url.searchParams.get('server') || window.location.href
+// var monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
+var monitorServerUrl = `http://54.93.204.116:3000/api`
+
+console.log('monitor server url', monitorServerUrl)
 
 function redirectToSignIn() {
-    location.href = 'signin'
+    // location.href = 'signin'
 }
 
 async function requestWithToken(url) {
@@ -27,18 +34,19 @@ async function checkAuthRequirement() {
     console.log('Checking auth requirement...')
     let token = localStorage.getItem('token')
 
-    let res = await request.get('/api/status')
+    let res = await request.get(`${monitorServerUrl}/status`)
     let env = res.data.env
 
     if (env === 'production' && !token) {
         console.log('You are not sign in yet...')
-        setTimeout(redirectToSignIn, 500)
+        console.log(window)
+        if (window.location.pathname !== '/signin') setTimeout(redirectToSignIn, 500)
         return
     }
 
     if (env === 'production' && token != null) {
         try {
-            let response = await request.get('/api/report', {
+            let response = await request.get(`${monitorServerUrl}/report`, {
                 headers: {
                     'Authorization': `${token}`
                 }
@@ -48,7 +56,7 @@ async function checkAuthRequirement() {
             }
         } catch (e) {
             console.log('You have invalid token')
-            setTimeout(redirectToSignIn, 500)
+            if (window.location.pathname !== '/signin') setTimeout(redirectToSignIn, 500)
             return
         }
     }

@@ -1,6 +1,4 @@
-;(function main() {
-    const monitorServerUrl = window.origin + '/api'
-    console.log('Monitor server', monitorServerUrl)
+; (function main() {
     const G = {}
     loadToken(G)
     G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
@@ -44,7 +42,7 @@
                 colorMode: 'state',
                 shouldShowMaxTps: false,
                 shouldShowMaxLoad: false,
-                animateTransactions: true,
+                animateTransactions: false,
             }
         },
         async mounted() {
@@ -152,11 +150,14 @@
                 }
             },
             getNodeColor(node) {
+                console.log('decideing color for node', node.crashed)
                 if (!node.cycleMarker) return '#fcbf49' // syncing node
                 let color = '#000000'
                 if (this.colorMode === 'state') {
                     color = node.isDataSynced ? '#80ED99' : '#FF2EFF'
-                    if (node.crashed && !node.isRefuted) color = '#FF2442'
+                    if (node.crashed && !node.isRefuted) {
+                        color = '#FF2442'
+                    }
                 } else if (this.colorMode === 'marker') color = `#${node.cycleMarker.substr(0, 6)}`
                 else if (this.colorMode === 'nodelist') color = `#${node.nodelistHash.substr(0, 6)}`
                 return color
@@ -233,10 +234,13 @@
                 }
             },
             async deleteRemovedNodes() {
+                console.log('Running deleteRemovedNodes')
                 try {
                     let res = await requestWithToken(`${monitorServerUrl}/removed`)
                     const removed = res.data.removed
+                    console.log('removed', removed)
                     if (removed.length === 0) {
+                        console.log('There is no removed nodes')
                         return
                     }
                     let removedNodeIds = []
@@ -244,11 +248,14 @@
                         const nodeId = node.nodeId
                         const activeNode = G.nodes.active[nodeId]
                         if (!activeNode) continue
-                        removedNodeIds.push({ id: nodeId })
+                        removedNodeIds.push(nodeId)
                         delete G.nodes.active[nodeId]
                     }
-                    if (removedNodeIds.length === 0) return
-                    console.log('removed ids', removedNodeIds)
+                    if (removedNodeIds.length === 0) {
+                        console.log('There is no removed nodes in active list')
+                        return
+                    }
+                    console.log('removed ids', JSON.stringify(removedNodeIds))
                     G.visNodes.remove(removedNodeIds)
 
                     // Clean up EOAs and edges as well
@@ -288,8 +295,7 @@
                 try {
                     let changes = await this.fetchChanges()
                     console.log(
-                        `Total of ${Object.keys(changes.nodes.active).length}/${
-                            Object.keys(G.nodes.active).length
+                        `Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length
                         } nodes updated.`
                     )
                     this.updateNetworkStatus(changes)
@@ -336,10 +342,15 @@
                         updatedNodesMap[nodeId] = updatedVisNode
                     }
                     // draw new active + synicng nodes
+                    console.log('drawing new active and syncing nodes')
                     newNodes = Object.values(newNodesMap)
                     this.addNewNodesIntoNetwork(newNodes)
 
                     // update existing active + syncing nodes
+                    console.log('updating existing active and syncing nodes', updatedNodesMap)
+
+                    return
+
                     updatedNodes = Object.values(updatedNodesMap)
                     G.visNodes.update(updatedNodes)
 
@@ -730,7 +741,7 @@
                     )
                 })
 
-                await this.drawArchiverNetwork()
+                // await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, G.REFRESH_TIME)
                 this.animateTraffic()
             },

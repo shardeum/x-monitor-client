@@ -22,11 +22,7 @@
     <script src="auth.js"></script>
     <script src="app.js"></script>
     <script>
-        const url = new URL(window.location.href)
-        const server = url.searchParams.get('server') || window.location.href
-        const fps = url.searchParams.get('fps') || 20
-        // const monitorServerUrl = "http://13.48.45.51:3000/api"
-        const monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
+        const fps = 30
         console.log('monitorServerUrl', monitorServerUrl)
         console.log('window.location', window.location)
         NetworkMonitor({
@@ -34,7 +30,6 @@
             nodeRadius: 12,
             maxNodeCount: 250,
             fps,
-            monitorServerUrl,
             environment: 'production'
             // environment: 'test',
         })

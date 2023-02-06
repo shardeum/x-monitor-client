@@ -9,20 +9,20 @@ new Vue({
         console.log('mounted')
     },
     methods: {
-        onSubmit(e, slotId) {
+        async onSubmit(e, slotId) {
             console.log('slotID', slotId)
             e.preventDefault()
-            this.signIn({
+            await this.signIn({
                 username: this.username,
                 password: this.password
             })
         },
         async signIn(payload) {
-            const res = await request.post('/api/signin', payload)
+            const res = await request.post(`${monitorServerUrl}/signin`, payload)
             if (res.data && res.data.token) {
                 console.log('SingIn Successful', res.data.token)
                 localStorage.setItem('token', res.data.token)
-                location.href = "/"
+                // location.href = "/"
             } else {
                 alert('Incorrect username or password')
                 this.username = ''
