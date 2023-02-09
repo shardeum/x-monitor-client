@@ -1,7 +1,9 @@
 var request = axios.default
 const url = new URL(window.location.href)
 
-const server = url.searchParams.get('server') || window.location.href
+const server = `http://` + window.location.host
+
+console.log('server', server)
 var monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
 // var monitorServerUrl = `http://54.93.204.116:3000/api`
 
@@ -37,14 +39,14 @@ async function checkAuthRequirement () {
     let res = await request.get(`${monitorServerUrl}/status`)
     let env = res.data.env
 
-    if (env === 'production' && !token) {
+    if (env === 'release' && !token) {
         console.log('You are not sign in yet...')
         console.log(window)
         if (window.location.pathname !== '/signin') setTimeout(redirectToSignIn, 500)
         return
     }
 
-    if (env === 'production' && token != null) {
+    if (env === 'release' && token != null) {
         try {
             let response = await request.get(`${monitorServerUrl}/report`, {
                 headers: {

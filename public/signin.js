@@ -22,7 +22,7 @@ new Vue({
             if (res.data && res.data.token) {
                 console.log('SingIn Successful', res.data.token)
                 localStorage.setItem('token', res.data.token)
-                location.href = "/large-network"
+                location.href = "/"
             } else {
                 alert('Incorrect username or password')
                 this.username = ''
