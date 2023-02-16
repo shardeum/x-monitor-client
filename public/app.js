@@ -205,19 +205,27 @@ const NetworkMonitor = function (config) {
         //     report.nodes.active[nodeId].timestamp = Date.now() - 20000
         //   }
         // }
+        const maxJoiningNodes = config.maxStandbyCount
+        let joiningCount = 0
         for (const publicKey in report.nodes.joining) {
+            joiningCount += 1
             if (!G.joining[publicKey]) {
                 // Pass in a list of positions to avoid overlapping grey cicles
-                const existingPositions = Object.values(G.joining).map((node) => node.realPosition)
-                G.joining[publicKey] = createNewNode(
-                    'joining',
-                    publicKey,
-                    existingPositions,
-                    report.nodes.joining[publicKey].nodeIpInfo
-                )
-                G.joining[publicKey].tooltipInstance = drawToolipForInactiveNodes(
-                    G.joining[publicKey]
-                )
+                const existingPositions = Object.values(G.joining).filter(node => node != null).map((node) => node.realPosition)
+                if (joiningCount <= maxJoiningNodes) {
+                    G.joining[publicKey] = createNewNode(
+                        'joining',
+                        publicKey,
+                        existingPositions,
+                        report.nodes.joining[publicKey].nodeIpInfo
+                    )
+                    G.joining[publicKey].tooltipInstance = drawToolipForInactiveNodes(
+                        G.joining[publicKey]
+                    )
+                } else {
+                    console.log(`Max joining nodes reached...`)
+                    G.joining[publicKey] = null
+                }
             }
         }
 
