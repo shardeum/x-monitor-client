@@ -22,19 +22,19 @@ const fetchChanges = async () => {
     drawPieChart(appVersionsWithColors, totalNumNodes)
 }
 
+// From https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
 const stringToColour = async (str) => {
-    const msgBuffer = new TextEncoder().encode(str)
-
-    // hash the message
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-
-    // convert ArrayBuffer to Array
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-
-    // convert bytes to hex string
-    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-
-    return `#${hashHex.slice(0, 6)}`
+    var hash = 0
+    for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    var color = '#'
+    for (var i = 0; i < 3; i++) {
+        var value = (hash >> (i * 8)) & 0xff
+        color += ('00' + value.toString(16)).substr(-2)
+    }
+    console.log('colour', color)
+    return color
 }
 
 const drawPieChart = (appVersionsWithColors, totalNumNodes) => {
