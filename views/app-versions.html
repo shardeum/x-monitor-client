@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="./app-versions.css" />
         <script src="axios.min.js"></script>
         <script src="auth.js"></script>
-        <script src="app-versions.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <title>App versions</title>
     </head>
@@ -15,6 +15,9 @@
         <h1>App versions</h1>
         <p>App versions of all the nodes in the network</p>
 
-        <canvas id="app-versions-chart" width="400" height="400"></canvas>
+        <div style="height: 80vw; width: 80vw; max-height: 400px; max-width: 400px">
+            <canvas id="app-versions-chart"></canvas>
+        </div>
+        <script src="app-versions.js"></script>
     </body>
 </html>
