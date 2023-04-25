@@ -36,9 +36,13 @@ const stringToColour = (str) => {
 }
 
 const drawPieChart = (data, labels, tooltips) => {
+  let chartStatus = Chart.getChart("app-versions-chart"); // <canvas> id
+  if (chartStatus != undefined) {
+    chartStatus.destroy();
+  }
+
   const canvas = document.getElementById("app-versions-chart");
   const ctx = canvas.getContext("2d");
-  console.log(tooltips)
 
   new Chart(ctx, {
     type: "pie",
