@@ -1,7 +1,8 @@
 var request = axios.default
 const url = new URL(window.location.href)
+const protocol = window.location.protocol
 
-const server = `http://` + window.location.host
+const server = `${protocol}//` + window.location.host
 
 console.log('server', server)
 var monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/api'
@@ -9,11 +10,11 @@ var monitorServerUrl = server.slice(-1) === '/' ? server + 'api' : server + '/ap
 
 console.log('monitor server url', monitorServerUrl)
 
-function redirectToSignIn () {
+function redirectToSignIn() {
     location.href = 'signin'
 }
 
-async function requestWithToken (url) {
+async function requestWithToken(url) {
     console.log('requesting with token', url)
     let token = loadToken()
     const options = {
@@ -25,14 +26,14 @@ async function requestWithToken (url) {
     return res
 }
 
-function loadToken (G) {
+function loadToken(G) {
     let token = localStorage.getItem('token')
     if (G) G.token = token
     console.log('Token is set to', token)
     return token
 }
 
-async function checkAuthRequirement () {
+async function checkAuthRequirement() {
     console.log('Checking auth requirement...')
     let token = localStorage.getItem('token')
 
