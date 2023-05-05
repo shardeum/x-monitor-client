@@ -1,24 +1,24 @@
 {
-  "name": "@shardus/monitor-client",
-  "version": "2.5.2",
-  "description": "",
-  "main": "entry.js",
-  "scripts": {
-    "release": "np --no-tests --no-yarn",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://gitlab.com/shardus/enterprise/monitor-client.git"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "np": "^7.6.1",
-    "prettier": "^2.7.1"
-  }
+    "name": "@shardus/monitor-client",
+    "version": "2.5.3",
+    "description": "",
+    "main": "entry.js",
+    "scripts": {
+        "release": "np --no-tests --no-yarn",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://gitlab.com/shardus/enterprise/monitor-client.git"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "np": "^7.6.1",
+        "prettier": "^2.7.1"
+    }
 }
