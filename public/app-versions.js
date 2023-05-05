@@ -53,6 +53,7 @@ const drawPieChart = (data, labels, tooltips) => {
     labels: labels,
     },
     options: {
+        animation: false,
         plugins: {
             tooltip: {
                 callbacks: {
