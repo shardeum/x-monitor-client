@@ -1,6 +1,6 @@
 const socket = io()
-socket.on('connection', async () => {
-    console.log('connection is made')
+socket.on('connection', async (err, data) => {
+    console.log('connection is made...', err, data)
 })
 
 new Vue({
@@ -43,22 +43,22 @@ new Vue({
         const urlParams = new URLSearchParams(window.location.search)
         let maxHistory = urlParams.get('max_history')
         if (maxHistory) maxHistory = parseInt(maxHistory)
-        else maxHistory = 2880 // last 48 hours
-        socket.on('connect', async () => {
-            console.log(`Connected as ${socket.id}`)
+        else maxHistory = 1440 // last 24 hours
+        socket.on('connect', async (e, data) => {
+            console.log(`Connected as ${socket.id}`, e, data)
         })
         socket.on('old-data', async (data) => {
             this.fileContent += `${data}\n`
             socket.emit('message', 'let get started')
             let oldEventLines = data.split('\n')
-            let startLineNumber = 0
-            for (let i = 0; i < oldEventLines.length; i++) {
-                let line = oldEventLines[i]
-                let splitted = line.split(" ")
-                if (splitted[4] === 'started') {
-                    startLineNumber = i
-                }
-            }
+            // for (let i = 0; i < oldEventLines.length; i++) {
+            //     let line = oldEventLines[i]
+            //     let splitted = line.split(" ")
+            //     if (splitted[4] === 'started') {
+            //         startLineNumber = i
+            //     }
+            // }
+            let startLineNumber = oldEventLines.length - maxHistory
             oldEventLines = oldEventLines.slice(startLineNumber + 1)
             oldEventLines = oldEventLines.filter(line => line.split(" ").length === 9)
 
@@ -74,6 +74,7 @@ new Vue({
                 let ip = splittedData[6]
                 let port = splittedData[7]
                 let cycle = parseInt(splittedData[8])
+                if (this.validateIPV4(ip) === false) continue
                 let event = {
                     name,
                     nodeId,
@@ -106,14 +107,15 @@ new Vue({
                 port,
                 cycle
             }
+            if (this.validateIPV4(ip) === false) return
             this.history.push(event)
             this.updateChart()
         })
 
-        console.log('Sync page loaded!')
+        console.log('Node history timeline')
         let data = [this.trace]
         this.layout = {
-            title: 'Node Sync Timeline',
+            title: 'Nodes History',
             barmode: 'stack',
             xaxis: {
                 autotick: false,
@@ -124,6 +126,9 @@ new Vue({
                 tickwidth: 4,
                 tickcolor: '#000',
             },
+            yaxis: {
+                automargin: true
+            }
         };
 
         Plotly.newPlot('myDiv', data, this.layout, { scrollZoom: true });
@@ -134,6 +139,16 @@ new Vue({
         getChart() {
             return this.chart
         },
+        // a function to check if the input string is a valid IPV4 ip address
+        validateIPV4(ip) {
+            let ipArr = ip.split('.')
+            if (ipArr.length !== 4) return false
+            for (let i = 0; i < ipArr.length; i++) {
+                let num = parseInt(ipArr[i])
+                if (Number.isNaN(num) || num < 0 || num > 255) return false
+            }
+            return true
+        },
         async updateChart() {
             console.log('updating chart')
             const shouldUpdateChart = await this.getReport()
@@ -143,6 +158,7 @@ new Vue({
             }
         },
         async getReport() {
+            console.log(this.history.map(event => event.ip + "__" + event.port))
             this.yValue = this.history.map(event => {
                 return `${event.ip}:${event.port}`
             })
