@@ -5,7 +5,7 @@ const fetchChanges = async () => {
     const labels = []
     const tooltips = []
 
-    const appDataResponse = await requestWithToken('/api/app-versions')
+    const appDataResponse = await requestWithToken(`${monitorServerUrl}/app-versions`)
     const appDataList = appDataResponse.data
 
     for(const appVersion in appDataList) {
