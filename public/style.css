@@ -136,11 +136,23 @@ thead>tr {
 }
 
 .link-container {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
 }
+
 .link-container a {
-    color: white;
-    margin: 0 10px;
+  color: white;
+  margin: 0 10px;
+}
+
+.version-numbers {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.version-numbers span {
+  color: white;
+  margin: 0 10px;
 }

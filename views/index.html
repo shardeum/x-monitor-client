@@ -17,10 +17,17 @@
         <a target="_blank" href="/history-log?max_history=2880">Node History</a>
         <a target="_blank" href="/sync">Sync Timeline</a>
     </div>
+    <div class="version-numbers">
+        <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
+        <br>
+        <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
+    </div>
+
     <script src="axios.min.js"></script>
     <script src="./popmotion.min.js"></script>
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script src="version.js"></script>
     <script>
         const fps = 30
         console.log('monitorServerUrl', monitorServerUrl)
