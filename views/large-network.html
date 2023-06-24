@@ -93,12 +93,18 @@
         </div>
         <div id="mynetwork"></div>
         <div id="myarchiver"></div>
+        <div style="position: absolute; bottom: 20px; right: 20px">
+            <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
+            <br>
+            <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
+        </div>
         <div class="grid grid-cols-12">
-            <div class="col-span-3 px-3 mb-6 md:mb-0" id="color-mode-selector">
-                <label class="block tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-state">
+            <div class="col-span-3 px-3 mb-6 md:mb-0" id="color-mode-selector"
+                style="position: absolute; top: 75px; left: 0px;">
+                <label class="inline-block tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-state">
                     Nodes Color By:
                 </label>
-                <div class="relative">
+                <div class="relative inline-block">
                     <select @change="onColorModeChange"
                         class="block appearance-none w-full bg-gray-100 border text-sm border-gray-100 text-gray-700 py-2 px-2 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         id="grid-state">
@@ -113,10 +119,9 @@
                     </div>
                 </div>
             </div>
-            <div class="col-span-9 px-3 mb-6 md:mb-0 align-middle flex flex-row items-end justify-end space-x-6">
 
-                <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
-                <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
+            <div class="col-span-9 px-3 mb-6 md:mb-0 align-middle flex flex-row items-end justify-end space-x-6"
+                style="position: absolute; top: 75px; right: 0px;">
                 <div>
                     <input type="checkbox" id="checkbox" v-model="animateTransactions" />
                     <label class="text-sm" for="checkbox">Animate transactions</label>

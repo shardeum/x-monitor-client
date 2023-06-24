@@ -137,8 +137,8 @@ thead>tr {
 
 .link-container {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  top: 390px;
+  right: 50px;
 }
 
 .link-container a {
@@ -149,7 +149,7 @@ thead>tr {
 .version-numbers {
   position: absolute;
   bottom: 20px;
-  left: 20px;
+  right: 20px;
 }
 
 .version-numbers span {
