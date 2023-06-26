@@ -1,4 +1,5 @@
 const INTERVAL = 10_000
+const colors = ["#36a2eb", "#ff6384", "#4bc0c0", "#ff9f40", "#9966ff", "#ffcd56", "#c9cbcf"]
 
 const fetchChanges = async (animate = false) => {
     const data = []
@@ -18,6 +19,7 @@ const fetchChanges = async (animate = false) => {
     }
 
     drawPieChart(data, labels, tooltips, animate)
+    writeInfoPanel(data, labels)
 }
 
 // From https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
@@ -67,11 +69,29 @@ const drawPieChart = (data, labels, tooltips, animate) => {
     data: {
     datasets: [{
         data: data,
+        backgroundColor: colors,
     }],
     labels: labels,
     },
     options: chartOptions
   });
+}
+
+const writeInfoPanel = (data, labels) => {
+    // Print total number of nodes for each version along with percentage
+    const total = data.reduce((a, b) => a + b, 0)
+    const infoPanel = document.getElementById("app-versions-info")
+    infoPanel.innerHTML = ""
+    for (let i = 0; i < data.length; i++) {
+        const percentage = Math.round((data[i] / total) * 100)
+        const color = stringToColour(labels[i])
+        infoPanel.innerHTML += `
+        <div>
+            <span style="display: inline-block; width: 12px; height: 12px; background-color: ${colors[i]};"></span>
+            <span style="font-weight: bold;">${labels[i]}:</span> ${data[i]} (${percentage}%)
+        </div>
+        `;
+    }
 }
 
 fetchChanges(true)
