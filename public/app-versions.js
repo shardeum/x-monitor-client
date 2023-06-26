@@ -1,6 +1,6 @@
 const INTERVAL = 10_000
 
-const fetchChanges = async () => {
+const fetchChanges = async (animate = false) => {
     const data = []
     const labels = []
     const tooltips = []
@@ -17,7 +17,7 @@ const fetchChanges = async () => {
         tooltips.push(`cliVersions:\n${cliVersions}\nguiVersions:\n${guiVersions}`)
     }
 
-    drawPieChart(data, labels, tooltips)
+    drawPieChart(data, labels, tooltips, animate)
 }
 
 // From https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
@@ -35,7 +35,7 @@ const stringToColour = (str) => {
     return color
 }
 
-const drawPieChart = (data, labels, tooltips) => {
+const drawPieChart = (data, labels, tooltips, animate) => {
   let chartStatus = Chart.getChart("app-versions-chart"); // <canvas> id
   if (chartStatus != undefined) {
     chartStatus.destroy();
@@ -43,6 +43,24 @@ const drawPieChart = (data, labels, tooltips) => {
 
   const canvas = document.getElementById("app-versions-chart");
   const ctx = canvas.getContext("2d");
+
+  const chartOptions = {
+    plugins: {
+        tooltip: {
+            callbacks: {
+                afterBody: (context) => {
+                    return tooltips[context[0].dataIndex].split("\n")
+                }
+            }
+
+        }
+    }
+  }
+
+  if(!animate) {
+    chartOptions.animation = false
+  }
+
 
   new Chart(ctx, {
     type: "pie",
@@ -52,21 +70,9 @@ const drawPieChart = (data, labels, tooltips) => {
     }],
     labels: labels,
     },
-    options: {
-        animation: false,
-        plugins: {
-            tooltip: {
-                callbacks: {
-                    afterBody: (context) => {
-                        return tooltips[context[0].dataIndex].split("\n")
-                    }
-                }
-
-            }
-        }
-    }
+    options: chartOptions
   });
 }
 
-fetchChanges()
+fetchChanges(true)
 setInterval(fetchChanges, INTERVAL)
