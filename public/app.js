@@ -464,7 +464,7 @@ const NetworkMonitor = function (config) {
         // delete offline joining nodes
         for (const publicKey in G.joining) {
             if (publicKey !== null) {
-                console.log('checking remove status', publicKey, report.nodes.joining)
+                // console.log('checking remove status', publicKey, report.nodes.joining)
                 const isOffline = isNodeOffline(publicKey, report.nodes)
                 if (isOffline) removeNodeFromNetwork(publicKey)
             }
@@ -1016,8 +1016,8 @@ const NetworkMonitor = function (config) {
     }
 
     const removeNodeFromNetwork = function (nodeId) {
-        if (node == null) return
         const node = G.active[nodeId] || G.syncing[nodeId] || G.joining[nodeId]
+        if (node == null) return
         console.log('removing offline node from network', node)
         const x = G.X + 3.5 * (node.currentPosition.x - G.X)
         const y = G.Y + 3.5 * (node.currentPosition.y - G.Y)
@@ -1049,13 +1049,17 @@ const NetworkMonitor = function (config) {
         transformCircle(node.circle, x, y, null, 1000)
 
         setTimeout(() => {
-            node.circle.graphics.clear()
-            node.rectangel.graphics.clear()
-            node.nodeListCycle.graphics.clear()
-            node.markerCycle.graphics.clear()
-            clearArrow(node.lastScalingTypeWinnerArrow)
-            clearArrow(node.lastScalingTypeRequestedArrow)
-            //stage.update()
+            try {
+                node.circle.graphics.clear()
+                node.rectangel.graphics.clear()
+                node.nodeListCycle.graphics.clear()
+                node.markerCycle.graphics.clear()
+                clearArrow(node.lastScalingTypeWinnerArrow)
+                clearArrow(node.lastScalingTypeRequestedArrow)
+                //stage.update()
+            } catch (e) {
+                console.error('Error while removing the node', e)
+            }
         }, 1000)
         if (node.status === 'active') delete G.active[nodeId]
         if (node.status === 'syncing') delete G.syncing[nodeId]
