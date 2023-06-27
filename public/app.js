@@ -1016,6 +1016,7 @@ const NetworkMonitor = function (config) {
     }
 
     const removeNodeFromNetwork = function (nodeId) {
+        if (node == null) return
         const node = G.active[nodeId] || G.syncing[nodeId] || G.joining[nodeId]
         console.log('removing offline node from network', node)
         const x = G.X + 3.5 * (node.currentPosition.x - G.X)
