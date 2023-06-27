@@ -11,12 +11,3 @@ async function getVersionNumbers() {
 }
 
 getVersionNumbers()
-
-
-console.log("inside")
-//console.log("versionReponse: ", versionResponse)
-//console.log(clientVersion)
-//console.log(serverVersion)
-
-
-
