@@ -5,7 +5,13 @@
     "main": "entry.js",
     "scripts": {
         "release": "np --no-tests --no-yarn",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "compile": "tsc -p .",
+        "prepare": "npm run compile",
+        "pretest": "npm run compile",
+        "lint": "eslint './public/**/*.ts'",
+        "lint-windows": "eslint ./public/**/*.ts",
+        "format-check": "prettier --check './public/**/*.ts'"
     },
     "repository": {
         "type": "git",
@@ -19,6 +25,21 @@
     "license": "ISC",
     "devDependencies": {
         "np": "^7.6.1",
-        "prettier": "^2.7.1"
+        "gts": "^3.1.1",
+        "prettier": "^2.7.1",
+        "@types/node": "^16.11.0",
+        "@types/node-fetch": "^2.5.4",
+        "@types/socket.io": "^2.1.11",
+        "@types/socket.io-client": "^1.4.33",
+        "@typescript-eslint/eslint-plugin": "^5.60.0",
+        "@typescript-eslint/typescript-estree": "^5.60.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-plugin-no-unsanitized": "^4.0.2",
+        "eslint-plugin-security": "^1.7.1",
+        "eslint-plugin-xss": "^0.1.12"
+    },
+    "dependencies": {
+        "eslint": "^8.43.0",
+        "node-fetch": "^2.6.8"
     }
 }
