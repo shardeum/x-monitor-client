@@ -757,7 +757,7 @@
                 G.currentNodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
                 G.network.on('click', (params) => {
                     const nodeId = params.nodes[0]
-                    const node = G.nodes.active[nodeId]
+                    let node = G.nodes.active[nodeId] || G.nodes.syncing[nodeId] || G.nodes.joining[nodeId]
                     if (!node) return
                     window.open(
                         `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`

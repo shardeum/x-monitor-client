@@ -219,7 +219,7 @@ const NetworkMonitor = function (config) {
                         existingPositions,
                         report.nodes.joining[publicKey].nodeIpInfo
                     )
-                    G.joining[publicKey].tooltipInstance = drawToolipForInactiveNodes(
+                    G.joining[publicKey].tooltipInstance = drawTooltipForInactiveNodes(
                         G.joining[publicKey]
                     )
                 } else {
@@ -244,7 +244,7 @@ const NetworkMonitor = function (config) {
                     G.syncing[nodeId].tooltipInstance = null
                     G.syncing[nodeId].circle.removeAllEventListeners('mouseover')
                     G.syncing[nodeId].circle.removeAllEventListeners('mouseout')
-                    G.syncing[nodeId].tooltipInstance = drawToolipForInactiveNodes(
+                    G.syncing[nodeId].tooltipInstance = drawTooltipForInactiveNodes(
                         G.syncing[nodeId]
                     )
                 } else {
@@ -258,7 +258,7 @@ const NetworkMonitor = function (config) {
                     )
                     G.syncing[nodeId].nodeId = nodeId
                     positionNewNodeIntoNetwork('syncing', G.syncing[nodeId])
-                    G.syncing[nodeId].tooltipInstance = drawToolipForInactiveNodes(
+                    G.syncing[nodeId].tooltipInstance = drawTooltipForInactiveNodes(
                         G.syncing[nodeId]
                     )
                 }
@@ -771,8 +771,13 @@ const NetworkMonitor = function (config) {
         })
     }
 
-    const drawToolipForInactiveNodes = function (node) {
+    const drawTooltipForInactiveNodes = function (node) {
         stage.enableMouseOver(20)
+        node.circle.on('click', () => {
+            console.log('node clicked', node)
+            console.log('url', `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`)
+            window.open(`/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`)
+        })
         node.circle.on('mouseover', () => {
             const position = {
                 x: node.currentPosition.x - 150 / 2,
