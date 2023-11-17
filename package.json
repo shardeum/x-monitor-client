@@ -1,6 +1,6 @@
 {
     "name": "@shardus/monitor-client",
-    "version": "2.5.6",
+    "version": "2.5.7",
     "description": "",
     "main": "entry.js",
     "engines": {
