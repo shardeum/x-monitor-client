@@ -222,7 +222,9 @@ new Vue({
                 ip = window.location.href.split('//')[1].split(":")[0]
             }
             console.log('ip', ip)
-           const response = await requestWithToken(`http://${ip}:${activeNode.nodeIpInfo.externalPort}/sync-newest-cycle`)
+            const response = await requestWithToken(
+                `/get-newest-cycle?ip=${ip}&port=${activeNode.nodeIpInfo.externalPort}`
+            )
             const cycleRecord = response.data.newestCycle
             if (cycleRecord && cycleRecord.duration) this.cycleDuration = cycleRecord.duration
         },
