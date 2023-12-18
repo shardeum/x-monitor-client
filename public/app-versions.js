@@ -1,14 +1,6 @@
 const INTERVAL = 10_000
 const colors = ["#36a2eb", "#ff6384", "#4bc0c0", "#ff9f40", "#9966ff", "#ffcd56", "#c9cbcf"]
 
-// Define the colors for different node types
-const nodeColors = {
-  all: '#ff6384',
-  active: '#4bc0c0',
-  joining: '#36a2eb',
-  syncing: '#ffcd56'
-};
-
 const fetchChanges = async (animate = false) => {
     const data = []
     const labels = []
@@ -89,26 +81,16 @@ const drawPieChart = (data, labels, tooltips, animate, selectedNodeType) => {
   if (selectedNodeType === "all") {
     datasets = [
       {
-        data: data.map((nodes) => nodes.active),
-        backgroundColor: "#4bc0c0",
-        label: "Active Nodes",
-      },
-      {
-        data: data.map((nodes) => nodes.joining),
-        backgroundColor: "#36a2eb",
-        label: "Joining Nodes",
-      },
-      {
-        data: data.map((nodes) => nodes.syncing),
-        backgroundColor: "#ffcd56",
-        label: "Syncing Nodes",
+        data: data.map((nodes) => nodes.all),
+        backgroundColor: colors,
       },
     ];
   } else {
     datasets = [
       {
         data: data.map((nodes) => nodes[selectedNodeType]),
-        backgroundColor: nodeColors[selectedNodeType],
+        backgroundColor: colors,
+        label: selectedNodeType,
       },
     ];
   }
@@ -124,6 +106,7 @@ const drawPieChart = (data, labels, tooltips, animate, selectedNodeType) => {
         data: [1], // Add a dummy value to display an empty pie chart
         backgroundColor: ["#808080"], // Set the color to grey
         borderWidth: 0, // Remove the border
+        label: "No data available",
       },
     ];
   }
@@ -142,32 +125,26 @@ const writeInfoPanel = (data, labels, selectedNodeType) => {
     const infoPanel = document.getElementById("app-versions-info");
     infoPanel.innerHTML = "";
     if (selectedNodeType === "all") {
-      const totalActive = data.reduce((total, nodes) => total + nodes.active, 0);
-      const totalJoining = data.reduce((total, nodes) => total + nodes.joining, 0);
-      const totalSyncing = data.reduce((total, nodes) => total + nodes.syncing, 0);
-      const total = totalActive + totalJoining + totalSyncing;
-      infoPanel.innerHTML += `
-        <div>
-          <span style="font-weight: bold;">Joining Nodes:</span> ${totalJoining}
-        </div>
-        <div>
-          <span style="font-weight: bold;">Syncing Nodes:</span> ${totalSyncing}
-        </div>
-        <div>
-          <span style="font-weight: bold;">Active Nodes:</span> ${totalActive}
-        </div>
-        <div>
-          <span style="font-weight: bold;">Total Nodes:</span> ${total}
-        </div>
-      `;
-    } else {
-      const total = data.reduce((total, nodes) => total + nodes[selectedNodeType], 0);
-  
+      const totalAll = data.reduce((total, nodes) => total + nodes.all, 0); // Calculate the total count for all nodes
       for (let i = 0; i < data.length; i++) {
-        const percentage = total > 0 ? Math.round((data[i][selectedNodeType] / total) * 100) : 0;
+        const total = data[i].active + data[i].joining + data[i].syncing;
+        const percentage = totalAll > 0 ? Math.round((total / totalAll) * 100) : 0; // Calculate the percentage for each node version
+        // eslint-disable-next-line no-unsanitized/property
         infoPanel.innerHTML += `
           <div>
-            <span style="display: inline-block; width: 12px; height: 12px; background-color: ${nodeColors[selectedNodeType]};"></span>
+            <span style="display: inline-block; width: 12px; height: 12px; background-color: ${colors[i]};"></span>
+            <span style="font-weight: bold;">${labels[i]}:</span> ${total} (${percentage}%)
+          </div>
+        `;
+      }
+    } else {
+      const total = data.reduce((total, nodes) => total + nodes[selectedNodeType], 0);
+      for (let i = 0; i < data.length; i++) {
+        const percentage = total > 0 ? Math.round((data[i][selectedNodeType] / total) * 100) : 0;
+        // eslint-disable-next-line no-unsanitized/property
+        infoPanel.innerHTML += `
+          <div>
+            <span style="display: inline-block; width: 12px; height: 12px; background-color: ${colors[i]};"></span>
             <span style="font-weight: bold;">${labels[i]}:</span> ${data[i][selectedNodeType]} (${percentage}%)
           </div>
         `;
