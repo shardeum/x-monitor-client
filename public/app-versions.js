@@ -29,6 +29,26 @@ const fetchChanges = async (animate = false) => {
         tooltips.push(`cliVersions:\n${cliVersions}\nguiVersions:\n${guiVersions}`)
     }
 
+    // Sort three arrays according to 'labels' while maintaining the same order
+    const zipped = labels.map((e, i) => [e, data[i], tooltips[i]])
+    zipped.sort((a, b) => {
+      const aParts = a[0].split('.').map(Number);
+      const bParts = b[0].split('.').map(Number);
+
+      for (let i = 0; i < aParts.length; i++) {
+        if (bParts[i] - aParts[i] !== 0) {
+          return bParts[i] - aParts[i];
+        }
+      }
+
+      return 0; // If all parts are equal
+    })
+    for (let i = 0; i < zipped.length; i++) {
+        labels[i] = zipped[i][0]
+        data[i] = zipped[i][1]
+        tooltips[i] = zipped[i][2]
+    }
+
     drawPieChart(data, labels, tooltips, animate, selectedNodeType)
     writeInfoPanel(data, labels, selectedNodeType)
 }
