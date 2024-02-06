@@ -1,49 +1,53 @@
-<head>
-    <title>Network Monitor</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="fabric.js"></script>
-    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.0.2/TweenLite.min.js"></script>
-</head>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Network Monitor</title>
+        <link rel="stylesheet" href="style.css" />
+        <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"
+        ></script>
+        <script src="fabric.js"></script>
+        <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+        <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.0.2/TweenLite.min.js"></script>
+    </head>
 
-<body>
-    <div id="app"></div>
+    <body>
+        <div id="app"></div>
 
-    <canvas id="demoCanvas" width="1500" height="800"></canvas>
-    <div class="link-container">
-        <a target="_blank" href="/history-log?max_history=2880">Node History</a>
-        <a target="_blank" href="/sync">Sync Timeline</a>
-    </div>
-    <div class="version-numbers">
-        <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
-        <br>
-        <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
-    </div>
+        <canvas id="demoCanvas" width="1500" height="800"></canvas>
+        <div class="link-container">
+            <a target="_blank" href="/history-log?max_history=2880">Node History</a>
+            <a target="_blank" href="/sync">Sync Timeline</a>
+        </div>
+        <div class="version-numbers">
+            <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
+            <br />
+            <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
+        </div>
 
-    <script src="axios.min.js"></script>
-    <script src="./popmotion.min.js"></script>
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
-    <script src="version.js"></script>
-    <script>
-        const fps = 30
-        console.log('monitorServerUrl', monitorServerUrl)
-        console.log('window.location', window.location)
-        NetworkMonitor({
-            networkCircleRadius: 250,
-            nodeRadius: 12,
-            maxNodeCount: 250,
-            maxStandbyCount: 100,
-            fps,
-            environment: 'production'
-            // environment: 'test',
-        })
-        console.log("testing")
-    </script>
-    <script src="https://unpkg.com/tippy.js@3/dist/tippy.all.min.js"></script>
-</body>
-
+        <script src="axios.min.js"></script>
+        <script src="./popmotion.min.js"></script>
+        <script src="auth.js"></script>
+        <script src="app.js"></script>
+        <script src="version.js"></script>
+        <script>
+            const fps = 30
+            console.log('monitorServerUrl', monitorServerUrl)
+            console.log('window.location', window.location)
+            NetworkMonitor({
+                networkCircleRadius: 250,
+                nodeRadius: 12,
+                maxNodeCount: 250,
+                maxStandbyCount: 100,
+                fps,
+                environment: 'production',
+                // environment: 'test',
+            })
+            console.log('testing')
+        </script>
+        <script src="https://unpkg.com/tippy.js@3/dist/tippy.all.min.js"></script>
+    </body>
 </html>
