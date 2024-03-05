@@ -29,6 +29,7 @@ const NetworkMonitor = function (config) {
     G.joining = {}
     G.syncing = {}
     G.active = {}
+    G.standby = {}
     G.colors = {
         joining: '#999',
         syncing: '#f9cb35',
@@ -57,6 +58,7 @@ const NetworkMonitor = function (config) {
             joining: {},
             syncing: {},
             active: {},
+            standby: {},
         },
     }
 
@@ -74,6 +76,9 @@ const NetworkMonitor = function (config) {
         for (const nodeId in G.joining) {
             removeNodeFromNetwork(nodeId)
         }
+        for (const nodeId in G.standby) {
+            removeNodeFromNetwork(nodeId)
+        }
         G.nodes = []
         G.partitionMatrix = {}
         G.partitionGraphic = {}
@@ -82,6 +87,7 @@ const NetworkMonitor = function (config) {
         G.active = {}
         G.syncing = {}
         G.joining = {}
+        G.standby = {}
         G.currentCycleCounter = 0
     }
 
@@ -211,7 +217,9 @@ const NetworkMonitor = function (config) {
             joiningCount += 1
             if (!G.joining[publicKey]) {
                 // Pass in a list of positions to avoid overlapping grey cicles
-                const existingPositions = Object.values(G.joining).filter(node => node != null).map((node) => node.realPosition)
+                const existingPositions = Object.values(G.joining)
+                    .filter((node) => node != null)
+                    .map((node) => node.realPosition)
                 if (joiningCount <= maxJoiningNodes) {
                     G.joining[publicKey] = createNewNode(
                         'joining',
@@ -247,6 +255,9 @@ const NetworkMonitor = function (config) {
                     G.syncing[nodeId].tooltipInstance = drawTooltipForInactiveNodes(
                         G.syncing[nodeId]
                     )
+                    if (G.standby[nodeId]) {
+                        delete G.standby[nodeId]
+                    }
                 } else {
                     // syncing node is not drawn as gray circle yet
                     // console.log(`New syncing node`)
@@ -470,6 +481,15 @@ const NetworkMonitor = function (config) {
             }
         }
 
+        // delete offline standby nodes
+        for (const publicKey in G.standby) {
+            if (publicKey !== null) {
+                // console.log('checking remove status', publicKey, report.nodes.standby)
+                const isOffline = isNodeOffline(publicKey, report.nodes)
+                if (isOffline) removeNodeFromNetwork(publicKey)
+            }
+        }
+
         // averageTpsApplied = Math.round(totalTxApplied / activeNodeCount)
         // if (!Number.isNaN(averageTpsApplied))
         //   avgTps = report.totalProcessed - lastTotalProcessed
@@ -497,6 +517,7 @@ const NetworkMonitor = function (config) {
         $('#tx-queue-length').innerHTML = calculateAverage(txQueueLen)
         $('#tx-queue-time').innerHTML = calculateAverage(txQueueTime)
 
+        updateStandby()
         updateTables()
         let injectedCount = injectTransactions()
         updateStateCircle()
@@ -511,6 +532,10 @@ const NetworkMonitor = function (config) {
         setTimeout(() => {
             updateReport()
         }, G.reportInterval)
+    }
+
+    const updateStandby = function () {
+        console.log('Total standby node: ', Object.keys(report.nodes.standby).length)
     }
 
     const injectTransactions = function () {
@@ -569,12 +594,15 @@ const NetworkMonitor = function (config) {
     }
 
     const updateTables = function () {
-        const totalJoining = Object.keys(G.joining).length
+        const totalStandby =
+            report.nodes.standby === undefined ? 0 : Object.keys(report.nodes.standby).length
+        const totalJoining = Object.keys(G.joining).length - totalStandby
         const totalSyncing = Object.keys(G.syncing).length
         const totalActive = Object.keys(G.active).length
-        const total = totalJoining + totalSyncing + totalActive
+        const total = totalJoining + totalSyncing + totalActive + totalStandby
 
         $('#node-info-joining').innerHTML = totalJoining
+        $('#node-info-standby').innerHTML = totalStandby
         $('#node-info-syncing').innerHTML = totalSyncing
         $('#node-info-active').innerHTML = totalActive
         $('#node-info-total').innerHTML = total
@@ -775,8 +803,13 @@ const NetworkMonitor = function (config) {
         stage.enableMouseOver(20)
         node.circle.on('click', () => {
             console.log('node clicked', node)
-            console.log('url', `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`)
-            window.open(`/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`)
+            console.log(
+                'url',
+                `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`
+            )
+            window.open(
+                `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`
+            )
         })
         node.circle.on('mouseover', () => {
             const position = {
@@ -1069,6 +1102,7 @@ const NetworkMonitor = function (config) {
         if (node.status === 'active') delete G.active[nodeId]
         if (node.status === 'syncing') delete G.syncing[nodeId]
         if (node.status === 'joining') delete G.joining[nodeId]
+        if (node.status === 'standby') delete G.standby[nodeId]
     }
     const setNodeAsCrashed = function (nodeId) {
         if (G.crashedNodes[nodeId]) return
@@ -1704,6 +1738,7 @@ const NetworkMonitor = function (config) {
             <thead>
                 <tr>
                     <td>Joining</td>
+                    <td>Standby</td>
                     <td>Syncing</td>
                     <td>Active</td>
                     <td>Total</td>
@@ -1713,6 +1748,7 @@ const NetworkMonitor = function (config) {
             <tbody>
                 <tr>
                     <td id="node-info-joining">0</td>
+                    <td id="node-info-standby">0</td>
                     <td id="node-info-syncing">0</td>
                     <td id="node-info-active">0</td>
                     <td id="node-info-total">0</td>

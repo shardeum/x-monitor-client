@@ -1,4 +1,4 @@
-;(function main () {
+;(function main() {
     const G = {}
     loadToken(G)
     G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
@@ -13,7 +13,8 @@
     G.nodes = {
         joining: {},
         syncing: {},
-        active: {}
+        active: {},
+        standby: {},
     }
     let n = 0
     let tracker = {}
@@ -22,11 +23,12 @@
 
     new Vue({
         el: '#app',
-        data () {
+        data() {
             return {
                 networkStatus: {
                     active: 0,
                     syncing: 0,
+                    standby: 0,
                     joining: 0,
                     counter: 0,
                     desired: 0,
@@ -37,20 +39,20 @@
                     rejectedTps: 0,
                     netLoad: 0,
                     load: 0,
-                    maxLoad: 0
+                    maxLoad: 0,
                 },
                 colorMode: 'state',
                 shouldShowMaxTps: false,
                 shouldShowMaxLoad: false,
-                animateTransactions: false
+                animateTransactions: false,
             }
         },
-        async mounted () {
+        async mounted() {
             console.log('Mounted')
             this.start()
         },
         methods: {
-            calculateNetworkPosition (nodeId) {
+            calculateNetworkPosition(nodeId) {
                 let spread = 4
                 let angle = 137.508
                 let phi = (angle * Math.PI) / 180
@@ -69,14 +71,14 @@
                 return {
                     x,
                     y,
-                    degree: angle * n
+                    degree: angle * n,
                 }
             },
-            randomIntFromInterval (min, max) {
+            randomIntFromInterval(min, max) {
                 // min and max included
                 return Math.floor(Math.random() * (max - min + 1) + min)
             },
-            calculateNetworkPositionNew (nodeId, totalNodeCount) {
+            calculateNetworkPositionNew(nodeId, totalNodeCount) {
                 let idRatio = nodeId / G.maxId
                 let angle = idRatio * 360
                 let nearestAngle = parseInt(angle)
@@ -88,19 +90,19 @@
                 return {
                     x,
                     y,
-                    degree: angle
+                    degree: angle,
                 }
             },
-            generateRandomColor () {
+            generateRandomColor() {
                 let n = (Math.random() * 0xfffff * 1000000).toString(16)
                 return '#' + n.slice(0, 6)
             },
-            htmlTitle (html) {
+            htmlTitle(html) {
                 const container = document.createElement('div')
                 container.innerHTML = html
                 return container
             },
-            getNewVisNode (nodeId, node) {
+            getNewVisNode(nodeId, node) {
                 let position = this.calculateNetworkPosition(parseInt(nodeId.substr(0, 4), 16))
                 return {
                     id: nodeId,
@@ -108,28 +110,28 @@
                     y: position.y,
                     physics: false,
                     title: this.getTitle(nodeId, node),
-                    color: this.getNodeColor(node)
+                    color: this.getNodeColor(node),
                 }
             },
-            getNewVisEdge (node1, node2) {
+            getNewVisEdge(node1, node2) {
                 return {
                     id: this.getVisEdgeId(node1.id, node2.id),
                     from: node1.id,
                     to: node2.id,
                     physics: false,
-                    hidden: true
+                    hidden: true,
                 }
             },
-            getTruncatedNodeId (nodeId) {
+            getTruncatedNodeId(nodeId) {
                 const hashLength = 10
 
                 return nodeId.substring(0, hashLength)
             },
-            getVisEdgeId (node1Id, node2Id) {
+            getVisEdgeId(node1Id, node2Id) {
                 // Store just part of the hashes to make these more readable
                 return `${this.getTruncatedNodeId(node1Id)}->${this.getTruncatedNodeId(node2Id)}`
             },
-            getNewArchiverVisNodes (archivers) {
+            getNewArchiverVisNodes(archivers) {
                 let visNodes = archivers.map((archiver, index) => {
                     return {
                         id: archiver.publicKey,
@@ -137,19 +139,19 @@
                         y: 0 - 130 + index * 20,
                         physics: false,
                         title: archiver.publicKey,
-                        color: '#abc2ec'
+                        color: '#abc2ec',
                     }
                 })
                 return visNodes
             },
-            getUpdatedVisNode (nodeId, node) {
+            getUpdatedVisNode(nodeId, node) {
                 return {
                     id: nodeId,
                     title: this.getTitle(nodeId, node),
-                    color: this.getNodeColor(node)
+                    color: this.getNodeColor(node),
                 }
             },
-            getNodeColor (node) {
+            getNodeColor(node) {
                 if (!node.cycleMarker) return '#fcbf49' // syncing node
                 let color = '#000000'
                 if (this.colorMode === 'state') {
@@ -161,18 +163,18 @@
                 else if (this.colorMode === 'nodelist') color = `#${node.nodelistHash.substr(0, 6)}`
                 return color
             },
-            onColorModeChange (event) {
+            onColorModeChange(event) {
                 if (event.target.value === this.colorMode) return
                 this.colorMode = event.target.value
                 this.changeNodeColor()
             },
-            async fetchChanges () {
+            async fetchChanges() {
                 let res = await requestWithToken(
                     `${monitorServerUrl}/report?timestamp=${G.lastUpdatedTimestamp}`
                 )
                 return res.data
             },
-            addNewNodesIntoNetwork (newNodes) {
+            addNewNodesIntoNetwork(newNodes) {
                 let newVisNodes = []
                 for (let node of newNodes) {
                     const visNode = this.getNewVisNode(node.nodeId, node)
@@ -180,7 +182,7 @@
                 }
                 G.visNodes.add(newVisNodes)
             },
-            filterOutCrashedNodes (report) {
+            filterOutCrashedNodes(report) {
                 let filterdActiveNodes = {}
                 for (let nodeId in report.nodes.active) {
                     const node = report.nodes.active[nodeId]
@@ -192,7 +194,7 @@
                 console.log('filtered active nodes', Object.keys(filterdActiveNodes).length)
                 report.nodes.active = { ...filterdActiveNodes }
             },
-            updateNetworkStatus (report) {
+            updateNetworkStatus(report) {
                 if (Object.keys(report.nodes.active).length === 0) return // don't update stats if no nodes send the
                 let reportPercentage =
                     Object.keys(report.nodes.active).length / Object.keys(G.nodes.active).length
@@ -221,6 +223,7 @@
                 this.networkStatus.active = Object.keys(G.nodes.active).length - crashedCount
                 this.networkStatus.syncing = Object.keys(G.nodes.syncing).length
                 this.networkStatus.joining = Object.keys(report.nodes.joining).length
+                this.networkStatus.standby = Object.keys(report.nodes.standby).length
 
                 this.networkStatus.load = this.average(loads)
                 this.networkStatus.counter = this.mode(counters)
@@ -230,7 +233,7 @@
                     this.networkStatus.maxLoad = this.networkStatus.load
                 }
             },
-            deleteCrashedNodes (nodes) {
+            deleteCrashedNodes(nodes) {
                 console.log('Running delete crash nodes', nodes)
                 try {
                     let removedNodeIds = []
@@ -248,7 +251,7 @@
                     console.log('Error while trying to remove crashed nodes', e)
                 }
             },
-            async deleteRemovedNodes () {
+            async deleteRemovedNodes() {
                 console.log('Running deleteRemovedNodes')
                 try {
                     let res = await requestWithToken(`${monitorServerUrl}/removed`)
@@ -282,7 +285,7 @@
                     console.log('Error while trying to remove nodes', e)
                 }
             },
-            isNodeCrashedBefore (newNode) {
+            isNodeCrashedBefore(newNode) {
                 console.log('Checking crashed node', newNode)
                 return Object.values(G.nodes.active).find((node) => {
                     if (
@@ -293,7 +296,7 @@
                     }
                 })
             },
-            findCrashedSyncingNode (newNode) {
+            findCrashedSyncingNode(newNode) {
                 for (let nodeId in G.nodes.syncing) {
                     const { externalIp, externalPort } = G.nodes.syncing[nodeId].nodeIpInfo
                     if (
@@ -306,15 +309,19 @@
                     }
                 }
             },
-            async updateNodes () {
+            async updateNodes() {
                 try {
                     let changes = await this.fetchChanges()
                     console.log(
-                        `Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length
+                        `Total of ${Object.keys(changes.nodes.active).length}/${
+                            Object.keys(G.nodes.active).length
                         } nodes updated.`
                     )
                     this.filterOutCrashedNodes(changes)
-                    console.log('number of active nodes after filter', Object.keys(changes.nodes.active).length)
+                    console.log(
+                        'number of active nodes after filter',
+                        Object.keys(changes.nodes.active).length
+                    )
                     this.updateNetworkStatus(changes)
                     let updatedNodes = []
                     let updatedNodesMap = []
@@ -387,18 +394,18 @@
                     console.log('Error while trying to update nodes.', e)
                 }
             },
-            getNodeSize (count) {
+            getNodeSize(count) {
                 if (count >= 5000) return 2
                 if (count >= 1000) return 3
                 if (count >= 100) return 5
                 return 7
             },
-            shouldChangeNodesSize () {
+            shouldChangeNodesSize() {
                 const newNodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
                 return newNodeSize !== G.currentNodeSize
             },
 
-            getTitle (nodeId, node) {
+            getTitle(nodeId, node) {
                 try {
                     return this.htmlTitle(`
             <p><strong>NodeId</strong>: ${nodeId}</p>
@@ -412,22 +419,22 @@
                 }
             },
 
-            changeNodesSize () {
+            changeNodesSize() {
                 const nodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
                 const options = {
                     nodes: {
-                        size: nodeSize
+                        size: nodeSize,
                     },
                     interaction: {
                         zoomSpeed: 0.1,
-                        zoomView: true
-                    }
+                        zoomView: true,
+                    },
                 }
                 G.network.setOptions(options)
                 G.network.redraw()
                 G.currentNodeSize = nodeSize
             },
-            changeNodeColor () {
+            changeNodeColor() {
                 try {
                     let updatedNodes = []
                     for (let nodeId in G.nodes.active) {
@@ -440,12 +447,12 @@
                     console.log('Error while trying to update nodes.', e)
                 }
             },
-            average (list) {
+            average(list) {
                 if (list.length === 0) return 0
                 const total = list.reduce((p, c) => p + c, 0)
                 return total / list.length
             },
-            mode (arr) {
+            mode(arr) {
                 return arr.reduce(
                     function (current, num) {
                         const freq =
@@ -461,7 +468,7 @@
                     { mode: null, modeFreq: 0, numMap: {} }
                 ).mode
             },
-            async getRandomArchiver () {
+            async getRandomArchiver() {
                 if (Object.keys(G.nodes.active).length === 0) return
                 const randomConsensorNode = Object.values(G.nodes.active)[0]
                 let res = await requestWithToken(
@@ -472,7 +479,7 @@
                     G.archiver = cycle.refreshedArchivers[0]
                 }
             },
-            async getActiveArchivers () {
+            async getActiveArchivers() {
                 if (!G.archiver) await this.getRandomArchiver()
                 const res = await requestWithToken(
                     `http://${G.archiver.ip}:${G.archiver.port}/archiverlist`
@@ -481,7 +488,7 @@
                     return res.data.archivers
                 }
             },
-            async drawArchiverNetwork () {
+            async drawArchiverNetwork() {
                 try {
                     const activeArchivers = await this.getActiveArchivers()
                     let newArchiverNodes = this.getNewArchiverVisNodes(activeArchivers)
@@ -489,7 +496,7 @@
                     G.archiverData = new vis.DataSet(newArchiverNodes)
                     const archiverContainer = document.getElementById('myarchiver')
                     let archiverData = {
-                        nodes: G.archiverData
+                        nodes: G.archiverData,
                     }
                     const options = {
                         nodes: {
@@ -497,14 +504,14 @@
                             size: 5,
                             font: {
                                 size: 12,
-                                face: 'Arial'
-                            }
+                                face: 'Arial',
+                            },
                         },
                         interaction: {
                             zoomSpeed: 0.1,
                             hover: false,
-                            zoomView: false
-                        }
+                            zoomView: false,
+                        },
                     }
                     G.archiverNetwork = new vis.Network(archiverContainer, archiverData, options)
                     G.archiverNetwork.on('click', (params) => {
@@ -518,7 +525,7 @@
                 }
             },
 
-            drawCanvasNode ({ ctx, x, y, width, height, style, isEoa, indicator }) {
+            drawCanvasNode({ ctx, x, y, width, height, style, isEoa, indicator }) {
                 const drawInternalNode = () => {
                     ctx.fillStyle = style.color
                     ctx.strokeStyle = style.borderColor
@@ -560,7 +567,7 @@
                 drawIndicator(indicator)
             },
 
-            animateTraffic () {
+            animateTraffic() {
                 const memoizedEdges = {}
 
                 const animateInterval = () => {
@@ -580,8 +587,8 @@
                             numTraffic: txInjected / 2,
                             trafficStyle: {
                                 strokeStyle: '#f837d8',
-                                fillStyle: '#a1208b'
-                            }
+                                fillStyle: '#a1208b',
+                            },
                         }))
 
                     const edgesWithGossip = activeNodes
@@ -599,16 +606,16 @@
                             numTraffic: 1,
                             trafficStyle: {
                                 strokeStyle: '#f8b437',
-                                fillStyle: '#f88737'
+                                fillStyle: '#f88737',
                             },
                             delay: Math.random() * 4500,
-                            delayArray: [Math.random() * 5000]
+                            delayArray: [Math.random() * 5000],
                         }))
 
                     if (this.animateTransactions) {
                         G.network.animateTraffic({
                             edgesTrafficList: [...edgesWithTraffic, ...edgesWithGossip],
-                            animationDuration: animationDuration
+                            animationDuration: animationDuration,
                         })
                     }
                 }
@@ -623,16 +630,16 @@
                 }, G.REFRESH_TIME * 0.5)
             },
 
-            edgesForNode (nodeId) {
+            edgesForNode(nodeId) {
                 const edges = G.visEdges.get({
-                    filter: (item) => item.from === nodeId
+                    filter: (item) => item.from === nodeId,
                 })
 
                 return edges
             },
 
             // See ctxRenderer for more details: https://visjs.github.io/vis-network/docs/network/nodes.html#
-            visContextRenderer ({ ctx, id, x, y, style }) {
+            visContextRenderer({ ctx, id, x, y, style }) {
                 const width = 6
                 const height = width
                 const currentNode = G.nodes.active[id]
@@ -644,11 +651,11 @@
                     drawNode: () => {
                         this.drawCanvasNode({ ctx, x, y, width, height, style, isEoa, indicator })
                     },
-                    nodeDimensions: { width, height }
+                    nodeDimensions: { width, height },
                 }
             },
 
-            async start () {
+            async start() {
                 let res = await requestWithToken(`${monitorServerUrl}/report`)
                 let newNodesMap = {}
                 let report = res.data
@@ -709,7 +716,7 @@
                         id: `eoa-${node.id}`,
                         x: node.x * distance,
                         y: node.y * distance,
-                        isEoa: true
+                        isEoa: true,
                     }
 
                     const edge = this.getNewVisEdge(eoaNode, node)
@@ -729,7 +736,7 @@
                 // provide the data in the vis format
                 let data = {
                     nodes: G.visNodes,
-                    edges: G.visEdges
+                    edges: G.visEdges,
                 }
                 const options = {
                     nodes: {
@@ -740,16 +747,16 @@
                         size: this.getNodeSize(Object.keys(G.nodes.active).length),
                         font: {
                             size: 12,
-                            face: 'Arial'
-                        }
+                            face: 'Arial',
+                        },
                     },
                     interaction: {
                         zoomSpeed: 0.1,
-                        zoomView: true
+                        zoomView: true,
                     },
                     physics: {
-                        enabled: false
-                    }
+                        enabled: false,
+                    },
                 }
 
                 // initialize your network!
@@ -757,7 +764,11 @@
                 G.currentNodeSize = this.getNodeSize(Object.keys(G.nodes.active).length)
                 G.network.on('click', (params) => {
                     const nodeId = params.nodes[0]
-                    let node = G.nodes.active[nodeId] || G.nodes.syncing[nodeId] || G.nodes.joining[nodeId]
+                    let node =
+                        G.nodes.active[nodeId] ||
+                        G.nodes.syncing[nodeId] ||
+                        G.nodes.joining[nodeId] ||
+                        G.nodes.standby[nodeId]
                     if (!node) return
                     window.open(
                         `/log?ip=${node.nodeIpInfo.externalIp}&port=${node.nodeIpInfo.externalPort}`
@@ -767,7 +778,7 @@
                 // await this.drawArchiverNetwork()
                 setInterval(this.updateNodes, G.REFRESH_TIME)
                 this.animateTraffic()
-            }
-        }
+            },
+        },
     })
 })()

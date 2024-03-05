@@ -1,145 +1,184 @@
 <html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="axios.min.js"></script>
+        <script
+            src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+            type="text/javascript"
+        ></script>
+        <script src="vis-network-animated.js" type="text/javascript"></script>
+        <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="axios.min.js"></script>
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js" type="text/javascript"></script>
-    <script src="vis-network-animated.js" type="text/javascript"></script>
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+        <style>
+            body {
+                margin: 0;
+                background: rgb(243 243 243);
+                background: #e0eafc;
+                /* fallback for old browsers */
+                background: -webkit-linear-gradient(to right, #cfdef3, #e0eafc);
+                /* Chrome 10-25, Safari 5.1-6 */
+                background: linear-gradient(to right, #cfdef3, #e0eafc);
+                /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+            }
 
-    <style>
-        body {
-            margin: 0;
-            background: rgb(243 243 243);
-            background: #e0eafc;
-            /* fallback for old browsers */
-            background: -webkit-linear-gradient(to right, #cfdef3, #e0eafc);
-            /* Chrome 10-25, Safari 5.1-6 */
-            background: linear-gradient(to right, #cfdef3, #e0eafc);
-            /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-        }
+            #mynetwork {
+                width: 100%;
+                height: calc(100vh - 140px);
+                margin: 0;
+                padding: 0;
+            }
 
-        #mynetwork {
-            width: 100%;
-            height: calc(100vh - 140px);
-            margin: 0;
-            padding: 0;
-        }
+            #myarchiver {
+                width: 30px;
+                height: 300px;
+                position: absolute;
+                top: 80px;
+                right: 20px;
+                z-index: 100;
+            }
 
-        #myarchiver {
-            width: 30px;
-            height: 300px;
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            z-index: 100;
-        }
+            tr > td {
+                padding: 5px;
+            }
 
-        tr>td {
-            padding: 5px;
-        }
+            #color-mode-selector {
+                /*position: relative;*/
+                /*bottom: 100px;*/
+            }
+        </style>
+    </head>
 
-        #color-mode-selector {
-            /*position: relative;*/
-            /*bottom: 100px;*/
-        }
-    </style>
-</head>
-
-<body>
-    <div id="app">
-        <div class="p-2 w-full">
-            <table class="w-full font-sans text-sm font-light text-center bg-gray-100 shadow">
-                <tr class="font-medium text-xs text-gray-800 grid grid-cols-10">
-                    <td>Counter</td>
-                    <td>Joining</td>
-                    <td>Syncing</td>
-                    <td>Active</td>
-                    <td>Desired</td>
-                    <td>
-                        <span v-if="shouldShowMaxTps">Max Tps</span>
-                        <span v-else>Avg Tps</span>
-                    </td>
-                    <td>Processed</td>
-                    <td>Rejected</td>
-                    <td>Rejected TPS</td>
-                    <td>
-                        <span v-if="shouldShowMaxLoad">Max Load</span>
-                        <span v-else>Load</span>
-                    </td>
-                </tr>
-                <tr class="grid grid-cols-10">
-                    <td>{{ networkStatus.counter }}</td>
-                    <td>{{ networkStatus.joining }}</td>
-                    <td>{{ networkStatus.syncing }}</td>
-                    <td>{{ networkStatus.active }}</td>
-                    <td>{{ networkStatus.desired }}</td>
-                    <td @mouseover="shouldShowMaxTps = true" @mouseleave="shouldShowMaxTps = false">
-                        <span v-if="shouldShowMaxTps">{{ networkStatus.maxTps }}</span>
-                        <span v-else>{{ networkStatus.tps }}</span>
-                    </td>
-                    <td>{{ networkStatus.processed }}</td>
-                    <td>{{ networkStatus.rejected }}</td>
-                    <td>{{ networkStatus.rejectedTps }}</td>
-                    <td @mouseover="shouldShowMaxLoad = true" @mouseleave="shouldShowMaxLoad = false">
-                        <span v-if="shouldShowMaxLoad">{{ networkStatus.maxLoad ? networkStatus.maxLoad.toFixed(2) : 0.0
-                            }}</span>
-                        <span v-else>{{ networkStatus.load ? networkStatus.load.toFixed(2) : 0.0
-                            }}</span>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div id="mynetwork"></div>
-        <div id="myarchiver"></div>
-        <div style="position: absolute; bottom: 20px; right: 20px">
-            <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
-            <br>
-            <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
-        </div>
-        <div class="grid grid-cols-12">
-            <div class="col-span-3 px-3 mb-6 md:mb-0" id="color-mode-selector"
-                style="position: absolute; top: 75px; left: 0px;">
-                <label class="inline-block tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-state">
-                    Nodes Color By:
-                </label>
-                <div class="relative inline-block">
-                    <select @change="onColorModeChange"
-                        class="block appearance-none w-full bg-gray-100 border text-sm border-gray-100 text-gray-700 py-2 px-2 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                        id="grid-state">
-                        <option value="state">Data Sync</option>
-                        <option value="marker">Cycle Marker</option>
-                        <option value="nodelist">NodeList Hash</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                        </svg>
+    <body>
+        <div id="app">
+            <div class="p-2 w-full">
+                <table class="w-full font-sans text-sm font-light text-center bg-gray-100 shadow">
+                    <tr class="font-medium text-xs text-gray-800 grid grid-cols-11">
+                        <td>Counter</td>
+                        <td>Joining</td>
+                        <td>Standby</td>
+                        <td>Syncing</td>
+                        <td>Active</td>
+                        <td>Desired</td>
+                        <td>
+                            <span v-if="shouldShowMaxTps">Max Tps</span>
+                            <span v-else>Avg Tps</span>
+                        </td>
+                        <td>Processed</td>
+                        <td>Rejected</td>
+                        <td>Rejected TPS</td>
+                        <td>
+                            <span v-if="shouldShowMaxLoad">Max Load</span>
+                            <span v-else>Load</span>
+                        </td>
+                    </tr>
+                    <tr class="grid grid-cols-11">
+                        <td>{{ networkStatus.counter }}</td>
+                        <td>{{ networkStatus.joining - networkStatus.standby }}</td>
+                        <td>{{ networkStatus.standby }}</td>
+                        <td>{{ networkStatus.syncing }}</td>
+                        <td>{{ networkStatus.active }}</td>
+                        <td>{{ networkStatus.desired }}</td>
+                        <td
+                            @mouseover="shouldShowMaxTps = true"
+                            @mouseleave="shouldShowMaxTps = false"
+                        >
+                            <span v-if="shouldShowMaxTps">{{ networkStatus.maxTps }}</span>
+                            <span v-else>{{ networkStatus.tps }}</span>
+                        </td>
+                        <td>{{ networkStatus.processed }}</td>
+                        <td>{{ networkStatus.rejected }}</td>
+                        <td>{{ networkStatus.rejectedTps }}</td>
+                        <td
+                            @mouseover="shouldShowMaxLoad = true"
+                            @mouseleave="shouldShowMaxLoad = false"
+                        >
+                            <span v-if="shouldShowMaxLoad"
+                                >{{ networkStatus.maxLoad ? networkStatus.maxLoad.toFixed(2) : 0.0
+                                }}</span
+                            >
+                            <span v-else
+                                >{{ networkStatus.load ? networkStatus.load.toFixed(2) : 0.0
+                                }}</span
+                            >
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div id="mynetwork"></div>
+            <div id="myarchiver"></div>
+            <div style="position: absolute; bottom: 20px; right: 20px">
+                <span>Monitor-server version: <span id="server-version">x.x.x</span></span>
+                <br />
+                <span>Monitor-client version: &nbsp;<span id="client-version">x.x.x</span></span>
+            </div>
+            <div class="grid grid-cols-12">
+                <div
+                    class="col-span-3 px-3 mb-6 md:mb-0"
+                    id="color-mode-selector"
+                    style="position: absolute; top: 75px; left: 0px"
+                >
+                    <label
+                        class="inline-block tracking-wide text-gray-700 text-xs font-bold mb-2"
+                        for="grid-state"
+                    >
+                        Nodes Color By:
+                    </label>
+                    <div class="relative inline-block">
+                        <select
+                            @change="onColorModeChange"
+                            class="block appearance-none w-full bg-gray-100 border text-sm border-gray-100 text-gray-700 py-2 px-2 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                            id="grid-state"
+                        >
+                            <option value="state">Data Sync</option>
+                            <option value="marker">Cycle Marker</option>
+                            <option value="nodelist">NodeList Hash</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
+                        >
+                            <svg
+                                class="fill-current h-4 w-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                            >
+                                <path
+                                    d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                                />
+                            </svg>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-span-9 px-3 mb-6 md:mb-0 align-middle flex flex-row items-end justify-end space-x-6"
-                style="position: absolute; top: 75px; right: 0px;">
-                <div>
-                    <input type="checkbox" id="checkbox" v-model="animateTransactions" />
-                    <label class="text-sm" for="checkbox">Animate transactions</label>
+                <div
+                    class="col-span-9 px-3 mb-6 md:mb-0 align-middle flex flex-row items-end justify-end space-x-6"
+                    style="position: absolute; top: 75px; right: 0px"
+                >
+                    <div>
+                        <input type="checkbox" id="checkbox" v-model="animateTransactions" />
+                        <label class="text-sm" for="checkbox">Animate transactions</label>
+                    </div>
+                    <a href="/chart" target="_blank" class="text-sm text-blue-400">Charts</a>
+                    <a href="/sync" target="_blank" class="text-sm text-blue-400">Sync History</a>
+                    <a href="/history" target="_blank" class="text-sm text-blue-400"
+                        >Node History</a
+                    >
+                    <a href="/history-log" target="_blank" class="text-sm text-blue-400"
+                        >Monitor Logs</a
+                    >
+                    <a href="/monitor-events" target="_blank" class="text-sm text-blue-400"
+                        >Monitor Events</a
+                    >
+                    <a href="/app-versions" target="_blank" class="text-sm text-blue-400"
+                        >App Versions</a
+                    >
                 </div>
-                <a href="/chart" target="_blank" class="text-sm text-blue-400">Charts</a>
-                <a href="/sync" target="_blank" class="text-sm text-blue-400">Sync History</a>
-                <a href="/history" target="_blank" class="text-sm text-blue-400">Node History</a>
-                <a href="/history-log" target="_blank" class="text-sm text-blue-400">Monitor Logs</a>
-                <a href="/monitor-events" target="_blank" class="text-sm text-blue-400">Monitor Events</a>
-                <a href="/app-versions" target="_blank" class="text-sm text-blue-400">App Versions</a>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <script src="auth.js" type="text/javascript"></script>
-    <script src="large-network.js" type="text/javascript"></script>
-    <script src="version.js"></script>
-</body>
-
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+        <script src="auth.js" type="text/javascript"></script>
+        <script src="large-network.js" type="text/javascript"></script>
+        <script src="version.js"></script>
+    </body>
 </html>
