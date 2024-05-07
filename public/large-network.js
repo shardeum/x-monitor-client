@@ -40,11 +40,16 @@
                     netLoad: 0,
                     load: 0,
                     maxLoad: 0,
+                    queueLength: 0,
+                    queueTime: 0,
+                    expiredTx: 0,
+
                 },
                 colorMode: 'state',
                 shouldShowMaxTps: false,
                 shouldShowMaxLoad: false,
                 animateTransactions: false,
+                queueDetails: false,
             }
         },
         async mounted() {
@@ -206,6 +211,8 @@
                 let cycleMarkers = []
                 let desired = []
                 let crashedCount = 0
+                let queueLength = []
+                let queueTime = []
 
                 for (let nodeId in report.nodes.active) {
                     const node = report.nodes.active[nodeId]
@@ -213,6 +220,8 @@
                     counters.push(node.cycleCounter)
                     cycleMarkers.push(node.cycleMarker)
                     desired.push(node.desiredNodes)
+                    queueLength.push(node.queueLength)
+                    queueTime.push(node.txTimeInQueue)
                 }
 
                 this.networkStatus.tps = report.avgTps
@@ -232,6 +241,9 @@
                 if (this.networkStatus.load > this.networkStatus.maxLoad) {
                     this.networkStatus.maxLoad = this.networkStatus.load
                 }
+                this.expiredTx = report.totalExpired
+                this.networkStatus.queueLength = this.average(queueLength)
+                this.networkStatus.queueTime = this.average(queueTime)
             },
             deleteCrashedNodes(nodes) {
                 console.log('Running delete crash nodes', nodes)
