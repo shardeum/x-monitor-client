@@ -105,6 +105,21 @@
                     </tr>
                 </table>
             </div>
+
+            <div style="position: absolute; bottom: 20px; left: 20px" v-if="queueDetails">
+                <table class="font-sans text-sm font-light text-center bg-gray-100 shadow">
+                    <tr class="font-medium text-xs text-gray-800 grid grid-cols-4">
+                        <td>Exp.Tx</td>
+                        <td>Q.Time</td>
+                        <td>Q.Length</td>
+                    </tr>
+                    <tr class="grid grid-cols-4">
+                        <td>{{ networkStatus.expiredTx }}</td>
+                        <td>{{ networkStatus.queueTime.toFixed(2) }}</td>
+                        <td>{{ networkStatus.queueLength.toFixed(2) }}</td>
+                    </tr>
+                </table>
+            </div>
             <div id="mynetwork"></div>
             <div id="myarchiver"></div>
             <div style="position: absolute; bottom: 20px; right: 20px">
@@ -157,6 +172,10 @@
                     <div>
                         <input type="checkbox" id="checkbox" v-model="animateTransactions" />
                         <label class="text-sm" for="checkbox">Animate transactions</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="checkbox" v-model="queueDetails" />
+                        <label class="text-sm" for="checkbox">Show Queue Detail</label>
                     </div>
                     <a href="/chart" target="_blank" class="text-sm text-blue-400">Charts</a>
                     <a href="/sync" target="_blank" class="text-sm text-blue-400">Sync History</a>
