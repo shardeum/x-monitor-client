@@ -1,4 +1,4 @@
-;(function main() {
+; (function main() {
     const G = {}
     loadToken(G)
     G.VW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
@@ -39,15 +39,16 @@
                     rejectedTps: 0,
                     netLoad: 0,
                     load: 0,
+                    totalLoad: 0,
                     maxLoad: 0,
                     queueLength: 0,
+                    totalQueueLength: 0,
                     queueTime: 0,
+                    totalQueueTime: 0,
                     expiredTx: 0,
 
                 },
                 colorMode: 'state',
-                shouldShowMaxTps: false,
-                shouldShowMaxLoad: false,
                 animateTransactions: false,
                 queueDetails: false,
             }
@@ -214,13 +215,20 @@
                 let queueLength = []
                 let queueTime = []
 
+                let totalLoad = 0
+                let totalQueueLength = 0
+                let totalQueueTime = 0.0
+
                 for (let nodeId in report.nodes.active) {
                     const node = report.nodes.active[nodeId]
+                    totalLoad += node.currentLoad.networkLoad
                     loads.push(node.currentLoad.networkLoad)
                     counters.push(node.cycleCounter)
                     cycleMarkers.push(node.cycleMarker)
                     desired.push(node.desiredNodes)
+                    totalQueueLength += node.queueLength
                     queueLength.push(node.queueLength)
+                    totalQueueTime += node.txTimeInQueue
                     queueTime.push(node.txTimeInQueue)
                 }
 
@@ -235,6 +243,7 @@
                 this.networkStatus.standby = Object.keys(report.nodes.standby).length
 
                 this.networkStatus.load = this.average(loads)
+                this.networkStatus.totalLoad = totalLoad
                 this.networkStatus.counter = this.mode(counters)
                 this.networkStatus.cycleMarker = this.mode(cycleMarkers)
                 this.networkStatus.desired = this.mode(desired)
@@ -243,7 +252,9 @@
                 }
                 this.expiredTx = report.totalExpired
                 this.networkStatus.queueLength = this.average(queueLength)
+                this.networkStatus.totalQueueLength = totalQueueLength
                 this.networkStatus.queueTime = this.average(queueTime)
+                this.networkStatus.totalQueueTime = totalQueueTime
             },
             deleteCrashedNodes(nodes) {
                 console.log('Running delete crash nodes', nodes)
@@ -325,8 +336,7 @@
                 try {
                     let changes = await this.fetchChanges()
                     console.log(
-                        `Total of ${Object.keys(changes.nodes.active).length}/${
-                            Object.keys(G.nodes.active).length
+                        `Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length
                         } nodes updated.`
                     )
                     this.filterOutCrashedNodes(changes)
