@@ -1,23 +1,20 @@
+<!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js" type="text/javascript"></script>
-    <script src="vis-network-animated.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
 
     <style>
         body {
             margin: 0;
-            background: rgb(243 243 243);
             background: #e0eafc;
-            /* fallback for old browsers */
             background: -webkit-linear-gradient(to right, #cfdef3, #e0eafc);
-            /* Chrome 10-25, Safari 5.1-6 */
             background: linear-gradient(to right, #cfdef3, #e0eafc);
-            /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
         }
 
         #mynetwork {
@@ -70,6 +67,32 @@
 
         tr>td {
             padding: 5px;
+        }
+
+        .content {
+            padding: 0 18px;
+            overflow: hidden;
+            background-color: #f1f1f1;
+            margin-bottom: 2px;
+        }
+
+        .table-container {
+            height: 30vh;
+            width: -webkit-fill-available;
+            font-size: 0.8rem;
+        }
+
+        .table-scroll {
+            overflow-y: scroll;
+            height: 50%;
+        }
+
+        th {
+            cursor: pointer;
+        }
+
+        th:hover {
+            background-color: #f1f1f1;
         }
     </style>
 </head>
@@ -228,16 +251,38 @@
                     <td><a href="/app-versions" target="_blank" class="text-sm text-blue-400">App Versions</a></td>
                 </tr>
             </table>
+
+            <div class="content table-container">
+                    <div id="monheader">NODE LOADS</div>
+                <table class="table-auto w-full">
+                    <thead>
+                        <tr>
+                            <th @click="sortTable('ip')">IP</th>
+                            <th @click="sortTable('port')">Port</th>
+                            <th @click="sortTable('load')">Load</th>
+                            <th @click="sortTable('queueLength')">Queue Length</th>
+                            <th @click="sortTable('queueTime')">Queue Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="node in sortedNodes" :key="node.id">
+                            <td>{{ node.ip }}</td>
+                            <td>{{ node.port }}</td>
+                            <td>{{ node.load }}</td>
+                            <td>{{ node.queueLength }}</td>
+                            <td>{{ node.queueTime }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div id="mynetwork"></div>
     <div id="myarchiver"></div>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="auth.js" type="text/javascript"></script>
-    <script src="large-network.js" type="text/javascript"></script>
+    <script src="large-network.js"></script>
     <script src="version.js"></script>
 </body>
 
