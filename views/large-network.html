@@ -73,18 +73,13 @@
             padding: 0 18px;
             overflow: hidden;
             background-color: #f1f1f1;
-            margin-bottom: 2px;
         }
 
         .table-container {
             height: 30vh;
             width: -webkit-fill-available;
             font-size: 0.8rem;
-        }
-
-        .table-scroll {
-            overflow-y: scroll;
-            height: 50%;
+             overflow-y: auto;
         }
 
         th {
@@ -259,16 +254,18 @@
                         <tr>
                             <th @click="sortTable('ip')">IP</th>
                             <th @click="sortTable('port')">Port</th>
-                            <th @click="sortTable('load')">Load</th>
-                            <th @click="sortTable('queueLength')">Queue Length</th>
-                            <th @click="sortTable('queueTime')">Queue Time</th>
+                            <th @click="sortTable('loadInternal')">Load Internal</th>
+                            <th @click="sortTable('loadExternal')">Load External</th>
+                            <th @click="sortTable('queueLength')">Q Length</th>
+                            <th @click="sortTable('queueTime')">Q Time</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="node in sortedNodes" :key="node.id">
                             <td>{{ node.ip }}</td>
                             <td>{{ node.port }}</td>
-                            <td>{{ node.load }}</td>
+                            <td>{{ node.loadInternal }}</td>
+                            <td>{{ node.loadExternal }}</td>
                             <td>{{ node.queueLength }}</td>
                             <td>{{ node.queueTime }}</td>
                         </tr>

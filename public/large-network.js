@@ -252,7 +252,8 @@
                         id: nodeId,
                         ip: node.nodeIpInfo.externalIp,
                         port: node.nodeIpInfo.externalPort,
-                        load: node.currentLoad.networkLoad,
+                        loadInternal: node.currentLoad.nodeLoad.internal,
+                        loadExternal: node.currentLoad.nodeLoad.external,
                         queueLength: node.queueLength,
                         queueTime: node.txTimeInQueue,
                     })
