@@ -53,7 +53,6 @@
                 nodeLoads: [],
                 sortKey: 'ip',
                 sortAsc: true,
-                isCollapsed: false,
             }
         },
         async mounted() {
@@ -92,9 +91,6 @@
                     y,
                     degree: angle * n,
                 }
-            },
-            toggleCollapse() {
-                this.isCollapsed = !this.isCollapsed
             },
             randomIntFromInterval(min, max) {
                 // min and max included
