@@ -46,16 +46,28 @@
                     queueTime: 0,
                     totalQueueTime: 0,
                     expiredTx: 0,
-
                 },
                 colorMode: 'state',
                 animateTransactions: false,
                 queueDetails: false,
+                nodeLoads: [],
+                sortKey: 'ip',
+                sortAsc: true,
             }
         },
         async mounted() {
             console.log('Mounted')
             this.start()
+        },
+        computed: {
+            sortedNodes() {
+                return this.nodeLoads.sort((a, b) => {
+                    let modifier = this.sortAsc ? 1 : -1
+                    if (a[this.sortKey] < b[this.sortKey]) return -1 * modifier
+                    if (a[this.sortKey] > b[this.sortKey]) return 1 * modifier
+                    return 0
+                })
+            },
         },
         methods: {
             calculateNetworkPosition(nodeId) {
@@ -218,6 +230,7 @@
                 let totalLoad = 0
                 let totalQueueLength = 0
                 let totalQueueTime = 0.0
+                this.nodeLoads = []
 
                 for (let nodeId in report.nodes.active) {
                     const node = report.nodes.active[nodeId]
@@ -230,6 +243,16 @@
                     queueLength.push(node.queueLength)
                     totalQueueTime += node.txTimeInQueue
                     queueTime.push(node.txTimeInQueue)
+
+                    this.nodeLoads.push({
+                        id: nodeId,
+                        ip: node.nodeIpInfo.externalIp,
+                        port: node.nodeIpInfo.externalPort,
+                        loadInternal: node.currentLoad.nodeLoad.internal,
+                        loadExternal: node.currentLoad.nodeLoad.external,
+                        queueLength: node.queueLength,
+                        queueTime: node.txTimeInQueue,
+                    })
                 }
 
                 this.networkStatus.tps = report.avgTps
@@ -255,6 +278,14 @@
                 this.networkStatus.totalQueueLength = totalQueueLength
                 this.networkStatus.queueTime = this.average(queueTime)
                 this.networkStatus.totalQueueTime = totalQueueTime
+            },
+            sortTable(key) {
+                if (this.sortKey === key) {
+                    this.sortAsc = !this.sortAsc
+                } else {
+                    this.sortKey = key
+                    this.sortAsc = true
+                }
             },
             deleteCrashedNodes(nodes) {
                 console.log('Running delete crash nodes', nodes)
@@ -336,7 +367,8 @@
                 try {
                     let changes = await this.fetchChanges()
                     console.log(
-                        `Total of ${Object.keys(changes.nodes.active).length}/${Object.keys(G.nodes.active).length
+                        `Total of ${Object.keys(changes.nodes.active).length}/${
+                            Object.keys(G.nodes.active).length
                         } nodes updated.`
                     )
                     this.filterOutCrashedNodes(changes)
