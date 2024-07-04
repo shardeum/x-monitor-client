@@ -118,14 +118,19 @@
                         good: result.stats.good,
                         bad: result.stats.bad,
                         radixes: result.radixes,
+                        stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
+                        cycleFinishedSyncing: node.cycleFinishedSyncing,
                     })
                 }
             },
             radixClass(r) {
                 if (this.hideEdgeOOS && r.inConsensusRange && !r.inEdgeRange) {
-                    return 'inconsensus-oosync'
+                    return 'inconsensus-oosync';
                 }
-                return r.insync ? 'insync' : 'oosync'
+                if (r.recentRuntimeSync) {
+                    return 'recent-runtime-sync';
+                }
+                return r.insync ? 'insync' : 'oosync';
             },
             sortTable(key) {
                 if (this.sortKey === key) {
