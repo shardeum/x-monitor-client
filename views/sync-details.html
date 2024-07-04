@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="axios.min.js"></script>
+        <!-- <script src="vis-network-animated.js" type="text/javascript"></script> -->
+        <script
+            src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+            type="text/javascript"
+        ></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+        <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+
+        <style>
+            body {
+                margin: 0;
+                background: #e0eafc;
+                background: -webkit-linear-gradient(to right, #cfdef3, #e0eafc);
+                background: linear-gradient(to right, #cfdef3, #e0eafc);
+            }
+
+            tr > td {
+                padding: 5px;
+            }
+
+            .content {
+                padding: 0 18px;
+                overflow: hidden;
+                background-color: #f1f1f1;
+            }
+
+            .table-container {
+                height: 90vh;
+                width: -webkit-fill-available;
+                font-size: 0.8rem;
+                overflow-y: auto;
+                text-align: center;
+            }
+
+            th {
+                cursor: pointer;
+            }
+
+            th:hover {
+                background-color: #f1f1f1;
+            }
+
+            .insync {
+                background-color: #2dc200;
+            }
+
+            .oosync {
+                background-color: #ff00bf;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app">
+            <div
+                class="table-container"
+                style="display: flex; gap: 10px; margin: 10px 10px; align-items: flex-start"
+            >
+                <div class="content table-container">
+                    <div id="monheader" style="margin-bottom: 10px">
+                        NODES
+                        <input
+                            style="margin-left: 10px"
+                            type="checkbox"
+                            :checked="shouldRefresh"
+                            id="refresh"
+                            @change="changeShouldRefresh()"
+                        />
+                        Refresh
+                    </div>
+                    <table class="table-auto w-full">
+                        <thead>
+                            <tr>
+                                <th @click="sortTable('ip')">IP</th>
+                                <th @click="sortTable('port')">Port</th>
+                                <th @click="sortTable('inSync')">In Sync</th>
+                                <th @click="sortTable('total')">Total</th>
+                                <th @click="sortTable('good')">Good</th>
+                                <th @click="sortTable('bad')">Bad</th>
+                                <th>Radixes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="node in sortedNodes" :key="node.id">
+                                <td>{{ node.ip }}</td>
+                                <td>{{ node.port }}</td>
+                                <td>
+                                    <span :class="{ insync: node.inSync, oosync: !node.inSync }"
+                                        >{{ node.inSync }}</span
+                                    >
+                                </td>
+                                <td>{{ node.total }}</td>
+                                <td>{{ node.good }}</td>
+                                <td>{{ node.bad }}</td>
+                                <td>
+                                    <template v-for="r in node.radixes">
+                                        <span
+                                            :class="{ insync: r.insync, oosync: !r.insync }"
+                                            style="color: white"
+                                            >{{r.inEdgeRange ? "E" : "C"}}</span
+                                        ><span
+                                            :class="{ insync: r.insync, oosync: !r.insync }"
+                                            style="margin-right: 2px"
+                                            >{{r.radix}}</span
+                                        >
+                                    </template>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script src="auth.js" type="text/javascript"></script>
+        <script src="sync-detail.js"></script>
+        <script src="version.js"></script>
+    </body>
+</html>
