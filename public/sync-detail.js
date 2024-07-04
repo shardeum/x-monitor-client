@@ -54,6 +54,7 @@
                 sortKey: 'ip',
                 sortAsc: true,
                 shouldRefresh: true,
+                hideEdgeOOS: false,
             }
         },
         async mounted() {
@@ -79,6 +80,9 @@
             },
             changeShouldRefresh() {
                 this.shouldRefresh = !this.shouldRefresh
+            },
+            changeHideEdgeOOS() {
+                this.hideEdgeOOS = !this.hideEdgeOOS
             },
             filterOutCrashedNodes(report) {
                 let filterdActiveNodes = {}
@@ -116,6 +120,12 @@
                         radixes: result.radixes,
                     })
                 }
+            },
+            radixClass(r) {
+                if (this.hideEdgeOOS && r.inConsensusRange && !r.inEdgeRange) {
+                    return 'inconsensus-oosync'
+                }
+                return r.insync ? 'insync' : 'oosync'
             },
             sortTable(key) {
                 if (this.sortKey === key) {
