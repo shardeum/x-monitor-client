@@ -15,6 +15,7 @@
             background: #e0eafc;
             background: -webkit-linear-gradient(to right, #cfdef3, #e0eafc);
             background: linear-gradient(to right, #cfdef3, #e0eafc);
+            font-family: Arial, sans-serif; /* Ensure font consistency */
         }
 
         tr > td {
@@ -43,10 +44,6 @@
             background-color: #f1f1f1;
         }
 
-        .recent-runtime-sync {
-            background-color: #FFD700;
-        }
-
         .insync {
             background-color: #2dc200;
         }
@@ -58,6 +55,49 @@
         .inconsensus-oosync {
             background-color: #2dc200 !important;
         }
+
+        .recent-runtime-sync {
+            background-color: #FFD700; /* Gold color for recentRuntimeSync */
+        }
+
+        .legend {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ccc;
+            font-size: 0.8rem; /* Ensure font consistency */
+            align-items: center; /* Vertically align items */
+            margin-bottom: 10px; /* Add space below the legend */
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+        }
+
+        .legend-color.insync {
+            background-color: #2dc200;
+        }
+
+        .legend-color.oosync {
+            background-color: #ff00bf;
+        }
+
+        .legend-color.inconsensus-oosync {
+            background-color: #2dc200;
+        }
+
+        .legend-color.recent-runtime-sync {
+            background-color: #FFD700;
+        }
     </style>
 </head>
 
@@ -65,8 +105,19 @@
 <div id="app">
     <div
             class="table-container"
-            style="display: flex; gap: 10px; margin: 10px 10px; align-items: flex-start"
+            style="display: flex; gap: 10px; margin: 10px 10px; flex-direction: column; align-items: flex-start"
     >
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-color insync"></span> In Sync
+            </div>
+            <div class="legend-item">
+                <span class="legend-color oosync"></span> Out of Sync
+            </div>
+            <div class="legend-item">
+                <span class="legend-color recent-runtime-sync"></span> Recent Runtime Sync
+            </div>
+        </div>
         <div class="content table-container">
             <div id="monheader" style="margin-bottom: 10px">
                 NODES
@@ -96,9 +147,9 @@
                     <th @click="sortTable('total')">Total</th>
                     <th @click="sortTable('good')">Good</th>
                     <th @click="sortTable('bad')">Bad</th>
-                    <th @click="sortTable('stillNeedsInitialPatchPostActive')">Patch Needed</th>
-                    <th @click="sortTable('cycleFinishedSyncing')">Cycle Finished Syncing</th>
                     <th>Radixes</th>
+                    <th @click="sortTable('stillNeedsInitialPatchPostActive')">Initial Patch Needed</th>
+                    <th @click="sortTable('cycleFinishedSyncing')">Cycle Finished Syncing</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -113,8 +164,6 @@
                     <td>{{ node.total }}</td>
                     <td>{{ node.good }}</td>
                     <td>{{ node.bad }}</td>
-                    <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
-                    <td>{{ node.cycleFinishedSyncing }}</td>
                     <td>
                         <template v-for="r in node.radixes">
                                     <span
@@ -128,6 +177,8 @@
                         >
                         </template>
                     </td>
+                    <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
+                    <td>{{ node.cycleFinishedSyncing }}</td>
                 </tr>
                 </tbody>
             </table>
