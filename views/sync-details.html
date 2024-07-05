@@ -150,6 +150,7 @@
                     <th>Radixes</th>
                     <th @click="sortTable('stillNeedsInitialPatchPostActive')">Initial Patch Needed</th>
                     <th @click="sortTable('cycleFinishedSyncing')">Cycle Finished Syncing</th>
+                    <th @click="sortTable('recentRuntimeSync')">Recent Sync</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -179,6 +180,7 @@
                     </td>
                     <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
                     <td>{{ node.cycleFinishedSyncing }}</td>
+                    <td>{{ node.recentRuntimeSync }}</td>
                 </tr>
                 </tbody>
             </table>

@@ -120,6 +120,7 @@
                         radixes: result.radixes,
                         stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
                         cycleFinishedSyncing: node.cycleFinishedSyncing,
+                        recentRuntimeSync: result.radixes.some((r) => r.recentRuntimeSync)
                     })
                 }
             },
