@@ -57,7 +57,7 @@
         }
 
         .recent-runtime-sync {
-            background-color: #FFD700; /* Gold color for recentRuntimeSync */
+            background-color: #FFD700 !important; /* Gold color for recentRuntimeSync */
         }
 
         .legend {
@@ -147,10 +147,10 @@
                     <th @click="sortTable('total')">Total</th>
                     <th @click="sortTable('good')">Good</th>
                     <th @click="sortTable('bad')">Bad</th>
-                    <th>Radixes</th>
                     <th @click="sortTable('stillNeedsInitialPatchPostActive')">Initial Patch Needed</th>
                     <th @click="sortTable('cycleFinishedSyncing')">Cycle Finished Syncing</th>
                     <th @click="sortTable('recentRuntimeSync')">Recent Sync</th>
+                    <th>Radixes</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -158,13 +158,16 @@
                     <td>{{ node.ip }}</td>
                     <td>{{ node.port }}</td>
                     <td>
-                                <span :class="{ insync: node.inSync, oosync: !node.inSync }"
-                                >{{ node.inSync }}</span
+                                <span :class="{ insync: node.inSync, oosync: !node.inSync, 'inconsensus-oosync': isInSync(node) }"
+                                >{{ isInSync(node) }}</span
                                 >
                     </td>
                     <td>{{ node.total }}</td>
                     <td>{{ node.good }}</td>
                     <td>{{ node.bad }}</td>
+                    <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
+                    <td>{{ node.cycleFinishedSyncing }}</td>
+                    <td>{{ node.recentRuntimeSync }}</td>
                     <td>
                         <template v-for="r in node.radixes">
                                     <span
@@ -178,9 +181,6 @@
                         >
                         </template>
                     </td>
-                    <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
-                    <td>{{ node.cycleFinishedSyncing }}</td>
-                    <td>{{ node.recentRuntimeSync }}</td>
                 </tr>
                 </tbody>
             </table>

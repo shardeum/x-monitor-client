@@ -125,13 +125,19 @@
                 }
             },
             radixClass(r) {
-                if (this.hideEdgeOOS && r.inConsensusRange && !r.inEdgeRange) {
-                    return 'inconsensus-oosync';
-                }
                 if (r.recentRuntimeSync) {
                     return 'recent-runtime-sync';
                 }
+                if (this.hideEdgeOOS && !r.insync && !r.inConsensusRange && r.inEdgeRange) {
+                    return 'inconsensus-oosync';
+                }
                 return r.insync ? 'insync' : 'oosync';
+            },
+            isInSync(node) {
+              if (this.hideEdgeOOS && !node.inSync) {
+                return node.radixes.filter(r => r.inConsensusRange).every(r => r.insync)
+              }
+                return node.inSync
             },
             sortTable(key) {
                 if (this.sortKey === key) {
