@@ -12,9 +12,9 @@
         "compile": "tsc -p .",
         "prepare": "npm run compile",
         "pretest": "npm run compile",
-        "lint": "eslint './public/**/*.ts'",
-        "lint-windows": "eslint ./public/**/*.ts",
-        "format-check": "prettier --check './public/**/*.ts'"
+        "lint": "eslint \"./public/**/*.ts\"",
+        "format-check": "prettier --check './public/**/*.ts'",
+        "format-fix": "prettier --write './public/**/*.ts'"
     },
     "repository": {
         "type": "git",
