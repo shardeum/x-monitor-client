@@ -135,7 +135,7 @@
             },
             isInSync(node) {
               if (this.hideEdgeOOS && !node.inSync) {
-                return node.radixes.filter(r => r.inConsensusRange).every(r => r.insync)
+                return node.radixes.filter(r => r.inConsensusRange && !r.inEdgeRange).every(r => r.insync)
               }
                 return node.inSync
             },
