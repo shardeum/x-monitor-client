@@ -10,6 +10,7 @@
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
 
     <style>
+        /* Base Styles */
         body {
             margin: 0;
             background: #e0eafc;
@@ -18,19 +19,10 @@
             font-family: Arial, sans-serif; /* Ensure font consistency */
         }
 
-        tr > td {
-            padding: 5px;
-        }
-
-        .content {
-            padding: 0 18px;
-            overflow: hidden;
-            background-color: #f1f1f1;
-        }
-
+        /* Table Styles */
         .table-container {
-            height: 90vh;
-            width: -webkit-fill-available;
+            height: 100%;
+            min-width: 100%;
             font-size: 0.8rem;
             overflow-y: auto;
             overflow-x: auto;
@@ -45,22 +37,26 @@
             background-color: #f1f1f1;
         }
 
-        .insync {
-            background-color: #2dc200;
+        tr > td {
+            padding: 5px;
         }
 
-        .oosync {
-            background-color: #ff00bf;
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9; 
         }
 
-        .inconsensus-oosync {
-            background-color: #2dc200 !important;
+        tbody tr:nth-child(even) {
+            background-color: #ffffff; 
         }
 
-        .recent-runtime-sync {
-            background-color: #FFD700 !important; /* Gold color for recentRuntimeSync */
+        /* Content Styles */
+        .content {
+            padding: 0 18px;
+            overflow: hidden;
+            background-color: #f1f1f1;
         }
 
+        /* Legend Styles */
         .legend {
             display: flex;
             gap: 10px;
@@ -84,29 +80,25 @@
             height: 20px;
         }
 
-        .legend-color.insync {
+        /* Status Color Styles */
+        .insync, .legend-color.insync {
             background-color: #2dc200;
         }
 
-        .legend-color.oosync {
+        .oosync, .legend-color.oosync {
             background-color: #ff00bf;
         }
 
-        .legend-color.inconsensus-oosync {
-            background-color: #2dc200;
+        .inconsensus-oosync, .legend-color.inconsensus-oosync {
+            background-color: #2dc200 !important;
         }
 
-        .legend-color.recent-runtime-sync {
-            background-color: #FFD700;
+        .recent-runtime-sync, .legend-color.recent-runtime-sync {
+            background-color: #FFD700 !important; /* Gold color for recentRuntimeSync */
         }
 
-        tbody tr:nth-child(odd) {
-            background-color: #f9f9f9; 
-        }
+        /* Radix Styles */
 
-        tbody tr:nth-child(even) {
-            background-color: #ffffff; 
-        }
     </style>
 </head>
 
@@ -177,15 +169,13 @@
                     <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
                     <td>{{ node.cycleFinishedSyncing }}</td>
                     <td>{{ node.recentRuntimeSync }}</td>
-                    <td style="min-width: 150px; max-width: 300px;">
-                        <div class="scrollable-radixes">
-                            <template v-for="r in node.radixes">
-                                <span :class="radixClass(r)" style="white-space: nowrap; display: inline-block; margin-right: 2px; margin-bottom: 4px; padding-top: 2px; padding-bottom: 2px;">
-                                    <span style="color: white;">{{ r.inConsensusRange ? "C" : "" }}{{ r.inEdgeRange ? "E" : "" }}</span>
-                                    <span style="color: black;">{{ r.radix }}</span>
-                                </span>
-                            </template>
-                        </div>
+                    <td>
+                        <template v-for="r in node.radixes">
+                            <span :class="radixClass(r)" style="white-space: nowrap; display: inline-block; margin-right: 2px; margin-bottom: 4px; padding-top: 2px; padding-bottom: 2px;">
+                                <span style="color: white;">{{ r.inConsensusRange ? "C" : "" }}{{ r.inEdgeRange ? "E" : "" }}</span>
+                                <span style="color: black;">{{ r.radix }}</span>
+                            </span>
+                        </template>
                     </td>
                 </tr>
                 </tbody>
