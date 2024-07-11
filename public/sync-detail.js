@@ -113,14 +113,14 @@
                         id: nodeId,
                         ip: node.nodeIpInfo.externalIp,
                         port: node.nodeIpInfo.externalPort,
-                        inSync: result.insync,
-                        total: result.stats.total,
-                        good: result.stats.good,
-                        bad: result.stats.bad,
-                        radixes: result.radixes,
+                        inSync: result?.insync,
+                        total: result?.stats.total,
+                        good: result?.stats.good,
+                        bad: result?.stats.bad,
+                        radixes: result?.radixes,
                         stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
                         cycleFinishedSyncing: node.cycleFinishedSyncing,
-                        recentRuntimeSync: result.radixes.some((r) => r.recentRuntimeSync)
+                        recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync)
                     })
                 }
             },
@@ -135,7 +135,7 @@
             },
             isInSync(node) {
               if (this.hideEdgeOOS && !node.inSync) {
-                return node.radixes.filter(r => r.inConsensusRange && !r.inEdgeRange).every(r => r.insync)
+                return node.radixes?.filter(r => r.inConsensusRange && !r.inEdgeRange).every(r => r.insync)
               }
                 return node.inSync
             },
