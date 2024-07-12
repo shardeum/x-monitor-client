@@ -135,6 +135,15 @@
                 />
                 Hide Edge OOS
             </div>
+              <input
+                        style="margin-left: 10px"
+                        type="checkbox"
+                        :checked="hideFullyInSync"
+                        id="hideFullyInSync"
+                        @change="changeHideFullyInSync()"
+                />
+                Hide Fully InSync Nodes
+            </div>
             <table class="table-auto w-full">
                 <thead>
                 <tr>

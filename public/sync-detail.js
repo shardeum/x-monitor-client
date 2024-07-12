@@ -76,6 +76,7 @@
                 sortOrder: -1,
                 shouldRefresh: true,
                 hideEdgeOOS: false,
+                hideFullyInSync: false,
                 recentRuntimeSyncMap: new Map(),
                 isRecentActiveCycles: 4,
             }
@@ -174,6 +175,10 @@
             changeHideEdgeOOS() {
                 this.hideEdgeOOS = !this.hideEdgeOOS
             },
+            changeHideFullyInSync() {
+                this.hideFullyInSync = !this.hideFullyInSync
+                this.updateNodes()
+            },
             filterOutCrashedNodes(report) {
                 let filterdActiveNodes = {}
                 for (let nodeId in report.nodes.active) {
@@ -207,20 +212,21 @@
                             this.recentRuntimeSyncMap.set(uniqueKey, recentRuntimeSyncCycle)
                         }
                     }
-
-                    this.nodeLoads.push({
-                        id: nodeId,
-                        ip: node.nodeIpInfo.externalIp,
-                        port: node.nodeIpInfo.externalPort,
-                        inSync: result?.insync,
-                        total: result?.stats.total,
-                        good: result?.stats.good,
-                        bad: result?.stats.bad,
-                        radixes: result?.radixes,
-                        stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
-                        cycleFinishedSyncing: node.cycleFinishedSyncing,
-                        recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
-                    })
+                    node.radixes = result?.radixes || []
+                    if (this.hideFullyInSync && this.isUnexpectedOOS(node).total === 0) continue;
+                        this.nodeLoads.push({
+                            id: nodeId,
+                            ip: node.nodeIpInfo.externalIp,
+                            port: node.nodeIpInfo.externalPort,
+                            inSync: result?.insync,
+                            total: result?.stats.total,
+                            good: result?.stats.good,
+                            bad: result?.stats.bad,
+                            radixes: result?.radixes,
+                            stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
+                            cycleFinishedSyncing: node.cycleFinishedSyncing,
+                            recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
+                        })
                 }
             },
             radixClass(r) {
@@ -273,7 +279,6 @@
                 let CUnexpectedOOSCount = 0
                 let EUnexpectedOOSCount = 0
                 let CEUnexpectedOOSCount = 0
-
                 for (let radix of node.radixes) {
                     if (CAndCEOnly && radix.inEdgeRange) continue
                     if (!radix.insync) {
