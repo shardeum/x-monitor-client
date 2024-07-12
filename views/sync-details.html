@@ -114,8 +114,7 @@
                         <span :style="getLegendColorStyle(borderColors.BLACK)" class="legend-span">1</span>
                         <span :style="getLegendColorStyle(borderColors.DARKGRAY)" class="legend-span">2</span>
                         <span :style="getLegendColorStyle(borderColors.GRAY)" class="legend-span">3</span>
-                        <span :style="getLegendColorStyle(borderColors.LIGHTGRAY)" class="legend-span">4</span>
-                        <span :style="getLegendColorStyle(borderColors.OFFWHITE)" class="legend-span">5</span>
+                        <span :style="getLegendColorStyle(borderColors.LIGHTGRAY)" class="legend-span">4+</span>
                     </div> <span class="label">Border Colors (Synced Cycles Ago)</span>
                 </div>
             </div>
@@ -171,18 +170,26 @@
                     <td>{{ node.cycleFinishedSyncing }}</td>
                     <td>{{ node.recentRuntimeSync }}</td>
                     <td>
-                         <template v-for="r in node.radixes" :key="r.radix">
-                            <span
-                                :class="radixClass(r)"
-                                :style="[getBorderStyle(node.cycleFinishedSyncing), { backgroundColor: getBackgroundColor(r) }]"
-                                style="white-space: nowrap; display: inline-block; min-width: 25px; margin-right: 2px; margin-bottom: 4px; padding: 2px;"
-                            >
-                                <span :style="{ color: 'white' }">
-                                 {{ r.inConsensusRange && r.inEdgeRange ? "C/E" : (r.inConsensusRange ? "C" : (r.inEdgeRange ? "E" : "")) }}
-                                </span>
-                                <span :style="{ color: 'black' }">{{ r.radix }}</span>
-                            </span>
-                        </template>
+                        <template>
+                            <div>
+                                <template v-for="r in node.radixes" :key="r.radix">
+                                <div style="display: inline-block; margin-right: 2px; margin-bottom: 4px;">
+                                    <div
+                                    :style="[getRadixSyncStyle(node.id, r.radix), { height: '5px', width: '100%', marginBottom: '2px' }]"
+                                    ></div>
+                                    <span
+                                    :class="radixClass(r)"
+                                    :style="{ backgroundColor: getBackgroundColor(r), whiteSpace: 'nowrap', display: 'inline-block', minWidth: '25px', padding: '2px' }"
+                                    >
+                                    <span :style="{ color: 'white' }">
+                                        {{ r.inConsensusRange && r.inEdgeRange ? "C/E" : (r.inConsensusRange ? "C" : (r.inEdgeRange ? "E" : "")) }}
+                                    </span>
+                                    <span :style="{ color: 'black' }">{{ r.radix }}</span>
+                                    </span>
+                                </div>
+                                </template>
+                            </div>
+                    </template>
                     </td>
                 </tr>
                 </tbody>

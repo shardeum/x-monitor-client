@@ -75,6 +75,7 @@
                 sortAsc: true,
                 shouldRefresh: true,
                 hideEdgeOOS: false,
+                recentRuntimeSyncMap: new Map(),
             }
         },
         async mounted() {
@@ -92,8 +93,11 @@
             },
         },
         methods: {
-            getBorderStyle(cycleFinishedSyncing) {
-                const cyclesAgo = this.networkStatus.counter - cycleFinishedSyncing
+            getRadixSyncStyle(nodeId, radixId) {
+                const uniqueKey = `${nodeId}-${radixId}`
+                const recentRuntimeSyncCycle = this.recentRuntimeSyncMap.get(uniqueKey)
+                if (!recentRuntimeSyncCycle) return {}
+                const cyclesAgo = this.networkStatus.counter - recentRuntimeSyncCycle
                 let borderColor
 
                 if (cyclesAgo === 1) {
@@ -102,13 +106,13 @@
                     borderColor = this.borderColors.DARKGRAY
                 } else if (cyclesAgo === 3) {
                     borderColor = this.borderColors.GRAY
-                } else if (cyclesAgo === 4) {
+                } else if (cyclesAgo >= 4) {
                     borderColor = this.borderColors.LIGHTGRAY
                 } else {
                     borderColor = this.borderColors.OFFWHITE
                 }
 
-                return { border: `2px solid ${borderColor}` }
+                return { backgroundColor: borderColor }
             },
             getBackgroundColor(r) {
                 let colorKey = ''
@@ -180,6 +184,14 @@
                     const node = report.nodes.active[nodeId]
                     const result = node.lastInSyncResult
                     this.networkStatus.counter = node.cycleCounter
+
+                    for (let radix of result?.radixes || []) {
+                        const recentRuntimeSyncCycle = radix.recentRuntimeSyncCycle || -1
+                        const uniqueKey = `${nodeId}-${radix.radix}`
+                        if (recentRuntimeSyncCycle !== -1) {
+                            this.recentRuntimeSyncMap.set(uniqueKey, recentRuntimeSyncCycle)
+                        }
+                    }
 
                     this.nodeLoads.push({
                         id: nodeId,
