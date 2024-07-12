@@ -71,11 +71,13 @@
                 animateTransactions: false,
                 queueDetails: false,
                 nodeLoads: [],
-                sortKey: 'ip',
-                sortAsc: true,
+                sortKey: 'cycleFinishedSyncing',
+                sortAsc: false,
+                sortOrder: -1,
                 shouldRefresh: true,
                 hideEdgeOOS: false,
                 recentRuntimeSyncMap: new Map(),
+                isRecentActiveCycles: 4,
             }
         },
         async mounted() {
@@ -84,11 +86,24 @@
         },
         computed: {
             sortedNodes() {
-                return this.nodeLoads.sort((a, b) => {
-                    let modifier = this.sortAsc ? 1 : -1
-                    if (a[this.sortKey] < b[this.sortKey]) return -1 * modifier
-                    if (a[this.sortKey] > b[this.sortKey]) return 1 * modifier
-                    return 0
+                return this.nodeLoads.slice().sort((a, b) => {
+                    let aValue, bValue
+
+                    if (this.sortKey === 'unexpectedOOSAll') {
+                        aValue = this.isUnexpectedOOS(a)
+                        bValue = this.isUnexpectedOOS(b)
+                    } else if (this.sortKey === 'unexpectedOOSC') {
+                        aValue = this.isUnexpectedOOS(a, true)
+                        bValue = this.isUnexpectedOOS(b, true)
+                    } else {
+                        aValue = a[this.sortKey]
+                        bValue = b[this.sortKey]
+                    }
+
+                    aValue = aValue !== undefined ? aValue : ''
+                    bValue = bValue !== undefined ? bValue : ''
+
+                    return (aValue > bValue ? 1 : aValue < bValue ? -1 : 0) * this.sortOrder
                 })
             },
         },
@@ -252,6 +267,25 @@
                 } catch (e) {
                     console.log('Error while trying to update nodes.', e)
                 }
+            },
+            isUnexpectedOOS(node, CAndCEOnly = false) {
+                const currentCounter = this.networkStatus.counter
+                let unexpectedOOSCount = 0
+
+                for (let radix of node.radixes) {
+                    if (CAndCEOnly && !(radix.inConsensusRange || radix.inEdgeRange)) continue
+                    if (!radix.insync) {
+                        const recentlyActive =
+                            currentCounter - node.cycleFinishedSyncing <= this.isRecentActiveCycles
+                        const hasRecentSync = radix.recentRuntimeSync
+
+                        if (!recentlyActive && !hasRecentSync) {
+                            unexpectedOOSCount++
+                        }
+                    }
+                }
+
+                return unexpectedOOSCount
             },
             async start() {
                 let res = await requestWithToken(`${monitorServerUrl}/report`)
