@@ -275,7 +275,7 @@
                 let CEUnexpectedOOSCount = 0
 
                 for (let radix of node.radixes) {
-                    if (CAndCEOnly && !(radix.inConsensusRange || radix.inEdgeRange)) continue
+                    if (CAndCEOnly && radix.inEdgeRange) continue
                     if (!radix.insync) {
                         const recentlyActive =
                             currentCounter - node.cycleFinishedSyncing <= this.isRecentActiveCycles
