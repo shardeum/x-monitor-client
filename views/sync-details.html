@@ -175,10 +175,10 @@
                             <span
                                 :class="radixClass(r)"
                                 :style="[getBorderStyle(node.cycleFinishedSyncing), { backgroundColor: getBackgroundColor(r) }]"
-                                style="white-space: nowrap; display: inline-block; margin-right: 2px; margin-bottom: 4px; padding-top: 2px; padding-bottom: 2px;"
+                                style="white-space: nowrap; display: inline-block; min-width: 25px; margin-right: 2px; margin-bottom: 4px; padding: 2px;"
                             >
                                 <span :style="{ color: 'white' }">
-                                {{ r.inConsensusRange ? "C" : "" }}{{ r.inEdgeRange ? "E" : "" }}
+                                 {{ r.inConsensusRange && r.inEdgeRange ? "C/E" : (r.inConsensusRange ? "C" : (r.inEdgeRange ? "E" : "")) }}
                                 </span>
                                 <span :style="{ color: 'black' }">{{ r.radix }}</span>
                             </span>
