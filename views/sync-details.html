@@ -57,47 +57,29 @@
         }
 
         /* Legend Styles */
-        .legend {
+       .legend {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
-            padding: 10px;
-            background-color: #f1f1f1;
-            border-bottom: 1px solid #ccc;
-            font-size: 0.8rem; /* Ensure font consistency */
-            align-items: center; /* Vertically align items */
-            margin-bottom: 10px; /* Add space below the legend */
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 5px;
         }
 
-        .legend-color {
+        .legend-combined {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-span {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            font-size: 14px;
         }
-
-        /* Status Color Styles */
-        .insync, .legend-color.insync {
-            background-color: #2dc200;
+        .label {
+            margin-left: 5px;
         }
-
-        .oosync, .legend-color.oosync {
-            background-color: #ff00bf;
-        }
-
-        .inconsensus-oosync, .legend-color.inconsensus-oosync {
-            background-color: #2dc200 !important;
-        }
-
-        .recent-runtime-sync, .legend-color.recent-runtime-sync {
-            background-color: #FFD700 !important; /* Gold color for recentRuntimeSync */
-        }
-
-        /* Radix Styles */
 
     </style>
 </head>
@@ -108,17 +90,36 @@
             class="table-container"
             style="display: flex; gap: 10px; margin: 10px 10px; flex-direction: column; align-items: flex-start"
     >
-        <div class="legend">
-            <div class="legend-item">
-                <span class="legend-color insync"></span> In Sync
+        <template>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-combined insync">
+                        <span :style="getLegendColorStyle(syncColors.insync.C)" class="legend-span">C</span>
+                        <span :style="getLegendColorStyle(syncColors.insync.CE)" class="legend-span">C/E</span>
+                        <span :style="getLegendColorStyle(syncColors.insync.E)" class="legend-span">E</span>
+                    </div> <span class="label">In Sync</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-combined oosync">
+                        <span :style="getLegendColorStyle(syncColors.outofsync.C)" class="legend-span">C</span>
+                        <span :style="getLegendColorStyle(syncColors.outofsync.CE)" class="legend-span">C/E</span>
+                        <span :style="getLegendColorStyle(syncColors.outofsync.E)" class="legend-span">E</span>
+                    </div> <span class="label">Out of Sync</span>
+                </div>
+                <div class="legend-item">
+                    <span :style="getLegendColorStyle(recentRuntimeSyncColor)" class="legend-span">R</span> Recent Runtime Sync
+                </div>
+                <div class="legend-item">
+                    <div class="legend-combined border-color">
+                        <span :style="getLegendColorStyle(borderColors.BLACK)" class="legend-span">1</span>
+                        <span :style="getLegendColorStyle(borderColors.DARKGRAY)" class="legend-span">2</span>
+                        <span :style="getLegendColorStyle(borderColors.GRAY)" class="legend-span">3</span>
+                        <span :style="getLegendColorStyle(borderColors.LIGHTGRAY)" class="legend-span">4</span>
+                        <span :style="getLegendColorStyle(borderColors.OFFWHITE)" class="legend-span">5</span>
+                    </div> <span class="label">Border Colors (Synced Cycles Ago)</span>
+                </div>
             </div>
-            <div class="legend-item">
-                <span class="legend-color oosync"></span> Out of Sync
-            </div>
-            <div class="legend-item">
-                <span class="legend-color recent-runtime-sync"></span> Recent Runtime Sync
-            </div>
-        </div>
+        </template>
         <div class="content table-container">
             <div id="monheader" style="margin-bottom: 10px">
                 NODES
@@ -170,10 +171,16 @@
                     <td>{{ node.cycleFinishedSyncing }}</td>
                     <td>{{ node.recentRuntimeSync }}</td>
                     <td>
-                        <template v-for="r in node.radixes">
-                            <span :class="radixClass(r)" style="white-space: nowrap; display: inline-block; margin-right: 2px; margin-bottom: 4px; padding-top: 2px; padding-bottom: 2px;">
-                                <span style="color: white;">{{ r.inConsensusRange ? "C" : "" }}{{ r.inEdgeRange ? "E" : "" }}</span>
-                                <span style="color: black;">{{ r.radix }}</span>
+                         <template v-for="r in node.radixes" :key="r.radix">
+                            <span
+                                :class="radixClass(r)"
+                                :style="[getBorderStyle(node.cycleFinishedSyncing), { backgroundColor: getBackgroundColor(r) }]"
+                                style="white-space: nowrap; display: inline-block; margin-right: 2px; margin-bottom: 4px; padding-top: 2px; padding-bottom: 2px;"
+                            >
+                                <span :style="{ color: 'white' }">
+                                {{ r.inConsensusRange ? "C" : "" }}{{ r.inEdgeRange ? "E" : "" }}
+                                </span>
+                                <span :style="{ color: 'black' }">{{ r.radix }}</span>
                             </span>
                         </template>
                     </td>

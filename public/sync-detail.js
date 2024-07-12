@@ -47,6 +47,26 @@
                     totalQueueTime: 0,
                     expiredTx: 0,
                 },
+                syncColors: {
+                    insync: {
+                        C: '#008000',
+                        CE: '#00A000',
+                        E: '#00C000',
+                    },
+                    outofsync: {
+                        C: '#800080',
+                        CE: '#A000A0',
+                        E: '#C000C0',
+                    },
+                },
+                borderColors: {
+                    BLACK: '#000000',
+                    DARKGRAY: '#808080',
+                    GRAY: '#999595',
+                    LIGHTGRAY: '#b8b2b2',
+                    OFFWHITE: '#cecece',
+                },
+                recentRuntimeSyncColor: '#FFD700',
                 colorMode: 'state',
                 animateTransactions: false,
                 queueDetails: false,
@@ -72,6 +92,57 @@
             },
         },
         methods: {
+            getBorderStyle(cycleFinishedSyncing) {
+                const cyclesAgo = this.networkStatus.counter - cycleFinishedSyncing
+                let borderColor
+
+                if (cyclesAgo === 1) {
+                    borderColor = this.borderColors.BLACK
+                } else if (cyclesAgo === 2) {
+                    borderColor = this.borderColors.DARKGRAY
+                } else if (cyclesAgo === 3) {
+                    borderColor = this.borderColors.GRAY
+                } else if (cyclesAgo === 4) {
+                    borderColor = this.borderColors.LIGHTGRAY
+                } else {
+                    borderColor = this.borderColors.OFFWHITE
+                }
+
+                return { border: `2px solid ${borderColor}` }
+            },
+            getBackgroundColor(r) {
+                let colorKey = ''
+
+                if (r.inConsensusRange && r.inEdgeRange) {
+                    colorKey = 'CE'
+                } else if (r.inConsensusRange) {
+                    colorKey = 'C'
+                } else if (r.inEdgeRange) {
+                    colorKey = 'E'
+                }
+
+                if (r.recentRuntimeSync) {
+                    return this.syncColors.insync[colorKey]
+                } else if (this.hideEdgeOOS && !r.insync && !r.inConsensusRange && r.inEdgeRange) {
+                    return this.syncColors.outofsync[colorKey]
+                } else {
+                    return r.insync
+                        ? this.syncColors.insync[colorKey]
+                        : this.syncColors.outofsync[colorKey]
+                }
+            },
+            getLegendColorStyle(color) {
+                return {
+                    backgroundColor: color,
+                    display: 'inline-block',
+                    width: '30px',
+                    height: '30px',
+                    lineHeight: '30px',
+                    textAlign: 'center',
+                    color: 'white',
+                    fontWeight: 'bold',
+                }
+            },
             async fetchChanges() {
                 let res = await requestWithToken(
                     `${monitorServerUrl}/report?timestamp=${G.lastUpdatedTimestamp}`
@@ -108,6 +179,7 @@
                 for (let nodeId in report.nodes.active) {
                     const node = report.nodes.active[nodeId]
                     const result = node.lastInSyncResult
+                    this.networkStatus.counter = node.cycleCounter
 
                     this.nodeLoads.push({
                         id: nodeId,
@@ -120,23 +192,25 @@
                         radixes: result?.radixes,
                         stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
                         cycleFinishedSyncing: node.cycleFinishedSyncing,
-                        recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync)
+                        recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
                     })
                 }
             },
             radixClass(r) {
                 if (r.recentRuntimeSync) {
-                    return 'recent-runtime-sync';
+                    return 'recent-runtime-sync'
                 }
                 if (this.hideEdgeOOS && !r.insync && !r.inConsensusRange && r.inEdgeRange) {
-                    return 'inconsensus-oosync';
+                    return 'inconsensus-oosync'
                 }
-                return r.insync ? 'insync' : 'oosync';
+                return r.insync ? 'insync' : 'oosync'
             },
             isInSync(node) {
-              if (this.hideEdgeOOS && !node.inSync) {
-                return node.radixes?.filter(r => r.inConsensusRange && !r.inEdgeRange).every(r => r.insync)
-              }
+                if (this.hideEdgeOOS && !node.inSync) {
+                    return node.radixes
+                        ?.filter((r) => r.inConsensusRange && !r.inEdgeRange)
+                        .every((r) => r.insync)
+                }
                 return node.inSync
             },
             sortTable(key) {
