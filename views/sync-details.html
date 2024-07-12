@@ -152,7 +152,7 @@
                     <th>Radixes</th>
                 </tr>
                 <tr>
-                <th colspan="9"></th>
+                <th colspan="10"></th>
                     <th @click="sortTable('unexpectedOOSAll')">All</th>
                     <th @click="sortTable('unexpectedOOSC')">C/CE</th>
                 <th></th>
@@ -174,8 +174,8 @@
                     <td>{{ node.stillNeedsInitialPatchPostActive }}</td>
                     <td>{{ node.cycleFinishedSyncing }}</td>
                     <td>{{ node.recentRuntimeSync }}</td>
-                    <td>{{ isUnexpectedOOS(node) ? `true (${isUnexpectedOOS(node)})` : false}}</td>
-                    <td>{{ isUnexpectedOOS(node, true) ? `true (${isUnexpectedOOS(node)})` : false}}</td>
+                    <td>{{ isUnexpectedOOS(node).total ? `true (${isUnexpectedOOS(node).total})` : false}}</td>
+                    <td>{{ isUnexpectedOOS(node, true).total ? `true (${isUnexpectedOOS(node).total})` : false}}</td>
                     <td>
                         <template>
                             <div>

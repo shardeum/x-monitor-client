@@ -270,7 +270,9 @@
             },
             isUnexpectedOOS(node, CAndCEOnly = false) {
                 const currentCounter = this.networkStatus.counter
-                let unexpectedOOSCount = 0
+                let CUnexpectedOOSCount = 0
+                let EUnexpectedOOSCount = 0
+                let CEUnexpectedOOSCount = 0
 
                 for (let radix of node.radixes) {
                     if (CAndCEOnly && !(radix.inConsensusRange || radix.inEdgeRange)) continue
@@ -280,12 +282,23 @@
                         const hasRecentSync = radix.recentRuntimeSync
 
                         if (!recentlyActive && !hasRecentSync) {
-                            unexpectedOOSCount++
+                            if (radix.inConsensusRange && radix.isEdgeRange) {
+                                CEUnexpectedOOSCount++
+                            } else if (radix.inConsensusRange) {
+                                CUnexpectedOOSCount++
+                            } else if (radix.inEdgeRange) {
+                                EUnexpectedOOSCount++
+                            }
                         }
                     }
                 }
 
-                return unexpectedOOSCount
+                return {
+                    total: CUnexpectedOOSCount + EUnexpectedOOSCount + CEUnexpectedOOSCount,
+                    C: CUnexpectedOOSCount,
+                    E: EUnexpectedOOSCount,
+                    CE: CEUnexpectedOOSCount,
+                }
             },
             async start() {
                 let res = await requestWithToken(`${monitorServerUrl}/report`)
