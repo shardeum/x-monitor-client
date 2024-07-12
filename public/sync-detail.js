@@ -49,21 +49,21 @@
                 },
                 syncColors: {
                     insync: {
-                        C: '#015e01',
+                        C: '#02e602',
                         CE: '#06a106',
-                        E: '#02e602',
+                        E: '#015e01',
                     },
                     outofsync: {
-                        C: '#5a015a',
+                        C: '#f600f6',
                         CE: '#b606b6',
-                        E: '#f600f6',
+                        E: '#5a015a',
                     },
                 },
                 borderColors: {
                     BLACK: '#000000',
-                    DARKGRAY: '#808080',
+                    DARKGRAY: '#525151',
                     GRAY: '#999595',
-                    LIGHTGRAY: '#b8b2b2',
+                    LIGHTGRAY: '#ccc5c5',
                     OFFWHITE: '#cecece',
                 },
                 recentRuntimeSyncColor: '#FFD700',
@@ -97,7 +97,7 @@
                 const uniqueKey = `${nodeId}-${radixId}`
                 const recentRuntimeSyncCycle = this.recentRuntimeSyncMap.get(uniqueKey)
                 if (!recentRuntimeSyncCycle) return {}
-                const cyclesAgo = this.networkStatus.counter - recentRuntimeSyncCycle
+                const cyclesAgo = recentRuntimeSyncCycle
                 let borderColor
 
                 if (cyclesAgo === 1) {
