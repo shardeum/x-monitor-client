@@ -119,6 +119,15 @@
                         </select>
                     </td>
                 </tr>
+                <tr id="itemrow">
+                    <td class="relative inline-block">OOS Filter:
+                        <select v-model="oosFilter" @change="refreshNodeColors">
+                            <option value="raw">Raw</option>
+                            <option value="smart-any">Smart Any</option>
+                            <option value="smart-c">Smart C</option>
+                        </select>
+                    </td>
+                </tr>
                 <tr>
                     <td><button type="button" id="reset-button">Reset DOES NOT WORK</button></td>
                 </tr>
@@ -248,6 +257,24 @@
                 </tr>
                 <tr id="itemrow">
                     <td><a href="/sync-details" target="_blank" class="text-sm text-blue-400">Sync Details</a></td>
+                </tr>
+            </table>
+
+            <table id="montable">
+                <tr id="itemrow">
+                    <td id="monheader">UNEXPECTED OOS</td>
+                </tr>
+                <tr id="itemrow" v-if="oosFilter !== 'smart-c'">
+                    <td id="monlabel">E:</td>
+                    <td id="monval">{{ oosSummary.E.count }} / {{ oosSummary.E.nodes }}</td>
+                </tr>
+                <tr id="itemrow" v-if="oosFilter !== 'smart-c'">
+                    <td id="monlabel">CE:</td>
+                    <td id="monval">{{ oosSummary.CE.count }} / {{ oosSummary.CE.nodes }}</td>
+                </tr>
+                <tr id="itemrow">
+                    <td id="monlabel">C:</td>
+                    <td id="monval">{{ oosSummary.C.count }} / {{ oosSummary.C.nodes }}</td>
                 </tr>
             </table>
 

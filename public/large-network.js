@@ -53,6 +53,14 @@
                 nodeLoads: [],
                 sortKey: 'ip',
                 sortAsc: true,
+                oosFilter: 'raw',
+                oosSummary: {
+                    E: { count: 0, nodes: 0 },
+                    CE: { count: 0, nodes: 0 },
+                    C: { count: 0, nodes: 0 }
+                },
+                isRecentActiveCycles: 4,
+                recentRuntimeSyncMap: new Map(),
             }
         },
         async mounted() {
@@ -68,6 +76,11 @@
                     return 0
                 })
             },
+        },
+        watch: {
+            oosFilter() {
+                this.refreshNodeColors()
+            }
         },
         methods: {
             calculateNetworkPosition(nodeId) {
@@ -173,18 +186,45 @@
                 if (!node.cycleMarker) return '#fcbf49' // syncing node
                 let color = '#000000'
                 if (this.colorMode === 'state') {
-                    color = node.isDataSynced ? '#80ED99' : '#FF2EFF'
+                    if (this.oosFilter === 'raw') {
+                        color = node.isDataSynced ? '#80ED99' : '#FF2EFF'
+                    } else {
+                        const oos = this.isUnexpectedOOS(node, this.oosFilter === 'smart-c');
+                        if (oos.total > 0) {
+                            color = '#FF2EFF'
+                        } else {
+                            const nodeRadixes = node.radixes || [];
+                            const recentOOS = nodeRadixes.map(radix => {
+                                const uniqueKey = `${node.nodeId}-${radix.radix}`;
+                                return this.recentRuntimeSyncMap.get(uniqueKey) || 0;
+                            });
+                
+                            if (recentOOS.some(oosCycle => oosCycle > 0)) {
+                                const mostRecentOOS = Math.max(...recentOOS);
+                                const cyclesSinceOOS = this.networkStatus.counter - mostRecentOOS;
+                                const darkness = Math.min(cyclesSinceOOS / 4, 1);
+                                const shade = Math.round(255 - (55 * darkness));
+                                color = `rgb(0, ${shade}, ${shade})`; // cyan gradient for recent OOS
+                            } else {
+                                color = '#80ED99' // green for no recent OOS
+                            }
+                        }
+                    }
                     if (node.crashed && !node.isRefuted) {
                         color = '#FF2442'
                     }
-                } else if (this.colorMode === 'marker') color = `#${node.cycleMarker.substr(0, 6)}`
-                else if (this.colorMode === 'nodelist') color = `#${node.nodelistHash.substr(0, 6)}`
+                } else if (this.colorMode === 'marker') {
+                    color = `#${node.cycleMarker.substr(0, 6)}`
+                } else if (this.colorMode === 'nodelist') {
+                    color = `#${node.nodelistHash.substr(0, 6)}`
+                }
                 return color
             },
             onColorModeChange(event) {
                 if (event.target.value === this.colorMode) return
                 this.colorMode = event.target.value
                 this.changeNodeColor()
+                this.refreshNodeColors()
             },
             async fetchChanges() {
                 let res = await requestWithToken(
@@ -243,7 +283,18 @@
                     queueLength.push(node.queueLength)
                     totalQueueTime += node.txTimeInQueue
                     queueTime.push(node.txTimeInQueue)
-
+                    const result = node.lastInSyncResult
+                    this.networkStatus.counter = node.cycleCounter
+            
+                    for (let radix of result?.radixes || []) {
+                        const recentRuntimeSyncCycle = radix.recentRuntimeSyncCycle || -1
+                        const uniqueKey = `${nodeId}-${radix.radix}`
+                        if (recentRuntimeSyncCycle !== -1) {
+                            this.recentRuntimeSyncMap.set(uniqueKey, recentRuntimeSyncCycle)
+                        }
+                    }
+                    node.radixes = result?.radixes || []
+                    
                     this.nodeLoads.push({
                         id: nodeId,
                         ip: node.nodeIpInfo.externalIp,
@@ -252,6 +303,14 @@
                         loadExternal: node.currentLoad.nodeLoad.external,
                         queueLength: node.queueLength,
                         queueTime: node.txTimeInQueue,
+                        inSync: result?.insync,
+                        total: result?.stats.total,
+                        good: result?.stats.good,
+                        bad: result?.stats.bad,
+                        radixes: result?.radixes,
+                        stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
+                        cycleFinishedSyncing: node.cycleFinishedSyncing,
+                        recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
                     })
                 }
 
@@ -433,6 +492,9 @@
                     updatedNodes = Object.values(updatedNodesMap)
                     G.visNodes.update(updatedNodes)
 
+                    // update oos summary
+                    this.oosSummary = this.calculateOOSSummary()
+
                     // delete removed nodes
                     await this.deleteRemovedNodes()
 
@@ -441,6 +503,8 @@
                     if (crashedNodesToRemove.length > 0) {
                         this.deleteCrashedNodes(crashedNodesToRemove)
                     }
+
+                    this.refreshNodeColors()
 
                     // G.lastUpdatedTimestamp = Date.now()
                     if (this.shouldChangeNodesSize()) this.changeNodesSize()
@@ -707,6 +771,82 @@
                     },
                     nodeDimensions: { width, height },
                 }
+            },
+            // Check if node is in unexpected out of sync state
+            isUnexpectedOOS(node, CAndCEOnly = false) {
+                const currentCounter = this.networkStatus.counter
+                let CUnexpectedOOSCount = 0
+                let EUnexpectedOOSCount = 0
+                let CEUnexpectedOOSCount = 0
+                // Check if node.radixes exists and is iterable
+                if (node.radixes && typeof node.radixes[Symbol.iterator] === 'function') {
+                    for (let radix of node.radixes) {
+                        if (CAndCEOnly && radix.inEdgeRange) continue
+                        if (!radix.insync) {
+                            const recentlyActive =
+                                currentCounter - node.cycleFinishedSyncing <= this.isRecentActiveCycles
+                            const hasRecentSync = radix.recentRuntimeSync
+
+                            if (!recentlyActive && !hasRecentSync) {
+                                if (radix.inConsensusRange && radix.isEdgeRange) {
+                                    CEUnexpectedOOSCount++
+                                } else if (radix.inConsensusRange) {
+                                    CUnexpectedOOSCount++
+                                } else if (radix.inEdgeRange) {
+                                    EUnexpectedOOSCount++
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    console.warn(`Node ${node.id || 'unknown'} does not have a valid radixes property`)
+                }
+
+                return {
+                    total: CUnexpectedOOSCount + EUnexpectedOOSCount + CEUnexpectedOOSCount,
+                    C: CUnexpectedOOSCount,
+                    E: EUnexpectedOOSCount,
+                    CE: CEUnexpectedOOSCount,
+                }
+            },
+
+            // Calculate summary of unexpected out of sync nodes
+            calculateOOSSummary() {
+                let summary = {
+                    E: { count: 0, nodes: 0 },
+                    CE: { count: 0, nodes: 0 },
+                    C: { count: 0, nodes: 0 }
+                };
+                
+                for (let nodeId in G.nodes.active) {
+                    let node = G.nodes.active[nodeId];
+                    let oos = this.isUnexpectedOOS(node, this.oosFilter === 'smart-c');
+
+                    if (oos.E > 0) {
+                        summary.E.count += oos.E;
+                        summary.E.nodes++;
+                    }
+                    if (oos.CE > 0) {
+                        summary.CE.count += oos.CE;
+                        summary.CE.nodes++;
+                    }
+                    if (oos.C > 0) {
+                        summary.C.count += oos.C;
+                        summary.C.nodes++;
+                    }
+                }
+                
+                return summary;
+            },
+            // update when filter changes
+            refreshNodeColors() {
+                let updatedNodes = []
+                for (let nodeId in G.nodes.active) {
+                    let node = G.nodes.active[nodeId]
+                    let updatedVisNode = this.getUpdatedVisNode(nodeId, node)
+                    updatedNodes.push(updatedVisNode)
+                }
+                G.visNodes.update(updatedNodes)
             },
 
             async start() {
