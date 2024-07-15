@@ -187,24 +187,42 @@
                 let color = '#000000'
                 if (this.colorMode === 'state') {
                     if (this.oosFilter === 'raw') {
-                        color = node.isDataSynced ? '#80ED99' : '#FF2EFF'
+                        color = node.isDataSynced ? '#80ED99' : '#FF2EFF' // green for data synced, magenta for data not synced
                     } else {
-                        const oos = this.isUnexpectedOOS(node, this.oosFilter === 'smart-c');
+                        const oos = this.isUnexpectedOOS(node, this.oosFilter === 'smart-c')
                         if (oos.total > 0) {
-                            color = '#FF2EFF'
+                            color = '#FF2EFF' // Magenta for unexpected OOS
                         } else {
-                            const nodeRadixes = node.radixes || [];
-                            const recentOOS = nodeRadixes.map(radix => {
-                                const uniqueKey = `${node.nodeId}-${radix.radix}`;
-                                return this.recentRuntimeSyncMap.get(uniqueKey) || 0;
-                            });
+                            const nodeRadixes = node.radixes || []
+                            // if smart-c, only consider radixes in consensus range
+                            // if smart-any, consider all radixes
+                            const recentOOS = nodeRadixes
+                                .filter(radix => {
+                                    if (this.oosFilter === 'smart-c') {
+                                        return radix.inConsensusRange; // Only C and CE for 'smart-c'
+                                    }
+                                    return true; // All radixes for 'smart-any'
+                                })
+                                .map(radix => {
+                                    const uniqueKey = `${node.nodeId}-${radix.radix}`
+                                    return this.recentRuntimeSyncMap.get(uniqueKey) || 0
+                                })
                 
                             if (recentOOS.some(oosCycle => oosCycle > 0)) {
                                 const mostRecentOOS = Math.max(...recentOOS);
                                 const cyclesSinceOOS = this.networkStatus.counter - mostRecentOOS;
-                                const darkness = Math.min(cyclesSinceOOS / 4, 1);
-                                const shade = Math.round(255 - (55 * darkness));
-                                color = `rgb(0, ${shade}, ${shade})`; // cyan gradient for recent OOS
+                                
+                                if (cyclesSinceOOS <= 1) {
+                                    color = '#00FFFF' // Bright cyan for very recent OOS (0-1 cycles ago)
+                                } else if (cyclesSinceOOS <= 2) {
+                                    color = '#00CCCC' // Medium cyan (1-2 cycles ago)
+                                } else if (cyclesSinceOOS <= 3) {
+                                    color = '#009999' // Darker cyan (2-3 cycles ago)
+                                } else if (cyclesSinceOOS <= 4) {
+                                    color = '#006666' // Darkest cyan (3-4 cycles ago)
+                                } else {
+                                    color = '#80ED99' // Return to green after 4 cycles
+                                }
                             } else {
                                 color = '#80ED99' // green for no recent OOS
                             }
