@@ -79,6 +79,7 @@
                 hideFullyInSync: false,
                 recentRuntimeSyncMap: new Map(),
                 isRecentActiveCycles: 4,
+                showAllRadixes: false,
             }
         },
         async mounted() {
@@ -226,6 +227,7 @@
                             stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
                             cycleFinishedSyncing: node.cycleFinishedSyncing,
                             recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
+                            fullRadixArray: this.generateFullRadixArray(node),
                         })
                 }
             },
@@ -303,6 +305,29 @@
                     C: CUnexpectedOOSCount,
                     E: EUnexpectedOOSCount,
                     CE: CEUnexpectedOOSCount,
+                }
+            },
+            toggleShowAllRadixes() {
+                this.showAllRadixes = !this.showAllRadixes
+            },
+            generateFullRadixArray(node) {
+                // Find the maximum radix value
+                const maxRadix = Math.max(...node.radixes.map(r => parseInt(r.radix, 16)))
+                
+                // Create an array with length maxRadix + 1 (to include 0)
+                let fullArray = new Array(maxRadix + 1).fill(null)
+                
+                for (let radix of node.radixes) {
+                    let index = parseInt(radix.radix, 16)
+                    fullArray[index] = radix;
+                }
+                return fullArray
+            },
+            getRadixStyle(radix) {
+                if (radix) {
+                    return { backgroundColor: this.getBackgroundColor(radix) }
+                } else {
+                    return { backgroundColor: 'white', border: '1px solid #ccc' }
                 }
             },
             async start() {

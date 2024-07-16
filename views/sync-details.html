@@ -134,6 +134,14 @@
                         @change="changeHideEdgeOOS()"
                 />
                 Hide Edge OOS
+                <input
+                style="margin-left: 10px"
+                type="checkbox"
+                :checked="showAllRadixes"
+                id="showAllRadixes"
+                @change="toggleShowAllRadixes()"
+                />
+                Show All Radixes
             </div>
               <input
                         style="margin-left: 10px"
@@ -187,25 +195,25 @@
                     <td>{{ isUnexpectedOOS(node, true).total ? `true (${isUnexpectedOOS(node).total})` : false}}</td>
                     <td>
                         <template>
-                            <div>
-                                <template v-for="r in node.radixes" :key="r.radix">
-                                <div style="display: inline-block; margin-right: 2px; margin-bottom: 4px;">
-                                    <div
-                                    :style="[getRadixSyncStyle(node.id, r.radix), { height: '5px', width: '100%', marginBottom: '2px' }]"
-                                    ></div>
-                                    <span
-                                    :class="radixClass(r)"
-                                    :style="{ backgroundColor: getBackgroundColor(r), whiteSpace: 'nowrap', display: 'inline-block', minWidth: '25px', padding: '2px' }"
-                                    >
-                                    <span :style="{ color: 'white' }">
-                                        {{ r.inConsensusRange && r.inEdgeRange ? "C/E" : (r.inConsensusRange ? "C" : (r.inEdgeRange ? "E" : "")) }}
-                                    </span>
-                                    <span :style="{ color: 'black' }">{{ r.radix }}</span>
-                                    </span>
-                                </div>
+                            <div style="display: flex; flex-wrap: wrap;">
+                                <template v-for="(radix, index) in showAllRadixes ? node.fullRadixArray : node.radixes" :key="index">
+                                    <div style="display: inline-block; margin-right: 2px; margin-bottom: 4px;">
+                                        <div
+                                        :style="[getRadixSyncStyle(node.id, radix ? radix.radix : index.toString(16)), { height: '5px', width: '100%', marginBottom: '2px' }]"
+                                        ></div>
+                                        <span
+                                        :class="radix ? radixClass(radix) : ''"
+                                        :style="radix ? { backgroundColor: getBackgroundColor(radix), whiteSpace: 'nowrap', display: 'inline-block', minWidth: '25px', padding: '2px' } : { backgroundColor: 'white', border: '1px solid #ccc', whiteSpace: 'nowrap', display: 'inline-block', minWidth: '25px', padding: '2px' }"
+                                        >
+                                        <span :style="{ color: radix ? 'white' : 'black' }">
+                                            {{ radix ? (radix.inConsensusRange && radix.inEdgeRange ? "C/E" : (radix.inConsensusRange ? "C" : (radix.inEdgeRange ? "E" : ""))) : '' }}
+                                        </span>
+                                        <span :style="{ color: 'black' }">{{ radix ? radix.radix : index.toString(16).toUpperCase() }}</span>
+                                        </span>
+                                    </div>
                                 </template>
                             </div>
-                    </template>
+                        </template>
                     </td>
                 </tr>
                 </tbody>
