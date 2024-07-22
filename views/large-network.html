@@ -347,33 +347,6 @@
                 </tr>
             </table>
         </div>
-        <div class="node-loads-container" id="montable">
-            <div id="monheader">NODE LOADS</div>
-            <div class="table-wrapper">
-                <table class="table-auto w-full">
-                    <thead>
-                        <tr>
-                            <th @click="sortTable('ip')">IP</th>
-                            <th @click="sortTable('port')">Port</th>
-                            <th @click="sortTable('loadInternal')">Load Internal</th>
-                            <th @click="sortTable('loadExternal')">Load External</th>
-                            <th @click="sortTable('queueLength')">Q Length</th>
-                            <th @click="sortTable('queueTime')">Q Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="node in sortedNodes" :key="node.id">
-                            <td>{{ node.ip }}</td>
-                            <td>{{ node.port }}</td>
-                            <td>{{ node.loadInternal }}</td>
-                            <td>{{ node.loadExternal }}</td>
-                            <td>{{ node.queueLength }}</td>
-                            <td>{{ node.queueTime }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
     <div id="mynetwork"></div>
