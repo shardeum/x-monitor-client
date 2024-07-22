@@ -203,6 +203,10 @@
                     <td id="monheader">NETWORK</td>
                 </tr>
                 <tr id="itemrow">
+                    <td id="monlabel">Mode:</td>
+                    <td id="monval" style="text-transform: capitalize;">{{(networkStatus.mode ?? '') + getModeEmoji(networkStatus.mode)}}</td>
+                </tr>
+                <tr id="itemrow">
                     <td id="monlabel">Counter:</td>
                     <td id="monval">{{networkStatus.counter}}</td>
                 </tr>

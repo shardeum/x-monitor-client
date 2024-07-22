@@ -337,6 +337,7 @@
                 this.networkStatus.processed = report.totalProcessed
                 this.networkStatus.rejected = report.totalRejected
                 this.networkStatus.rejectedTps = report.rejectedTps
+                this.networkStatus.mode = report.mode
                 this.networkStatus.active = Object.keys(G.nodes.active).length - crashedCount
                 this.networkStatus.syncing = Object.keys(G.nodes.syncing).length
                 this.networkStatus.joining = Object.keys(report.nodes.joining).length
@@ -552,6 +553,18 @@
                 } catch (e) {
                     console.log('Unable to get Node title', e)
                     console.log(nodeId, node)
+                }
+            },
+            getModeEmoji(networkMode){
+                switch (networkMode) {
+                    case 'forming': return ' 🟡'
+                    case 'processing': return ' 🟢'
+                    case 'safety': return ' ⚠️'
+                    case 'recovery': return ' ♻️'
+                    case 'restart': return ' 🔄'
+                    case 'restore': return ' 🔵'
+                    case 'shutdown': return ' 🔴'
+                    default: return ''
                 }
             },
 
