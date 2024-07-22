@@ -16,12 +16,10 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
         }
 
         .center-container {
             width: 100%;
-            max-width: 1200px; /* Adjust this value as needed */
         }
 
         .node-loads-container {
@@ -38,7 +36,6 @@
 
         .table-wrapper {
             overflow-x: auto;
-            max-height: calc(90vh - 30px);
         }
 
         .node-loads-container table {
@@ -103,7 +100,8 @@
                             <th @click="sortTable('loadInternal')">Load Internal</th>
                             <th @click="sortTable('loadExternal')">Load External</th>
                             <th @click="sortTable('queueLength')">Q Length</th>
-                            <th @click="sortTable('queueTime')">Q Time</th>
+                            <th @click="sortTable('avgQueueTime')">AVG Q Time</th>
+                            <th @click="sortTable('maxQueueTime')">Max Q Time</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,7 +111,8 @@
                             <td>{{ node.loadInternal }}</td>
                             <td>{{ node.loadExternal }}</td>
                             <td>{{ node.queueLength }}</td>
-                            <td>{{ node.queueTime }}</td>
+                            <td>{{ node.avgQueueTime }}</td>
+                            <td>{{ node.maxQueueTime }}</td>
                         </tr>
                     </tbody>
                 </table>

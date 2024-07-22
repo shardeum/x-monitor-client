@@ -46,10 +46,11 @@
                       id: nodeId,
                       ip: node.nodeIpInfo.externalIp,
                       port: node.nodeIpInfo.externalPort,
-                      loadInternal: node.currentLoad.nodeLoad.internal,
-                      loadExternal: node.currentLoad.nodeLoad.external,
+                      loadInternal: node.currentLoad.nodeLoad.internal.toFixed(3),
+                      loadExternal: node.currentLoad.nodeLoad.external.toFixed(3),
                       queueLength: node.queueLength,
-                      queueTime: node.txTimeInQueue,
+                      avgQueueTime: node.txTimeInQueue.toFixed(3),
+                      maxQueueTime: node.maxTxTimeInQueue.toFixed(3),
                   })
               }
           },
