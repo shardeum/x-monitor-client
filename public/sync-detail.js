@@ -214,21 +214,21 @@
                         }
                     }
                     node.radixes = result?.radixes || []
-                    if (this.hideFullyInSync && this.isUnexpectedOOS(node).total === 0) continue;
-                        this.nodeLoads.push({
-                            id: nodeId,
-                            ip: node.nodeIpInfo.externalIp,
-                            port: node.nodeIpInfo.externalPort,
-                            inSync: result?.insync,
-                            total: result?.stats.total,
-                            good: result?.stats.good,
-                            bad: result?.stats.bad,
-                            radixes: result?.radixes,
-                            stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
-                            cycleFinishedSyncing: node.cycleFinishedSyncing,
-                            recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
-                            fullRadixArray: this.generateFullRadixArray(node),
-                        })
+                    if (this.hideFullyInSync && this.isUnexpectedOOS(node).total === 0) continue
+                    this.nodeLoads.push({
+                        id: nodeId,
+                        ip: node.nodeIpInfo.externalIp,
+                        port: node.nodeIpInfo.externalPort,
+                        inSync: result?.insync,
+                        total: result?.stats.total,
+                        good: result?.stats.good,
+                        bad: result?.stats.bad,
+                        radixes: result?.radixes,
+                        stillNeedsInitialPatchPostActive: node.stillNeedsInitialPatchPostActive,
+                        cycleFinishedSyncing: node.cycleFinishedSyncing,
+                        recentRuntimeSync: result?.radixes.some((r) => r.recentRuntimeSync),
+                        fullRadixArray: this.generateFullRadixArray(node),
+                    })
                 }
             },
             radixClass(r) {
@@ -281,7 +281,10 @@
                 let CUnexpectedOOSCount = 0
                 let EUnexpectedOOSCount = 0
                 let CEUnexpectedOOSCount = 0
-                for (let radix of node.radixes) {
+                
+                const radixes = node.radixes ?? []
+
+                for (let radix of radixes) {
                     if (CAndCEOnly && radix.inEdgeRange) continue
                     if (!radix.insync) {
                         const recentlyActive =
@@ -311,16 +314,27 @@
                 this.showAllRadixes = !this.showAllRadixes
             },
             generateFullRadixArray(node) {
+                const validRadixes = node.radixes
+                    .map((r) => parseInt(r.radix, 16))
+                    .filter((r) => !isNaN(r) && r < 1e6)
+
+                if (validRadixes.length === 0) {
+                    return []
+                }
+
                 // Find the maximum radix value
-                const maxRadix = Math.max(...node.radixes.map(r => parseInt(r.radix, 16)))
-                
+                const maxRadix = Math.max(...validRadixes)
+
                 // Create an array with length maxRadix + 1 (to include 0)
                 let fullArray = new Array(maxRadix + 1).fill(null)
-                
+
                 for (let radix of node.radixes) {
                     let index = parseInt(radix.radix, 16)
-                    fullArray[index] = radix;
+                    if (!isNaN(index) && index <= maxRadix) {
+                        fullArray[index] = radix
+                    }
                 }
+
                 return fullArray
             },
             getRadixStyle(radix) {
