@@ -121,40 +121,45 @@
 <body>
     <div id="app" class="center-container">
         <div class="node-loads-container">
-            <div style="font-weight: bold; padding: 10px; background-color: #e5e7eb;">NODE LOADS</div>
-            <div class="table-wrapper">
-                <table class="table-auto w-full">
-                    <thead>
-                        <tr>
-                            <th @click="sortTable('ip')">IP</th>
-                            <th @click="sortTable('port')">Port</th>
-                            <th @click="sortTable('loadInternal')">Load Internal</th>
-                            <th @click="sortTable('loadExternal')">Load External</th>
-                            <th @click="sortTable('queueLength')">Q Length</th>
-                            <th @click="sortTable('avgQueueTime')">AVG Q Time</th>
-                            <th @click="sortTable('maxQueueTime')">Max Q Time</th>
-                        </tr>
-                    </thead>
-                </table>
-                <div class="tbody-wrapper">
-                    <table class="table-auto w-full">
-                        <tbody>
-                            <tr v-for="node in sortedNodes" :key="node.id">
-                                <td>{{ node.ip }}</td>
-                                <td>{{ node.port }}</td>
-                                <td>{{ node.loadInternal }}</td>
-                                <td>{{ node.loadExternal }}</td>
-                                <td>{{ node.queueLength }}</td>
-                                <td>{{ node.avgQueueTime }}</td>
-                                <td>{{ node.maxQueueTime }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div style="font-weight: bold; padding: 10px; background-color: #e5e7eb;">NODE LOADS</div>
+        <div class="table-wrapper">
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th @click="sortTable('ip')">IP</th>
+                        <th @click="sortTable('port')">Port</th>
+                        <th @click="sortTable('loadInternal')">Load Internal</th>
+                        <th @click="sortTable('loadExternal')">Load External</th>
+                        <th @click="sortTable('queueLengthAll')">Q Length All</th>
+                        <th @click="sortTable('queueLength')">Q Length</th>
+                        <th @click="sortTable('bucket15')">Q 15</th>
+                        <th @click="sortTable('bucket60')">Q 60</th>
+                        <th @click="sortTable('bucket120')">Q 120</th>
+                        <th @click="sortTable('bucket600')">Q 600</th>
+                        <th @click="sortTable('avgQueueTime')">AVG Q Time</th>
+                        <th @click="sortTable('maxQueueTime')">Max Q Time</th>
+                    </tr>
+                </thead>
+                <tbody class="tbody-wrapper">
+                    <tr v-for="node in sortedNodes" :key="node.id">
+                        <td>{{ node.ip }}</td>
+                        <td>{{ node.port }}</td>
+                        <td>{{ node.loadInternal }}</td>
+                        <td>{{ node.loadExternal }}</td>
+                        <td>{{ node.queueLengthAll }}</td>
+                        <td>{{ node.queueLength }}</td>
+                        <td>{{ node.bucket15 }}</td>
+                        <td>{{ node.bucket60 }}</td>
+                        <td>{{ node.bucket120 }}</td>
+                        <td>{{ node.bucket600 }}</td>
+                        <td>{{ node.avgQueueTime }}</td>
+                        <td>{{ node.maxQueueTime }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
-
+    </div>
 
     <script src="auth.js" type="text/javascript"></script>
     <script src="node-loads.js"></script>

@@ -17,8 +17,15 @@
           sortedNodes() {
               return this.nodeLoads.sort((a, b) => {
                   let modifier = this.sortAsc ? 1 : -1
-                  if (a[this.sortKey] < b[this.sortKey]) return -1 * modifier
-                  if (a[this.sortKey] > b[this.sortKey]) return 1 * modifier
+                  const valueA = a[this.sortKey]
+                  const valueB = b[this.sortKey]
+
+                  if (typeof valueA === 'number' && typeof valueB === 'number') {
+                      return (valueA - valueB) * modifier
+                  }
+
+                  if (valueA < valueB) return -1 * modifier
+                  if (valueA > valueB) return 1 * modifier
                   return 0
               })
           },
@@ -48,7 +55,12 @@
                       port: node.nodeIpInfo.externalPort,
                       loadInternal: node.currentLoad.nodeLoad.internal.toFixed(3),
                       loadExternal: node.currentLoad.nodeLoad.external.toFixed(3),
+                      queueLengthAll: node.queueLengthAll,
                       queueLength: node.queueLength,
+                      bucket15: node.queueLengthBuckets.c15,
+                      bucket60: node.queueLengthBuckets.c60,
+                      bucket120: node.queueLengthBuckets.c120,
+                      bucket600: node.queueLengthBuckets.c600,
                       avgQueueTime: node.txTimeInQueue.toFixed(3),
                       maxQueueTime: node.maxTxTimeInQueue.toFixed(3),
                   })
