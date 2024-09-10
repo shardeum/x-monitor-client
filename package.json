@@ -4,7 +4,7 @@
     "description": "",
     "main": "entry.js",
     "engines": {
-        "node": "18.16.1"
+        "node": "18.19.1"
     },
     "scripts": {
         "release": "np --any-branch --no-cleanup --no-tests --no-yarn --branch dev",
@@ -30,7 +30,7 @@
         "np": "8.0.4",
         "gts": "3.1.1",
         "prettier": "2.7.1",
-        "@types/node": "18.16.1",
+        "@types/node": "18.19.1",
         "@types/node-fetch": "2.5.4",
         "@types/socket.io": "2.1.11",
         "@types/socket.io-client": "1.4.33",
