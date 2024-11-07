@@ -41,7 +41,7 @@
         .node-loads-container {
             margin: 10px auto;
             max-height: 90vh;
-            overflow: hidden;
+            overflow: auto;
             font-family: sans-serif;
             font-size: small;
             font-weight: 300;
@@ -138,6 +138,11 @@
                         <th @click="sortTable('bucket600')">Q 600</th>
                         <th @click="sortTable('avgQueueTime')">AVG Q Time</th>
                         <th @click="sortTable('maxQueueTime')">Max Q Time</th>
+                        <th @click="sortTable('memoryRss')">Memory RSS (MB)</th>
+                        <th @click="sortTable('memoryHeapTotal')">Memory Heap Total (MB)</th>
+                        <th @click="sortTable('memoryHeapUsed')">Memory Heap Used (MB)</th>
+                        <th @click="sortTable('memoryExternal')">Memory External (MB)</th>
+                        <th @click="sortTable('memoryArrayBuffers')">Memory Array Buffers (MB)</th>
                     </tr>
                 </thead>
                 <tbody class="tbody-wrapper">
@@ -154,6 +159,11 @@
                         <td>{{ node.bucket600 }}</td>
                         <td>{{ node.avgQueueTime }}</td>
                         <td>{{ node.maxQueueTime }}</td>
+                        <td>{{ node.memoryRss/1000000 }}</td>
+                        <td>{{ node.memoryHeapTotal/1000000 }}</td>
+                        <td>{{ node.memoryHeapUsed/1000000 }}</td>
+                        <td>{{ node.memoryExternal/1000000 }}</td>
+                        <td>{{ node.memoryArrayBuffers/1000000 }}</td>
                     </tr>
                 </tbody>
             </table>
