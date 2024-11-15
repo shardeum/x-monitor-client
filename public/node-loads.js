@@ -63,12 +63,18 @@
                       bucket600: node.queueLengthBuckets?.c600 || 0,
                       avgQueueTime: node.txTimeInQueue.toFixed(3),
                       maxQueueTime: node.maxTxTimeInQueue.toFixed(3),
+                      memoryRss: node.memory?.rss || 0,
+                      memoryHeapTotal: node.memory?.heapTotal || 0,
+                      memoryHeapUsed: node.memory?.heapUsed || 0,
+                      memoryExternal: node.memory?.external || 0,
+                      memoryArrayBuffers: node.memory?.arrayBuffers || 0,
                   })
               }
           },
           async updateNodes() {
               try {
                   let changes = await this.fetchChanges()
+                  console.log({method: 'updateNodes', changes})
                   this.updateNetworkStatus(changes)
               } catch (e) {
                   console.log('Error while trying to update nodes.', e)
